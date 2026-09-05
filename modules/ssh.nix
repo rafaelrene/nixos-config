@@ -18,6 +18,9 @@ let
 in
 {
   programs.ssh.startAgent = true;
+  # GitHub's ED25519 host key, verified against https://api.github.com/meta.
+  programs.ssh.knownHosts."github.com".publicKey =
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
   # The desktop enables GNOME Keyring, which otherwise adds a second agent.
   services.gnome.gcr-ssh-agent.enable = false;
   environment.systemPackages = [ pkgs.age ];

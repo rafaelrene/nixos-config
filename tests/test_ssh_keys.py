@@ -146,6 +146,14 @@ class SSHKeysTest(unittest.TestCase):
         self.assertEqual(next((self.home / ".ssh").glob("config.before-nixos-*")).read_text(), "old config")
         self.assertEqual(next((self.home / ".ssh").glob("othinus.before-nixos-*")).read_text(), "old key")
 
+    def test_group_writable_config_repaired_even_when_keys_are_current(self):
+        self.encrypt()
+        config = self.repo / "config/ssh/config"
+        config.chmod(0o664)
+        code, output = self.run_helper()
+        self.assertEqual(code, 0, output)
+        self.assertEqual(stat.S_IMODE(config.stat().st_mode), 0o644)
+
     def test_changed_bundle_prompts_again(self):
         self.encrypt()
         old_digest = json.loads((self.home / ".local/state/ssh-keys/installed.json").read_text())["bundle"]

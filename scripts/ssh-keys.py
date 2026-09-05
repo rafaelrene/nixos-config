@@ -109,6 +109,11 @@ def installed_matches(state, bundle, public, ssh):
 
 
 def link_config(ssh, target):
+    # The shared checkout can inherit group-write permissions through its ACL.
+    # OpenSSH checks the symlink target and rejects a group-writable config.
+    if target.stat().st_uid != os.getuid():
+        raise RuntimeError(f"SSH config belongs to another user: {target}")
+    target.chmod(0o644)
     path = ssh / "config"
     if path.is_symlink() and os.readlink(path) == str(target):
         return

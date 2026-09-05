@@ -20,6 +20,12 @@ Existing SSH-key passphrases are preserved. In particular, the personal key has
 its own passphrase, independent of the archive passphrase. The SSH agent caches
 unlocked identities for the login session.
 
+The SSH config selects `/run/user/1000/ssh-agent` explicitly, so existing
+applications also use the NixOS agent. To unlock the personal key for T3Code,
+run `env SSH_AUTH_SOCK=/run/user/1000/ssh-agent ssh-add ~/.ssh/personal` locally.
+No T3Code restart is needed. GitHub's verified host key is declared in NixOS
+so background pushes can verify the server without an interactive trust prompt.
+
 The hook runs for `switch` and `test`, not boot or build. It requires the `raf`
 account to exist (as on this machine). A terminal is required only when keys
 need encryption/decryption. Cancelling or entering a wrong passphrase fails the

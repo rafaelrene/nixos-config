@@ -14,6 +14,8 @@ Host othinus
 
 # Keep defaults last: OpenSSH uses the first value found for each option.
 Host *
+  # Use the NixOS agent even in processes started before the agent migration.
+  IdentityAgent /run/user/1000/ssh-agent
   AddKeysToAgent yes
   IdentitiesOnly yes
   ForwardAgent no
