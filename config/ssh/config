@@ -1,0 +1,19 @@
+# This file is linked from ~/.ssh/config. Edits there are edits to this checkout.
+Host bitbucket.org
+  User git
+  IdentityFile ~/.ssh/bitbucket_work
+
+Host github.com gitlab.com
+  User git
+  IdentityFile ~/.ssh/personal
+
+Host othinus
+  HostName 192.168.86.136
+  User raf
+  IdentityFile ~/.ssh/othinus
+
+# Keep defaults last: OpenSSH uses the first value found for each option.
+Host *
+  AddKeysToAgent yes
+  IdentitiesOnly yes
+  ForwardAgent no

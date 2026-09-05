@@ -1,0 +1,10 @@
+[General]
+ColorScheme=CatppuccinMocha@accent-title@
+font=JetBrainsMono Nerd Font,10,-1,5,50,0,0,0,0,0
+fixed=JetBrainsMono Nerd Font,10,-1,5,50,0,0,0,0,0
+
+[KDE]
+widgetStyle=kvantum
+
+[Icons]
+Theme=breeze-dark

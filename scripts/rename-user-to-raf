@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+old_user=othinus
+new_user=raf
+target_uid=1000
+target_gid=1000
+
+die() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+if ((EUID != 0)); then
+  die "run this script with sudo"
+fi
+
+if [[ ${SUDO_USER:-} != migration-admin ]]; then
+  die "run this from the temporary migration-admin account"
+fi
+
+if getent passwd "$new_user" >/dev/null; then
+  [[ $(id -u "$new_user") == "$target_uid" ]] || die "$new_user has an unexpected UID"
+  [[ $(getent passwd "$new_user" | cut -d: -f6) == /home/raf ]] || die "$new_user has an unexpected home"
+  if getent passwd "$old_user" >/dev/null; then
+    die "both $old_user and $new_user exist; inspect the account database"
+  fi
+  printf '%s is already the UID %s account\n' "$new_user" "$target_uid"
+  exit 0
+fi
+
+getent passwd "$old_user" >/dev/null || die "$old_user does not exist"
+[[ $(id -u "$old_user") == "$target_uid" ]] || die "$old_user is not UID $target_uid"
+[[ ! -e /home/raf ]] || die "/home/raf already exists"
+
+gid_entry=$(getent group "$target_gid" || true)
+if [[ -n $gid_entry && ${gid_entry%%:*} != "$new_user" ]]; then
+  die "GID $target_gid is already used by ${gid_entry%%:*}"
+fi
+
+if getent group "$new_user" >/dev/null; then
+  [[ $(getent group "$new_user" | cut -d: -f3) == "$target_gid" ]] || die "$new_user has an unexpected GID"
+else
+  groupadd --gid "$target_gid" "$new_user"
+fi
+
+loginctl terminate-user "$old_user" 2>/dev/null || true
+pkill --signal TERM --uid "$target_uid" 2>/dev/null || true
+for _ in {1..20}; do
+  pgrep --uid "$target_uid" >/dev/null || break
+  sleep 0.25
+done
+if pgrep --uid "$target_uid" >/dev/null; then
+  pkill --signal KILL --uid "$target_uid"
+fi
+
+usermod \
+  --login "$new_user" \
+  --home /home/raf \
+  --move-home \
+  --gid "$new_user" \
+  "$old_user"
+usermod --append --groups networkmanager,storage,video,wheel "$new_user"
+chown "$new_user:$new_user" /home/raf
+
+printf 'renamed %s to %s; apply the othinus-migration target now\n' "$old_user" "$new_user"
