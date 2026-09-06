@@ -1,0 +1,10 @@
+[General]
+ColorScheme=@color-scheme@
+font=@font@,10,-1,5,50,0,0,0,0,0
+fixed=@monospace-font@,10,-1,5,50,0,0,0,0,0
+
+[KDE]
+widgetStyle=kvantum
+
+[Icons]
+Theme=@icon-theme@

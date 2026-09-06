@@ -1,0 +1,14 @@
+{
+  "$schema": "https://vicinae.com/schemas/config.json",
+  "telemetry": {
+    "system_info": false
+  },
+  "input_server": {
+    "enabled": false
+  },
+  "search_files_in_root": false,
+  "close_on_focus_loss": false,
+  "font": {
+    "rendering": "native"
+  }
+}

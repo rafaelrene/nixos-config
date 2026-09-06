@@ -42,12 +42,6 @@ incrementally, then remove DMS in one deliberate change.
   The command should refresh flake dependencies and T3Code's version and hashes,
   then rebuild and switch the system. Packages should update only when this
   command is run. Obtain explicit approval for the helper before implementing it.
-- Restructure the repository into self-contained module directories. Keep each
-  module's Nix configuration, application configuration, helper scripts, and
-  assets together. For example, the SSH module should own its Nix file, existing
-  helper, public keys, SSH config, and encrypted key bundle. Removing a module's
-  directory and its import should remove the entire feature without leaving
-  feature-specific files elsewhere. Leave the SSH helper unchanged for now.
 - Add Tailscale for T3Code access outside the trusted LAN.
 - Consider lowering the internal display to 60 Hz on battery.
 - Revisit dedicated coding workspace rules after the Niri workflow settles.
