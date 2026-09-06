@@ -3,6 +3,9 @@ let
   theme = import ../../../themes { inherit lib pkgs; };
 in
 {
+  # Mason downloads executables built for conventional Linux distributions.
+  programs.nix-ld.enable = true;
+
   environment = {
     systemPackages = [
       (pkgs.neovim.override {

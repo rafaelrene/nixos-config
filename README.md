@@ -29,6 +29,15 @@ Neovim's package adds Go, GCC, and Python to its own PATH so Mason can install
 Go tools and ansible-lint. These dependencies are not added to the global shell PATH.
 Mason continues to manage editor tools.
 
+NixOS enables `nix-ld` and its standard shared libraries system-wide so Mason's
+downloaded Linux executables can run. LazyVim Extras continues selecting language
+servers, formatters, and debuggers; nvim-treesitter installs grammars using
+Mason's Tree-sitter CLI. Editor tools remain in Neovim's private data directory
+and are not added to the global shell PATH. Apply this through the normal system
+rebuild, then reopen Neovim to let missing parsers install. New Extras may need
+additional libraries or installer runtimes; keep editor-only runtimes in Neovim's
+package wrapper.
+
 ## Themes
 
 `themes/default.nix` selects `catppuccin.nix`, currently Mocha with a Mauve
