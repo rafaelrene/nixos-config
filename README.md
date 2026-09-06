@@ -29,6 +29,12 @@ Neovim's package adds Go, GCC, and Python to its own PATH so Mason can install
 Go tools and ansible-lint. These dependencies are not added to the global shell PATH.
 Mason continues to manage editor tools.
 
+The same wrapper supplies nightly Cargo, rustc, and the Rust standard library
+for Mason packages built from Rust source, such as `nil`. The `rust-overlay`
+flake input pins the latest available minimal nightly toolchain at lock-update
+time. Update it with `nix flake update rust-overlay`, then rebuild to use a newer
+nightly. Rust is not added to the global shell PATH.
+
 NixOS enables `nix-ld` and its standard shared libraries system-wide so Mason's
 downloaded Linux executables can run. LazyVim Extras continues selecting language
 servers, formatters, and debuggers; nvim-treesitter installs grammars using

@@ -1,6 +1,13 @@
-{ lib, pkgs, ... }:
+{
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
 let
   theme = import ../../../themes { inherit lib pkgs; };
+  rustPkgs = pkgs.extend inputs.rust-overlay.overlays.default;
+  rustNightly = rustPkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.minimal);
 in
 {
   # Mason downloads executables built for conventional Linux distributions.
@@ -18,6 +25,7 @@ in
             pkgs.gcc
             pkgs.go
             pkgs.python3
+            rustNightly
           ])
         ];
       })
