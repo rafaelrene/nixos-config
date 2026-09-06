@@ -1,0 +1,14 @@
+[projects."/home/raf"]
+trust_level = "trusted"
+
+[projects."/data/code/nixos-config"]
+trust_level = "trusted"
+
+[projects."/data/code/ansible"]
+trust_level = "trusted"
+
+[tui.model_availability_nux]
+gpt-6-astra = 1
+
+[features]
+hooks = true

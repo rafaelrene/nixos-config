@@ -48,3 +48,5 @@ incrementally, then remove DMS in one deliberate change.
 - Revisit the global Catppuccin accent. It is currently Mocha Mauve.
 - Revisit Helium as the default browser if work and personal usage changes.
 - Remove `nh` if it does not improve the update workflow.
+- Add optional forwarding of Othinus agent notifications to the Mac; keep notifications local to Othinus for now.
+- Install and authenticate the Bitbucket CLI expected by the resolve-pr-comments skill (bkt); until then, the skill reports the missing prerequisite for Bitbucket work.

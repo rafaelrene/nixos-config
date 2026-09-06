@@ -68,6 +68,59 @@ Codex CLI, Claude Code, and OpenCode update daily from
 `numtide/llm-agents.nix`. Their wrappers automatically enter an allowed Devenv
 environment when the project contains `devenv.nix` or `devenv.yaml`.
 
+## Shared agent configuration
+
+Codex, Claude Code, and OpenCode share instructions, skills, and desktop
+notifications from `config/agents/`. NixOS links these files directly into:
+
+- Codex: `~/.local/share/codex` (`CODEX_HOME`)
+- Claude: `~/.local/share/claude` (`CLAUDE_CONFIG_DIR`)
+- OpenCode: `~/.config/opencode`
+
+Editing a linked skill, hook, or setting changes the repository file immediately.
+Restart the agent when it needs to reload configuration. Add or remove skill
+directories under `config/agents/skills/`, then rebuild to reconcile their links.
+Built-in skills, separately installed skills, credentials, sessions, databases,
+and generated plugin dependencies remain outside the checkout.
+
+The first activation backs up the imported Codex and Claude settings under
+`~/.local/state/agent-config-backups/`. If either file has changed since import,
+or another managed path contains an unrelated file/link, activation reports the
+conflict and preserves it. Compare the conflicting file with its source under
+`config/agents/`, retain the desired settings there, and move the original to a
+backup before retrying. Do not delete a conflict blindly.
+
+Run this on Othinus to include new files even before they are tracked by Git:
+
+```sh
+sudo nixos-rebuild switch --flake path:/data/code/nixos-config#othinus
+```
+
+NixOS declares the links and packages. The current checkout supplies mutable
+contents, so restoring an older system generation does not restore previous
+skill or settings contents; use Git for those. Othinus owns these files
+independently of the Mac and has no Ansible dependency for agent configuration.
+
+### Agent notifications
+
+`~/.local/bin/agent-notify` sends “Agent needs attention” through the logged-in
+user’s D-Bus notification service. It works from local terminals and SSH while
+the Othinus desktop is running. Without a desktop service it exits quietly;
+notification delivery never answers an agent’s permission request.
+
+- Codex: completion, interruption, and permission requests.
+- Claude: completion, API errors, and permission/idle/elicitation notifications.
+- OpenCode: idle, errors, permissions, and questions; subagent events are ignored.
+
+Test delivery with `~/.local/bin/agent-notify`. If no popup appears, check desktop
+Do Not Disturb settings and `busctl --user --list` for
+`org.freedesktop.Notifications`. Inspect link activation with
+`journalctl --user -u nixos-activation.service -b` and verify targets with
+`readlink -f ~/.local/bin/agent-notify`. Restart agents after hook configuration
+changes. On first launch, Codex asks you to review the three new notification hooks;
+trust them to enable delivery. Use `/hooks` to inspect them later. Mac forwarding
+and Bitbucket CLI setup are deferred in `TODO.md`.
+
 ## SSH identities
 
 `sudo nixos-rebuild switch --flake /data/code/nixos-config#othinus` provisions
@@ -127,8 +180,10 @@ t3 connect link --headless --base-dir /home/raf/.local/share/t3code
 ## Validation
 
 ```sh
-nix flake check --no-build
-nix build --no-link .#nixosConfigurations.othinus.config.system.build.toplevel
+nix flake check --no-build path:/data/code/nixos-config
+nix build --no-link path:/data/code/nixos-config#nixosConfigurations.othinus.config.system.build.toplevel
+nix shell --inputs-from path:/data/code/nixos-config nixpkgs#python3 -c python3 -m unittest discover -s tests -v
+node --test tests/test_opencode_notification.mjs
 ```
 
 Use a previous NixOS generation from Limine if a system update fails. T3Code

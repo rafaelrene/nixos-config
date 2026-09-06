@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "autoupdate": false,
+  "permission": {
+    "skill": {
+      "btca-local": "allow",
+    },
+    "external_directory": {
+      "~/.local/share/btca-sandbox/**": "allow",
+    },
+  },
+}
