@@ -4,7 +4,21 @@ let
 in
 {
   environment = {
-    systemPackages = [ pkgs.neovim ];
+    systemPackages = [
+      (pkgs.neovim.override {
+        # Mason's installers need these runtimes, but the shell does not.
+        wrapperArgs = [
+          "--suffix"
+          "PATH"
+          ":"
+          (lib.makeBinPath [
+            pkgs.gcc
+            pkgs.go
+            pkgs.python3
+          ])
+        ];
+      })
+    ];
     variables = {
       EDITOR = "nvim";
       VISUAL = "nvim";

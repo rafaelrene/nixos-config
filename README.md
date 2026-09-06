@@ -23,6 +23,12 @@ explicit integrations: Niri shortcuts, Nushell tool settings, default applicatio
 associations, and root flake inputs or package exports. These are intentionally
 manual. Existing application data is not deleted by removing a module.
 
+## Neovim
+
+Neovim's package adds Go, GCC, and Python to its own PATH so Mason can install
+Go tools and ansible-lint. These dependencies are not added to the global shell PATH.
+Mason continues to manage editor tools.
+
 ## Themes
 
 `themes/default.nix` selects `catppuccin.nix`, currently Mocha with a Mauve
