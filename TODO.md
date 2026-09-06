@@ -50,3 +50,6 @@ incrementally, then remove DMS in one deliberate change.
 - Remove `nh` if it does not improve the update workflow.
 - Add optional forwarding of Othinus agent notifications to the Mac; keep notifications local to Othinus for now.
 - Install and authenticate the Bitbucket CLI expected by the resolve-pr-comments skill (bkt); until then, the skill reports the missing prerequisite for Bitbucket work.
+- Fix `nvim` showing bunch of errors on launch
+- T3Code is not showing usage statistics
+- T3 Server that's running can not be configured. I can't connect to t3connect or use any connection settings
