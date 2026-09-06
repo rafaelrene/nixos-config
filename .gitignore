@@ -1,9 +1,9 @@
-# Only ciphertext belongs in secrets/.
-/secrets/*
-!/secrets/ssh-keys.age
-!/secrets/README.md
-# SSH config and public keys are the only plaintext SSH files tracked here.
-/config/ssh/*
-!/config/ssh/config
-!/config/ssh/*.pub
+# Only the SSH module’s declared source files and ciphertext belong here.
+/modules/services/ssh/*
+!/modules/services/ssh/default.nix
+!/modules/services/ssh/ssh-keys.py
+!/modules/services/ssh/config
+!/modules/services/ssh/*.pub
+!/modules/services/ssh/ssh-keys.age
+!/modules/services/ssh/README.md
 __pycache__/

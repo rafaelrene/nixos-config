@@ -1,0 +1,21 @@
+{
+  "configVersion": 5,
+  "currentThemeName": "custom",
+  "customThemeFile": "/home/raf/.config/DankMaterialShell/theme.json",
+  "use24HourClock": true,
+  "clockDateFormat": "dd.MM.yyyy",
+  "lockDateFormat": "dddd, d MMMM yyyy",
+  "cornerRadius": 0,
+  "niriLayoutGapsOverride": 2,
+  "niriLayoutRadiusOverride": 0,
+  "niriLayoutBorderSize": 1,
+  "acMonitorTimeout": 900,
+  "acLockTimeout": 600,
+  "acSuspendTimeout": 0,
+  "acProfileName": "balanced",
+  "batteryMonitorTimeout": 600,
+  "batteryLockTimeout": 300,
+  "batterySuspendTimeout": 1200,
+  "batteryProfileName": "power-saver",
+  "lockBeforeSuspend": true
+}

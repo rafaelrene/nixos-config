@@ -2,48 +2,41 @@
 
 Declarative configuration for the Othinus development machine.
 
-## Targets
+## Repository structure
 
-- `othinus-bootstrap` preserves the current `othinus` user, hostname, and
-  systemd-boot setup. It adds the temporary key-only `migration-admin` account.
-- `othinus-migration` is the full system with both `raf` and
-  `migration-admin`. Use it while verifying the renamed account.
-- `othinus` is the final system. It removes `migration-admin` and its temporary
-  passwordless sudo rule.
+- `hosts/othinus/`: machine hardware, disks, accounts, and explicit module imports.
+- `modules/applications/`: Ghostty, Helium, Zen, Neovim, Vicinae, and desktop apps.
+- `modules/desktop/`: Niri, DMS, shared desktop services, and GTK/Qt theming.
+- `modules/services/`: SSH, T3Code, and local snapshots.
+- `modules/development/`: agent tools, Git, and development runtimes.
+- `modules/shell/`: Nushell and shell integration.
+- `modules/system/`: boot, networking, Nix, and shared system settings.
+- `themes/`: the selected palette, fonts, and application theme identifiers.
 
-## First migration
+Each grouping’s `default.nix` explicitly imports its submodules. Each feature
+owns its configuration, helpers, assets, package definitions, and documentation.
+Use further subdirectories where useful; small shared settings can stay in the
+grouping’s `default.nix`.
 
-Run only the first command from the existing `othinus` account:
+Removing a feature means removing its directory and import, then adjusting
+explicit integrations: Niri shortcuts, Nushell tool settings, default application
+associations, and root flake inputs or package exports. These are intentionally
+manual. Existing application data is not deleted by removing a module.
 
-```sh
-sudo nixos-rebuild switch \
-  --flake /data/code/nixos-config#othinus-bootstrap \
-  --option experimental-features 'nix-command flakes'
-```
+## Themes
 
-Then connect as the temporary administrator:
+`themes/default.nix` selects `catppuccin.nix`, currently Mocha with a Mauve
+accent. To add a theme, supply the same palette, font, and application-style
+fields in another Nix file and select it there. GTK, Qt, the greeter, boot,
+Niri, DMS, Ghostty, Neovim, and Vicinae consume this selection.
 
-```sh
-ssh -i ~/.ssh/othinus migration-admin@192.168.86.136
-sudo /data/code/nixos-config/scripts/rename-user-to-raf
-sudo nixos-rebuild switch --flake /data/code/nixos-config#othinus-migration
-```
-
-Open a second terminal and verify the new account before removing the recovery
-account:
-
-```sh
-ssh -i ~/.ssh/othinus raf@192.168.86.136
-sudo --validate
-```
-
-From the verified `raf` session, activate the final target:
-
-```sh
-sudo nixos-rebuild switch --flake /data/code/nixos-config#othinus
-```
-
-Do not reboot between the rename and a successful `othinus-migration` switch.
+Application templates stay with their modules. Ghostty and Neovim keep editable
+checkout configuration and read generated theme settings from `/etc/xdg`.
+Vicinae keeps writable user settings; its native `VICINAE_OVERRIDES` mechanism
+applies the selected theme and font without replacing other preferences.
+DMS keeps its writable settings and receives the selected palette through its
+linked `theme.json`; font settings are initial defaults and existing UI overrides
+remain in effect.
 
 ## Normal updates
 
@@ -57,7 +50,7 @@ sudo nixos-rebuild switch --flake .#othinus
 ```
 
 `nh os switch` uses this repository by default through `NH_FLAKE` and is a
-shorter equivalent after the migration.
+shorter equivalent.
 
 Dark mode is the machine-wide default through dconf and the desktop settings
 portal. GTK and Qt use Catppuccin Mocha; Qt applications such as Dolphin use
@@ -80,15 +73,17 @@ environment when the project contains `devenv.nix` or `devenv.yaml`.
 `sudo nixos-rebuild switch --flake /data/code/nixos-config#othinus` provisions
 the personal, Bitbucket work, and Othinus keys. On the first switch, choose an
 archive passphrase at the terminal prompt; the decrypted Ansible keys are
-encrypted into `secrets/ssh-keys.age`. Commit that file after the rebuild.
+encrypted into `modules/services/ssh/ssh-keys.age`. Commit that file after the
+rebuild.
 Restoring onto another machine requires only the committed bundle and its
 passphrase. Later switches skip the prompt unless the bundle or installed keys
 change. The personal key's existing SSH passphrase remains separate.
 
-`~/.ssh/config` points to `config/ssh/config` in this checkout. Editing either
-path updates the Git working tree immediately; SSH config edits need no rebuild.
+`~/.ssh/config` points to `modules/services/ssh/config` in this checkout. Editing
+either path updates the Git working tree immediately; SSH config edits need no rebuild.
 NixOS manages the SSH agent without Home Manager. See
-[`secrets/README.md`](./secrets/README.md) for storage and recovery details.
+[the SSH module documentation](./modules/services/ssh/README.md) for storage and
+recovery details.
 
 ## T3Code access
 
@@ -122,7 +117,7 @@ attachments are uploaded to the Othinus environment with the message. The web
 and mobile clients can send attachments but do not provide the desktop-only
 embedded preview.
 
-Link T3 Connect interactively after the migration:
+Link T3 Connect interactively:
 
 ```sh
 ssh raf@192.168.86.136
