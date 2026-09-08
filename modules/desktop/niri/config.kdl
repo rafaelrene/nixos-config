@@ -56,6 +56,8 @@ spawn-at-startup "xwayland-satellite"
 
 window-rule {
     match app-id=r#"^com\.mitchellh\.ghostty$"#
+    // Keep the focus ring from filling the transparent terminal background.
+    draw-border-with-background false
     background-effect {
         blur true
     }
