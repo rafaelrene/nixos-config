@@ -54,6 +54,13 @@ window-rule {
 
 spawn-at-startup "xwayland-satellite"
 
+window-rule {
+    match app-id=r#"^com\.mitchellh\.ghostty$"#
+    background-effect {
+        blur true
+    }
+}
+
 hotkey-overlay { skip-at-startup; }
 
 binds {

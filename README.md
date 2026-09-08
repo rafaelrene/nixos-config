@@ -59,6 +59,15 @@ DMS keeps its writable settings and receives the selected palette through its
 linked `theme.json`; font settings are initial defaults and existing UI overrides
 remain in effect.
 
+Ghostty uses 14.5pt text and an 80% opaque background. Niri blurs the wallpaper
+behind Ghostty using its default blur strength. Selecting text copies it to the
+clipboard, trailing spaces are trimmed, and terminal applications can read and
+write the clipboard. Super+Enter opens Ghostty.
+
+After changing `themes/default.nix`, rebuild the system to regenerate
+`/etc/xdg/ghostty/theme`, then reload Ghostty's configuration or restart it.
+The selected theme supplies both the terminal colors and monospace font family.
+
 ## Normal updates
 
 The operating system stays on the pinned NixOS 26.05 input until the lock file
