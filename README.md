@@ -61,10 +61,9 @@ remain in effect.
 
 Ghostty uses 14.5pt text and an 80% opaque background. Niri blurs the wallpaper
 behind Ghostty using two blur passes at offset 1, configured globally in Niri.
-Its focus ring draws only around
-the window so it does not cover the wallpaper. Selecting text copies it to the
-clipboard, trailing spaces are trimmed, and terminal applications can read and
-write the clipboard. Super+Enter opens Ghostty.
+Its focus ring draws only around the window so it does not cover the wallpaper.
+Selecting text copies it to the clipboard, trailing spaces are trimmed, and
+terminal applications can read and write the clipboard. Super+Enter opens Ghostty.
 
 After changing `themes/default.nix`, rebuild the system to regenerate
 `/etc/xdg/ghostty/theme`, then reload Ghostty's configuration or restart it.
