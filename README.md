@@ -60,7 +60,8 @@ linked `theme.json`; font settings are initial defaults and existing UI override
 remain in effect.
 
 Ghostty uses 14.5pt text and an 80% opaque background. Niri blurs the wallpaper
-behind Ghostty using its default blur strength. Selecting text copies it to the
+behind Ghostty using its default blur strength. Its focus ring draws only around
+the window so it does not cover the wallpaper. Selecting text copies it to the
 clipboard, trailing spaces are trimmed, and terminal applications can read and
 write the clipboard. Super+Enter opens Ghostty.
 
