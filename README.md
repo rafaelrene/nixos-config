@@ -71,6 +71,9 @@ The selected theme supplies both the terminal colors and monospace font family.
 
 ## Shell prompt
 
+The prompt shows directory and tool information on the first line and
+`user@hostname` (normally `raf@othinus`) on the second line, locally and over SSH.
+
 Nushell uses Starship with prompt settings in
 `modules/shell/starship/starship.toml`. Nix combines these settings with the
 shared theme palette into a Nix store file, linked at
