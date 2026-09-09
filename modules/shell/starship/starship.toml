@@ -1,0 +1,104 @@
+# Get editor completions based on the config schema
+"$schema" = 'https://starship.rs/config-schema.json'
+
+format = '''
+$directory(\[$git_branch(\($git_commit\))(:$git_status( | $git_state))\])( | $jobs)( | $all)
+$hostname[$character](bold green)
+'''
+
+right_format = '(\($cmd_duration\))$time'
+
+# Inserts a blank line between shell prompts# Use custom format
+add_newline = true
+
+
+[bun]
+detect_extensions = []
+detect_files = ["bun.lock", "bun.lockb"]
+detect_folders = []
+symbol = ""
+format = '[$symbol( $version)]($style)'
+
+# Replace the '❯' symbol in the prompt with '➜'
+[character]
+success_symbol = '[➜](bold green)'
+error_symbol = '[➜](bold red)'
+
+[cmd_duration]
+format = '[$duration]($style)'
+min_time = 10_000
+show_notifications = false
+
+[conda]
+format = '[$symbol$environment]($style)'
+ignore_base = true
+
+[deno]
+detect_extensions = []
+detect_files = ["deno.lock"]
+detect_folders = []
+format = '[$symbol( $version)]($style)'
+
+[directory]
+fish_style_pwd_dir_length = 1
+
+[docker_context]
+format = '[$symbol$context](blue bold) '
+
+[git_branch]
+format = '[$symbol$branch(:$remote_branch)]($style)'
+truncation_length = 50
+truncation_symbol = '../'
+
+[git_commit]
+format = '[\($hash$tag\)]($style)'
+
+[git_state]
+format = '\([$state( $progress_current / $progress_total)]($style)\)'
+
+[git_status]
+format = '([\[$all_status$ahead_behind\]]($style))'
+
+[golang]
+format = '[$symbol($version)]($style)'
+
+[hostname]
+format = '[$hostname@]($style)'
+style = "bg:green fg:base"
+ssh_only = true
+
+[jobs]
+format = '[j$number]($style)'
+
+[line_break]
+disabled = true
+
+[lua]
+format = '[$symbol($version)]($style)'
+
+[nodejs]
+detect_extensions = []
+detect_files = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock"]
+detect_folders = []
+format = '[$symbol( $version)]($style)'
+
+[package]
+disabled = true
+
+[python]
+disabled = true
+
+[status]
+format = '[$symbol$status]($style)'
+
+[sudo]
+format = '[as $symbol]($style)'
+
+[time]
+disabled = false
+time_format = '%T'
+format = '[ at $time]($style)'
+
+[gcloud]
+disabled = true
+
