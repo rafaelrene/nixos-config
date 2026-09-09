@@ -3,7 +3,7 @@
 
 format = '''
 $directory(\[$git_branch(\($git_commit\))(:$git_status( | $git_state))\])( | $jobs)( | $all)
-$hostname[$character](bold green)
+$username$hostname[$character](bold green)
 '''
 
 right_format = '(\($cmd_duration\))$time'
@@ -63,9 +63,14 @@ format = '([\[$all_status$ahead_behind\]]($style))'
 format = '[$symbol($version)]($style)'
 
 [hostname]
-format = '[$hostname@]($style)'
+format = '[$hostname]($style)'
 style = "bg:green fg:base"
-ssh_only = true
+ssh_only = false
+
+[username]
+format = '[$user@]($style)'
+style_user = "bg:green fg:base"
+show_always = true
 
 [jobs]
 format = '[j$number]($style)'
@@ -78,7 +83,12 @@ format = '[$symbol($version)]($style)'
 
 [nodejs]
 detect_extensions = []
-detect_files = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock"]
+detect_files = [
+  "package-lock.json",
+  "npm-shrinkwrap.json",
+  "pnpm-lock.yaml",
+  "yarn.lock",
+]
 detect_folders = []
 format = '[$symbol( $version)]($style)'
 
@@ -101,4 +111,3 @@ format = '[ at $time]($style)'
 
 [gcloud]
 disabled = true
-
