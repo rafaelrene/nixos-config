@@ -4,6 +4,21 @@
   pkgs,
   ...
 }:
+
+let
+  updatePackages = pkgs.writeShellApplication {
+    name = "nix-update-packages";
+    runtimeInputs = [
+      pkgs.nix
+      pkgs.systemd
+    ];
+    text = ''
+      nix flake update --flake path:/data/code/nixos-config
+      systemctl --user start t3code-update.service
+      systemctl --user restart t3code.service
+    '';
+  };
+in
 {
   nix = {
     settings = {
@@ -33,7 +48,10 @@
   nixpkgs.config.allowUnfree = true;
 
   environment.variables.NH_FLAKE = "/data/code/nixos-config";
-  environment.systemPackages = [ pkgs.nh ];
+  environment.systemPackages = [
+    pkgs.nh
+    updatePackages
+  ];
   assertions = [
     {
       assertion = config.nix.settings.trusted-users == [ "root" ];

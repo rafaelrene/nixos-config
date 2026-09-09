@@ -82,14 +82,6 @@ let
     '';
   };
 
-  updateNow = pkgs.writeShellApplication {
-    name = "t3-update-now";
-    runtimeInputs = [ pkgs.systemd ];
-    text = ''
-      systemctl --user start t3code-update.service
-      systemctl --user restart t3code.service
-    '';
-  };
   t3Command = pkgs.writeShellApplication {
     name = "t3";
     text = ''
@@ -132,10 +124,7 @@ in
     ip saddr 192.168.86.0/24 tcp dport 3773 accept comment "Othinus LAN T3Code"
   '';
   environment.variables.T3CODE_HOME = "$HOME/.local/share/t3code";
-  environment.systemPackages = [
-    t3Command
-    updateNow
-  ];
+  environment.systemPackages = [ t3Command ];
 
   systemd = {
     user.services = {

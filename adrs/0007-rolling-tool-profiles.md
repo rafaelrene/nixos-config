@@ -11,8 +11,14 @@ whole operating system.
 
 ## Decision
 
-Package the official T3Code nightly artifact with Nix and update its independent
-profile every three hours. Update Codex CLI, Claude Code, and OpenCode from
+Package the official T3Code nightly artifact with Nix and stage it in its
+independent profile every three hours. Restart the server daily at 04:00 to
+activate the staged generation. For manual updates, `nix-update-packages`
+refreshes the workstation flake inputs, runs the T3Code updater, and restarts
+the server immediately. Applying workstation package updates remains a separate
+NixOS rebuild and switch.
+
+Update Codex CLI, Claude Code, and OpenCode from
 `numtide/llm-agents.nix` in another independent profile each day. Never use
 `npx` or an imperative language package manager for these tools.
 
