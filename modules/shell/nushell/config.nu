@@ -21,4 +21,9 @@ source @zoxide-hook@
 source @devenv-hook@
 source @starship-hook@
 
-alias ls = eza --icons=auto --group-directories-first
+alias ls = eza -la --icons=auto --group-directories-first
+alias gs = git status
+alias gf = git fetch
+alias vim = nvim
+alias v = nvim
+alias pn = pnpm
