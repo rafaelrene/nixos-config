@@ -109,6 +109,22 @@ branch; `su`, `sui`, and `sup` update submodules, initialize them recursively,
 and update them from remotes recursively. `git c` discards unstaged changes to
 tracked files beneath the current directory.
 
+## Scripts and command help
+
+Nix packages the scripts in `modules/shell/scripts/` with their runtime
+dependencies and links them into `/home/raf/.local/bin`, which is on PATH.
+`git branches [branch]` selects a branch with fzf or checks out the
+given branch. `git delete-branches` (also `git db`) force-deletes local branches
+other than the current branch, preserving branches checked out in worktrees and
+printing cleanup commands for them. It must run from the main worktree.
+The full `git-*` executable names also work directly.
+
+Tealdeer provides `tldr` with the configuration in
+`modules/applications/tealdeer/config.toml`, linked into `~/.config/tealdeer/`.
+It uses a pager, colored examples, and automatic cache updates. Rebuild after
+changing scripts or tealdeer configuration. These are independent copies from
+Ansible; the Zentty scripts are deferred in `TODO.md`.
+
 ## Normal updates
 
 The operating system stays on the pinned NixOS 26.05 input until the lock file
