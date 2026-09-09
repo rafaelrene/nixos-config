@@ -4,6 +4,7 @@
     ./helium
     ./zen
     ./neovim
+    ./tealdeer
     ./vicinae
   ];
   environment.systemPackages = with pkgs; [

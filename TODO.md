@@ -33,6 +33,9 @@ incrementally, then remove DMS in one deliberate change.
 
 ## Later
 
+- Migrate `zentty-project` and `zentty-subrepo` (alias `zsr`) from
+  `/data/code/ansible/roles/scripts/files/` once we have a replacement for their
+  Zentty pane/worklane integration. They require Zentty and are not installed here.
 - Support cloning and rebuilding from any checkout directory. Replace the
   hardcoded `/data/code/nixos-config` paths as part of that work; retain them
   until then.
