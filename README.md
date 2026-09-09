@@ -49,7 +49,7 @@ package wrapper.
 `themes/default.nix` selects `catppuccin.nix`, currently Mocha with a Mauve
 accent. To add a theme, supply the same palette, font, and application-style
 fields in another Nix file and select it there. GTK, Qt, the greeter, boot,
-Niri, DMS, Ghostty, Neovim, Vicinae, and Starship consume this selection.
+Niri, DMS, Ghostty, Neovim, Vicinae, Starship, and Git's Delta pager consume this selection.
 
 Application templates stay with their modules. Ghostty and Neovim keep editable
 checkout configuration and read generated theme settings from `/etc/xdg`.
@@ -83,6 +83,31 @@ All Nushell integrations use `source` to load their build-generated hooks.
 Rebuild after changing the settings
 or theme, then open a new Nushell session. Bash does not enable Starship.
 Othinus owns this configuration independently of Ansible.
+
+## Shell aliases and Git
+
+Nushell's `ls` runs `eza -la --icons=auto --group-directories-first`, showing
+hidden entries and long details. `gs` runs `git status`; `gf` runs `git fetch`.
+Both `v` and `vim` run `nvim`; `pn` runs `pnpm`.
+Rebuild and open a new Nushell session after changing aliases.
+
+Git configuration and global ignores live in
+`modules/development/git/`, linked into `~/.config/git/`. They are independent
+copies of the Ansible configuration. NixOS installs Delta for Git's pager and
+interactive diffs. Delta settings are generated from the central Catppuccin
+Mocha theme into a Nix store file linked at `~/.config/git/themes.gitconfig`.
+Rebuild after changing the central theme.
+
+Git retains the work identity, `master` as the initial branch, fetch pruning
+and all-remotes fetching, automatic upstream setup and annotated-tag pushing,
+rerere, rebase autostash, and submodule settings. The global ignore excludes
+`.claude/settings.local.json` in every repository.
+
+Git aliases: `undo` soft-resets the last commit; `rb` pulls from origin with
+rebase and autostash; `rbd` does that for develop; `s` creates and checks out a
+branch; `su`, `sui`, and `sup` update submodules, initialize them recursively,
+and update them from remotes recursively. `git c` discards unstaged changes to
+tracked files beneath the current directory.
 
 ## Normal updates
 

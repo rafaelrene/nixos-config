@@ -94,6 +94,29 @@ palette
     package = pkgs.catppuccin-plymouth.override { variant = flavor; };
   };
   ghostty = "Catppuccin Mocha";
+  delta = {
+    dark = true;
+    syntax-theme = "Catppuccin Mocha";
+    blame-palette = "#${colors.base} #${colors.mantle} #${colors.crust} #${colors.surface0} #${colors.surface1}";
+    commit-decoration-style = "box ul";
+    file-decoration-style = "#${colors.text}";
+    file-style = "#${colors.text}";
+    hunk-header-decoration-style = "box ul";
+    hunk-header-file-style = "bold";
+    hunk-header-line-number-style = "bold #${colors.subtext0}";
+    hunk-header-style = "file line-number syntax";
+    line-numbers-left-style = "#${colors.overlay0}";
+    line-numbers-minus-style = "bold #${colors.red}";
+    line-numbers-plus-style = "bold #${colors.green}";
+    line-numbers-right-style = "#${colors.overlay0}";
+    line-numbers-zero-style = "#${colors.overlay0}";
+    # Catppuccin Mocha blends: 25% accent for emphasis, 10% otherwise.
+    minus-emph-style = "bold syntax #53394c";
+    minus-style = "syntax #34293a";
+    plus-emph-style = "bold syntax #404f4a";
+    plus-style = "syntax #2c3239";
+    map-styles = "bold purple => syntax #494060, bold blue => syntax #384361, bold cyan => syntax #384d5d, bold yellow => syntax #544f4e";
+  };
   vicinae = "catppuccin-${flavor}";
   neovim = {
     plugin = "catppuccin/nvim";

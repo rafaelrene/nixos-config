@@ -1,3 +1,66 @@
+[include]
+  path = ~/.config/git/themes.gitconfig
+
 [user]
   name = René Rafael
   email = rene.rafael@groupsolver.com
+
+[init]
+  defaultBranch = master
+
+[core]
+  pager = delta
+  editor = nvim
+  whitespace = -trailing-space
+  autocrlf = false
+  eol = lf
+
+[interactive]
+  diffFilter = delta --color-only
+
+[color]
+  ui = auto
+
+[fetch]
+  recurseSubmodules = on-demand
+  prune = true
+  all = true
+
+[pull]
+  ff = true
+
+[merge]
+  conflictstyle = zdiff3
+
+[push]
+  default = simple
+  autosetupremote = true
+  followTags = true
+
+[rerere]
+  enabled = true
+  autoupdate = true
+
+[status]
+  submoduleSummary = true
+  showUntrackedFiles = all
+
+[rebase]
+  autostash = true
+
+[alias]
+  # reset
+  undo = reset --soft HEAD^
+
+  # pull
+  rb = pull --rebase --autostash origin
+  rbd = rb develop
+
+  # checkout
+  c = checkout -- .
+  s = checkout -b
+
+  # submodules
+  su = submodule update
+  sui = su --init --recursive
+  sup = su --remote --recursive
