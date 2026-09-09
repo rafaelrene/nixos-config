@@ -39,12 +39,6 @@ incrementally, then remove DMS in one deliberate change.
 - Support cloning and rebuilding from any checkout directory. Replace the
   hardcoded `/data/code/nixos-config` paths as part of that work; retain them
   until then.
-- Unify all package updates behind one explicit command. Move T3Code and the
-  agent tools into the system configuration, record their versions in this
-  repository, and remove their separate profiles and automatic update timers.
-  The command should refresh flake dependencies and T3Code's version and hashes,
-  then rebuild and switch the system. Packages should update only when this
-  command is run. Obtain explicit approval for the helper before implementing it.
 - Add Tailscale for T3Code access outside the trusted LAN.
 - Consider lowering the internal display to 60 Hz on battery.
 - Revisit dedicated coding workspace rules after the Niri workflow settles.

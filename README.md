@@ -129,14 +129,30 @@ Ansible; the Zentty scripts are deferred in `TODO.md`.
 
 ## Normal updates
 
-The operating system stays on the pinned NixOS 26.05 input until the lock file
-is updated deliberately:
+Run `nix-update-packages` from any directory to refresh the flake inputs in
+`/data/code/nixos-config`, then build and stage the latest T3Code nightly and
+restart T3Code immediately. The command replaces `t3-update-now` and stops if
+any command fails. T3Code's updater retains a usable generation if a nightly
+cannot be built.
+
+The operating system stays on its current packages until a separate rebuild
+and switch applies the updated pins:
 
 ```sh
-cd /data/code/nixos-config
-nix flake update
-sudo nixos-rebuild switch --flake .#othinus
+nix-update-packages
+sudo nixos-rebuild switch --flake path:/data/code/nixos-config#othinus
 ```
+
+Nushell provides three shortcuts:
+
+| Command | Action |
+| --- | --- |
+| `ns` | Rebuild and switch Othinus using `/data/code/nixos-config`. |
+| `nup` | Run `nix-update-packages`. |
+| `nups` | Update packages, then rebuild and switch only if the update succeeds. |
+
+Plain `nix flake update` still only refreshes flake inputs. T3Code's rolling
+version remains in its independent updater state, outside the root `flake.lock`.
 
 `nh os switch` uses this repository by default through `NH_FLAKE` and is a
 shorter equivalent.
@@ -150,8 +166,8 @@ and back in so applications inherit the Qt plugin paths and theme environment.
 
 T3Code checks the npm nightly tag every three hours, builds the official
 artifact with Nix, and stages it in its own Nix profile. The server restarts at
-04:00 to use the staged generation. Run `t3-update-now` to update and restart
-immediately.
+04:00 to use the staged generation. Manual `nix-update-packages` runs activate
+T3Code immediately instead of waiting until 04:00.
 
 Codex CLI, Claude Code, and OpenCode update daily from
 `numtide/llm-agents.nix`. Their wrappers automatically enter an allowed Devenv

@@ -30,3 +30,11 @@ alias gf = git fetch
 alias vim = nvim
 alias v = nvim
 alias pn = pnpm
+alias ns = sudo nixos-rebuild switch --flake "path:/data/code/nixos-config#othinus"
+alias nup = nix-update-packages
+
+# Update packages, then switch only after a successful update.
+def nups [] {
+  nup
+  ns
+}
