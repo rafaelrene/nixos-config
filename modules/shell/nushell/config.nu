@@ -21,6 +21,9 @@ source @zoxide-hook@
 source @devenv-hook@
 source @starship-hook@
 
+# Nushell may start without the PATH configured by /etc/profile.
+$env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local" "bin") | uniq)
+
 alias ls = eza -la --icons=auto --group-directories-first
 alias gs = git status
 alias gf = git fetch

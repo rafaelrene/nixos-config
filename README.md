@@ -113,6 +113,8 @@ tracked files beneath the current directory.
 
 Nix packages the scripts in `modules/shell/scripts/` with their runtime
 dependencies and links them into `/home/raf/.local/bin`, which is on PATH.
+Nushell explicitly adds this directory at startup, including when its parent
+process supplies a PATH without it. Open a new Nushell session after rebuilding.
 `git branches [branch]` selects a branch with fzf or checks out the
 given branch. `git delete-branches` (also `git db`) force-deletes local branches
 other than the current branch, preserving branches checked out in worktrees and
