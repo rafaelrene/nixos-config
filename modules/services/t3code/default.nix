@@ -190,10 +190,10 @@ in
                 systemd
               ]
             )
-          }:/run/current-system/sw/bin";
-          # T3's PATH probe emits POSIX shell syntax. Keep Nushell interactive,
-          # but give this service a compatible shell for the probe.
-          SHELL = "${pkgs.bashInteractive}/bin/bash";
+          }:/run/current-system/sw/bin:/home/raf/.local/bin";
+          # SHELL also selects the integrated terminal. Supply PATH above because
+          # T3's POSIX login-shell probe can fail with Nushell.
+          SHELL = lib.getExe pkgs.nushell;
           T3CODE_HOME = baseDir;
           T3CODE_TELEMETRY_ENABLED = "false";
           CODEX_HOME = "/home/raf/.local/share/codex";

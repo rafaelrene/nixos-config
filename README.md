@@ -253,6 +253,13 @@ boot, restarts after any unexpected exit, and retries without a rate limit.
 Running bare `t3` shows its service status; `t3 start` and `t3 serve` are
 blocked to prevent a second server from replacing its discovery state.
 
+T3Code's integrated terminals use Nushell, including its aliases and startup
+hooks. The service PATH includes `/home/raf/.local/bin` so Git helpers such as
+`git db` are available to terminals and child processes. T3's POSIX login-shell
+PATH probe can log a warning with Nushell; the service supplies PATH explicitly.
+After rebuilding, run `systemctl --user restart t3code.service` and open a new
+terminal to load the changed environment.
+
 The Mac desktop owns its embedded Chromium preview even when the environment is
 remote. Preview captures stay local to that desktop, while ordinary screenshot
 attachments are uploaded to the Othinus environment with the message. The web
