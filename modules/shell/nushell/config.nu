@@ -9,6 +9,7 @@ $env.XDG_STATE_HOME = ($env.HOME | path join ".local" "state")
 $env.CODEX_HOME = ($env.XDG_DATA_HOME | path join "codex")
 $env.CLAUDE_CONFIG_DIR = ($env.XDG_DATA_HOME | path join "claude")
 $env.T3CODE_HOME = ($env.XDG_DATA_HOME | path join "t3code")
+$env.STARSHIP_CONFIG = ($env.XDG_CONFIG_HOME | path join "starship" "starship.toml")
 
 # `cdb` is the direct built-in escape hatch when zoxide's `cd` behavior is not
 # wanted for one directory change.
@@ -18,5 +19,6 @@ def --env cdb [path: path = "."] {
 
 source @zoxide-hook@
 source @devenv-hook@
+source @starship-hook@
 
 alias ls = eza --icons=auto --group-directories-first

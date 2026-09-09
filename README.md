@@ -49,7 +49,7 @@ package wrapper.
 `themes/default.nix` selects `catppuccin.nix`, currently Mocha with a Mauve
 accent. To add a theme, supply the same palette, font, and application-style
 fields in another Nix file and select it there. GTK, Qt, the greeter, boot,
-Niri, DMS, Ghostty, Neovim, and Vicinae consume this selection.
+Niri, DMS, Ghostty, Neovim, Vicinae, and Starship consume this selection.
 
 Application templates stay with their modules. Ghostty and Neovim keep editable
 checkout configuration and read generated theme settings from `/etc/xdg`.
@@ -68,6 +68,18 @@ terminal applications can read and write the clipboard. Super+Enter opens Ghostt
 After changing `themes/default.nix`, rebuild the system to regenerate
 `/etc/xdg/ghostty/theme`, then reload Ghostty's configuration or restart it.
 The selected theme supplies both the terminal colors and monospace font family.
+
+## Shell prompt
+
+Nushell uses Starship with prompt settings in
+`modules/shell/starship/starship.toml`. Nix combines these settings with the
+shared theme palette into a Nix store file, linked at
+`~/.config/starship/starship.toml` by systemd-tmpfiles, just like Nushell's
+generated configuration. Nushell sets `STARSHIP_CONFIG` to this active file.
+All Nushell integrations use `source` to load their build-generated hooks.
+Rebuild after changing the settings
+or theme, then open a new Nushell session. Bash does not enable Starship.
+Othinus owns this configuration independently of Ansible.
 
 ## Normal updates
 
