@@ -59,6 +59,12 @@ DMS keeps its writable settings and receives the selected palette through its
 linked `theme.json`; font settings are initial defaults and existing UI overrides
 remain in effect.
 
+The DMS top bar hides until the pointer reaches the top edge, leaving its space
+available to windows. It appears over windows and stays visible while a bar menu
+is open, then hides after the existing 250 ms delay. A DMS startup hook enables
+auto-hide for the Main Bar without replacing other settings. Disabling auto-hide
+in the UI lasts until DMS next starts.
+
 Ghostty uses 14.5pt text and an 80% opaque background. Niri blurs the wallpaper
 behind Ghostty using two blur passes at offset 1, configured globally in Niri.
 Its focus ring draws only around the window so it does not cover the wallpaper.
