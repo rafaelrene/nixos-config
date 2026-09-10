@@ -7,7 +7,7 @@ Declarative configuration for the Othinus development machine.
 - `hosts/othinus/`: machine hardware, disks, accounts, and explicit module imports.
 - `modules/applications/`: Ghostty, Helium, Zen, Neovim, Vicinae, and desktop apps.
 - `modules/desktop/`: Niri, DMS, shared desktop services, and GTK/Qt theming.
-- `modules/services/`: SSH, T3Code, and local snapshots.
+- `modules/services/`: SSH, Tailscale, T3Code, and local snapshots.
 - `modules/development/`: agent tools, Git, and development runtimes.
 - `modules/shell/`: Nushell and shell integration.
 - `modules/system/`: boot, networking, Nix, and shared system settings.
@@ -243,10 +243,49 @@ NixOS manages the SSH agent without Home Manager. See
 [the SSH module documentation](./modules/services/ssh/README.md) for storage and
 recovery details.
 
+## Tailscale
+
+NixOS runs Tailscale as a system service, starting at boot and retaining its
+login in `/var/lib/tailscale`. It reconnects after sleep; the existing sleep
+policy is unchanged, and the machine is unreachable while suspended.
+
+After the first rebuild and switch, enroll Othinus in your existing tailnet:
+
+```sh
+sudo tailscale up
+```
+
+Open the printed login URL and complete browser authentication. In the Tailscale
+admin console, disable key expiry for Othinus so it does not periodically need
+another login. These are one-time setup steps, not requirements for later
+rebuilds or boots. No enrollment key belongs in this repository or the Nix store.
+
+Tailscale accepts the tailnet's DNS settings, including MagicDNS when enabled.
+Othinus joins as a regular device, with no exit node, subnet routing, or
+Tailscale SSH. OpenSSH keeps its existing key authentication.
+
+The firewall permits TCP ports 22 and 3773 on `tailscale0` and UDP port 41641
+for the encrypted tunnel. Existing LAN rules remain unchanged. Tailnet access
+policies must also permit connections to these services.
+
+Check the connection locally:
+
+```sh
+systemctl status tailscaled
+tailscale status
+tailscale ip -4
+```
+
+From another tailnet device, use `ssh raf@othinus` and
+`http://othinus:3773` when MagicDNS is enabled, or substitute Othinus's full
+MagicDNS name or Tailscale IP. Verify both services from outside the LAN, confirm
+the existing LAN addresses still work, and check reconnection after reboot and
+sleep/resume.
+
 ## T3Code access
 
-T3Code listens on port 3773 and the firewall accepts it only from
-`192.168.86.0/24`:
+T3Code listens on port 3773 and the firewall accepts it from
+`192.168.86.0/24` and the Tailscale interface. Existing LAN addresses:
 
 ```text
 http://othinus.local:3773
@@ -257,7 +296,7 @@ The server stores its data in `/home/raf/.local/share/t3code`. Usage, token,
 cost, and provider resource tracking remain enabled. Only PostHog analytics are
 disabled.
 
-Create a one-time pairing URL for the Mac desktop app or another LAN client:
+Create a one-time pairing URL for the Mac desktop app or another client:
 
 ```sh
 ssh raf@192.168.86.136
