@@ -69,6 +69,23 @@ After changing `themes/default.nix`, rebuild the system to regenerate
 `/etc/xdg/ghostty/theme`, then reload Ghostty's configuration or restart it.
 The selected theme supplies both the terminal colors and monospace font family.
 
+## Wallpapers
+
+The repository's `wallpapers/` directory contains the wallpaper images and a
+source catalogue. Nix installs the collection in the store and exposes it at
+`~/Pictures/Wallpapers` during the normal system rebuild. In DMS's wallpaper
+picker, browse that directory and select an image. DMS keeps the selection in
+its writable settings, so rebuilds do not reset it.
+
+To add wallpapers, download the full-resolution originals into
+`/data/code/nixos-config/wallpapers/`, use descriptive filenames with the source
+ID, and record their sources in `wallpapers/README.md`. Keep every original.
+If either dimension is below Othinus's 2560 × 1440 display, also add a version
+enlarged proportionally to cover 2560 × 1440 and cropped to that size, with
+`-2560x1440` before its extension. Include new files in Git so flake builds see
+them, then rebuild. Image processing happens when adding an image, not at build
+time.
+
 ## Shell prompt
 
 The prompt shows directory and tool information on the first line and
