@@ -39,7 +39,6 @@ incrementally, then remove DMS in one deliberate change.
 - Support cloning and rebuilding from any checkout directory. Replace the
   hardcoded `/data/code/nixos-config` paths as part of that work; retain them
   until then.
-- Add Tailscale for T3Code access outside the trusted LAN.
 - Consider lowering the internal display to 60 Hz on battery.
 - Revisit dedicated coding workspace rules after the Niri workflow settles.
 - Revisit the global Catppuccin accent. It is currently Mocha Mauve.
