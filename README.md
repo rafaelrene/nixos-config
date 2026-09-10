@@ -72,10 +72,16 @@ The selected theme supplies both the terminal colors and monospace font family.
 ## Wallpapers
 
 The repository's `wallpapers/` directory contains the wallpaper images and a
-source catalogue. Nix installs the collection in the store and exposes it at
+source catalogue. Nix selects one image per wallpaper and exposes the collection at
 `~/Pictures/Wallpapers` during the normal system rebuild. In DMS's wallpaper
 picker, browse that directory and select an image. DMS keeps the selection in
 its writable settings, so rebuilds do not reset it.
+
+Selection happens at rebuild time using `displayResolution` in
+`modules/desktop/niri/default.nix`, which also sets Niri's display mode. Nix
+prefers a matching `-2560x1440` variant with the same extension and otherwise
+uses the original. Other resolution variants and the source catalogue stay out
+of the exposed collection. DMS therefore sees each wallpaper once during rotation.
 
 To add wallpapers, download the full-resolution originals into
 `/data/code/nixos-config/wallpapers/`, use descriptive filenames with the source
@@ -84,7 +90,9 @@ If either dimension is below Othinus's 2560 × 1440 display, also add a version
 enlarged proportionally to cover 2560 × 1440 and cropped to that size, with
 `-2560x1440` before its extension. Include new files in Git so flake builds see
 them, then rebuild. Image processing happens when adding an image, not at build
-time.
+time. Image filenames use lowercase `.jpg`, `.jpeg`, `.png`, or `.webp`
+extensions; reserve a trailing `-WIDTHxHEIGHT` for variants. Always make new
+variants from the original, and keep the original in the repository.
 
 ## Shell prompt
 
