@@ -18,7 +18,7 @@ input {
 output "eDP-1" {
     // Omitting the refresh rate selects the highest 2560x1440 mode, 165 Hz on
     // Othinus. VRR remains disabled because it is not enabled here.
-    mode "2560x1440"
+    mode "@displayResolution@"
     scale 1.5
 }
 

@@ -1,8 +1,18 @@
 # Wallpapers
 
 Original downloads are preserved unchanged. Filenames retain the Wallhaven ID
-to connect each image to its source. Nix exposes this directory at
-`~/Pictures/Wallpapers`; choose the active image through DMS.
+to connect each image to its source. Nix exposes one selected image per wallpaper
+at `~/Pictures/Wallpapers`; choose the active image or rotation through DMS.
+
+At rebuild time, Nix prefers a `-WIDTHxHEIGHT` variant matching the display
+resolution declared in `modules/desktop/niri/default.nix`, with the same
+extension as the original. Otherwise it uses the original. Other variants and
+this catalogue are excluded. On Othinus, the collection contains seven images:
+the `-2560x1440` Akame variant and the six other originals.
+
+Use lowercase `.jpg`, `.jpeg`, `.png`, or `.webp` extensions and reserve the
+trailing `-WIDTHxHEIGHT` suffix for variants. Generate each new resolution from
+the original, keeping it unchanged as a reference.
 
 | Original | Dimensions | Source |
 | --- | --- | --- |
