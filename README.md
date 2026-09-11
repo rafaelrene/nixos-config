@@ -119,6 +119,12 @@ Othinus owns this configuration independently of Ansible.
 
 Nushell's `ls` runs `eza -la --icons=auto --group-directories-first`, showing
 hidden entries and long details. `gs` runs `git status`; `gf` runs `git fetch`.
+`gl` shows a compact colored Git history graph with short hashes, branch/tag
+labels, subjects, relative ages, and authors. `gll` shows full hashes, labels,
+dates (`YYYY-MM-DD HH:MM`), authors, and complete commit messages without a graph.
+Both show the current branch's history by default and accept Git log arguments,
+such as `gl --all` or `gll -20`. Colors are automatic; both use the existing Git
+pager.
 Both `v` and `vim` run `nvim`; `pn` runs `pnpm`.
 Rebuild and open a new Nushell session after changing aliases.
 
