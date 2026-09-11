@@ -333,6 +333,12 @@ The server stores its data in `/home/raf/.local/share/t3code`. Usage, token,
 cost, and provider resource tracking remain enabled. Only PostHog analytics are
 disabled.
 
+T3Code's provider settings explicitly point to the Codex and Claude data
+directories under `/home/raf/.local/share`. Its usage scanner does not use
+`CODEX_HOME` or `CLAUDE_CONFIG_DIR`; without these settings it scans empty default
+directories and reports zero usage. Before each server start, systemd merges
+the declared provider paths into the saved settings, preserving other preferences.
+
 Create a one-time pairing URL for the Mac desktop app or another client:
 
 ```sh
