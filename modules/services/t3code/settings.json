@@ -1,3 +1,11 @@
 {
-  "continueThreadsAfterServerUpdate": true
+  "continueThreadsAfterServerUpdate": true,
+  "providers": {
+    "codex": {
+      "homePath": "/home/raf/.local/share/codex"
+    },
+    "claudeAgent": {
+      "homePath": "/home/raf/.local/share/claude"
+    }
+  }
 }

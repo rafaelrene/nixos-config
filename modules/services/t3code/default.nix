@@ -1,6 +1,7 @@
 {
   lib,
   pkgs,
+  utils,
   ...
 }:
 
@@ -189,6 +190,15 @@ in
           CLAUDE_CONFIG_DIR = "/home/raf/.local/share/claude";
         };
         serviceConfig = {
+          # The usage scanner reads provider settings, not CODEX_HOME or
+          # CLAUDE_CONFIG_DIR. Merge the paths into existing mutable settings.
+          ExecStartPre = utils.escapeSystemdExecArgs [
+            (lib.getExe pkgs.yq-go)
+            "--inplace"
+            "--output-format=json"
+            ".providers *= load(\"${./settings.json}\").providers"
+            "${baseDir}/userdata/settings.json"
+          ];
           ExecStart = lib.getExe runT3Code;
           Restart = "always";
           RestartSec = 3;
