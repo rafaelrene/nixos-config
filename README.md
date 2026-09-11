@@ -128,6 +128,11 @@ pager.
 Both `v` and `vim` run `nvim`; `pn` runs `pnpm`.
 Rebuild and open a new Nushell session after changing aliases.
 
+Run `gf` to fetch, then `gp` to fast-forward to the cached upstream with
+autostash. `gp` never fetches or rewrites commits; it stops if histories diverge
+or no upstream is configured. Git restores tracked edits afterward, possibly
+with conflicts; untracked files stay in place and staging may not be preserved.
+
 Git configuration and global ignores live in
 `modules/development/git/`, linked into `~/.config/git/`. They are independent
 copies of the Ansible configuration. NixOS installs Delta for Git's pager and
