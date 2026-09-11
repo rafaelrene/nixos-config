@@ -27,6 +27,8 @@ $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local" "bin") | uniq)
 alias ls = eza -la --icons=auto --group-directories-first
 alias gs = git status
 alias gf = git fetch
+alias gl = git log --graph --color=auto --pretty=tformat:'%C(yellow)%h%C(reset) %C(green)%d%C(reset) %s %C(dim white)(%ar) <%an>%C(reset)'
+alias gll = git log --color=auto --date=format:'%Y-%m-%d %H:%M' --pretty=tformat:'%C(yellow)%H%C(reset) %C(green)%D%C(reset)%n%C(dim white)%ad  %an%C(reset)%n%n    %C(bold)%s%C(reset)%n%n%w(0,4,4)%b%w(0,0,0)%n'
 alias vim = nvim
 alias v = nvim
 alias pn = pnpm
