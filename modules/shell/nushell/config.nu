@@ -1,7 +1,6 @@
 $env.config.show_banner = false
 $env.EDITOR = "nvim"
 $env.VISUAL = "nvim"
-$env.NH_FLAKE = "/data/code/nixos-config"
 $env.XDG_CONFIG_HOME = ($env.HOME | path join ".config")
 $env.XDG_CACHE_HOME = ($env.HOME | path join ".cache")
 $env.XDG_DATA_HOME = ($env.HOME | path join ".local" "share")

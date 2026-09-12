@@ -36,15 +36,17 @@ incrementally, then remove DMS in one deliberate change.
 - Migrate `zentty-project` and `zentty-subrepo` (alias `zsr`) from
   `/data/code/ansible/roles/scripts/files/` once we have a replacement for their
   Zentty pane/worklane integration. They require Zentty and are not installed here.
-- Support cloning and rebuilding from any checkout directory. Replace the
-  hardcoded `/data/code/nixos-config` paths as part of that work; retain them
-  until then.
 - Consider lowering the internal display to 60 Hz on battery.
 - Revisit dedicated coding workspace rules after the Niri workflow settles.
 - Revisit the global Catppuccin accent. It is currently Mocha Mauve.
 - Revisit Helium as the default browser if work and personal usage changes.
-- Remove `nh` if it does not improve the update workflow.
 - Add optional forwarding of Othinus agent notifications to the Mac; keep notifications local to Othinus for now.
 - Install and authenticate the Bitbucket CLI expected by the resolve-pr-comments skill (bkt); until then, the skill reports the missing prerequisite for Bitbucket work.
-- Fix `nvim` showing bunch of errors on launch
-- T3 Server that's running can not be configured. I can't connect to t3connect or use any connection settings
+
+## Done
+
+- [x] Remove `nh`; use `ns`, `nup`, and `nups` for rebuilds and updates.
+- [x] Settle the rebuild and update workflow with `ns`, `nup`, and `nups`;
+  retain the canonical `/data/code/nixos-config` checkout path.
+- [x] Fix Neovim startup errors.
+- [x] Fix T3 server configuration and T3 Connect access.

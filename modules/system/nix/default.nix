@@ -47,11 +47,7 @@ in
   };
   nixpkgs.config.allowUnfree = true;
 
-  environment.variables.NH_FLAKE = "/data/code/nixos-config";
-  environment.systemPackages = [
-    pkgs.nh
-    updatePackages
-  ];
+  environment.systemPackages = [ updatePackages ];
   assertions = [
     {
       assertion = config.nix.settings.trusted-users == [ "root" ];
