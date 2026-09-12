@@ -391,3 +391,19 @@ the relevant `--profile` can restore their preceding generation.
 
 See [`TODO.md`](./TODO.md) for deferred work and [`adrs`](./adrs) for decisions
 that should not be reopened without a changed constraint.
+
+## Web apps
+
+`T3Code (Othinus) Webapp` opens `http://othinus.local:3773` in a dedicated
+Helium window using the normal profile's logins and cookies. Search
+`Webapp` in Vicinae to find all web app launchers.
+
+To add another, invoke the project-local
+[add-webapp skill](.agents/skills/add-webapp/SKILL.md) with its URL and app name:
+
+- Codex: `$add-webapp https://example.com "Example"`
+- Claude Code: `/add-webapp https://example.com "Example"`
+- OpenCode: `Use the add-webapp skill with URL https://example.com and app name Example.`
+
+The skill prepares and checks the Nix changes. Apply them through the
+existing NixOS rebuild workflow when ready.
