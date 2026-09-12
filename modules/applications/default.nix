@@ -6,6 +6,7 @@
     ./neovim
     ./tealdeer
     ./vicinae
+    ./webapps
   ];
   environment.systemPackages = with pkgs; [
     ffmpegthumbnailer
