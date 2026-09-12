@@ -196,9 +196,6 @@ Nushell provides three shortcuts:
 Plain `nix flake update` still only refreshes flake inputs. T3Code's rolling
 version remains in its independent updater state, outside the root `flake.lock`.
 
-`nh os switch` uses this repository by default through `NH_FLAKE` and is a
-shorter equivalent.
-
 Dark mode is the machine-wide default through dconf and the desktop settings
 portal. GTK and Qt use Catppuccin Mocha; Qt applications such as Dolphin use
 Kvantum with KDE integration and the matching color scheme. Helium launches
