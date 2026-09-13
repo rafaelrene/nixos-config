@@ -11,7 +11,19 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [tui.model_availability_nux]
-gpt-6-astra = 1
+gpt-6-astra = 3
 
 [features]
 hooks = true
+
+[hooks.state]
+
+[hooks.state."/home/raf/.local/share/codex/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:84de0ac7190a2ed6ac1764fb685860ba627efb53683b8ebccecb2cb1a269f2cc"
+enabled = true
+
+[hooks.state."/home/raf/.local/share/codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:5411271ca43fd4fe8ffaaf60e5eba3863e26ee219f47144185477f51cf1b7628"
+
+[hooks.state."/home/raf/.local/share/codex/hooks.json:interrupt:0:0"]
+trusted_hash = "sha256:91f5a56f13dbb034e4fcf4289a63ff03fe70b0bd782d38ac0ea643060b352caf"
