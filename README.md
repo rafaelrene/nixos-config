@@ -254,7 +254,7 @@ user journal under `othinus-agent-notify`, even without a desktop service.
 Journal publication times out after one second; local popup delivery after three.
 Notification delivery never answers an agent’s permission request.
 
-- Codex: completion, interruption, and permission requests.
+- Codex: completion and permission requests. Interrupting a turn stays silent.
 - Claude: completion, API errors, and permission/idle/elicitation notifications.
 - OpenCode: idle, errors, permissions, and questions; subagent events are ignored.
 
@@ -263,7 +263,7 @@ Do Not Disturb settings and `busctl --user --list` for
 `org.freedesktop.Notifications`. Inspect link activation with
 `journalctl --user -u nixos-activation.service -b` and verify targets with
 `readlink -f ~/.local/bin/agent-notify`. Restart agents after hook configuration
-changes. On first launch, Codex asks you to review the three new notification hooks;
+changes. On first launch, Codex asks you to review the two notification hooks;
 trust them to enable delivery. Use `/hooks` to inspect them later.
 
 The Mac Ansible configuration in `/data/code/ansible/roles/agents` installs
