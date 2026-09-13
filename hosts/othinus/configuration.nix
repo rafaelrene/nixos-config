@@ -34,6 +34,7 @@
     };
   };
   console.keyMap = "us";
+  hardware.keyboard.zsa.enable = true;
 
   users = {
     mutableUsers = true;

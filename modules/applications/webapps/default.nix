@@ -1,6 +1,17 @@
 { lib, pkgs, ... }:
 let
   apps = {
+    oryx-zsa-voyager-keyboard-config = {
+      name = "Oryx (ZSA Voyager Keyboard Config)";
+      url = "https://configure.zsa.io/voyager";
+      keywords = [
+        "oryx"
+        "zsa"
+        "voyager"
+        "keyboard"
+        "config"
+      ];
+    };
     t3code-othinus = {
       name = "T3Code (Othinus)";
       url = "http://othinus.local:3773";

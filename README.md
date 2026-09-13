@@ -428,6 +428,13 @@ that should not be reopened without a changed constraint.
 Helium window using the normal profile's logins and cookies. Search
 `Webapp` in Vicinae to find all web app launchers.
 
+`Oryx (ZSA Voyager Keyboard Config) Webapp` opens
+`https://configure.zsa.io/voyager` in Helium and uses the browser icon.
+NixOS enables ZSA's udev rules for Voyager flashing and live training in Oryx.
+After applying the configuration, reconnect the Voyager if Oryx cannot access
+it, then select the keyboard in Oryx's connection prompt. Keymapp and a
+`plugdev` group are not required.
+
 To add another, invoke the project-local
 [add-webapp skill](.agents/skills/add-webapp/SKILL.md) with its URL and app name:
 
