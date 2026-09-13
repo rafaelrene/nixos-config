@@ -9,10 +9,10 @@
 - Revisit dedicated coding workspace rules after the Niri workflow settles.
 - Revisit the global Catppuccin accent. It is currently Mocha Mauve.
 - Revisit Helium as the default browser if work and personal usage changes.
-- Verify Mac notification forwarding after applying both configurations: check
-  noninteractive `ssh othinus`, T3Code completion/permission popups on both
-  desktops, and reconnect/sleep behavior. Implementation is ready in NixOS and
-  `/data/code/ansible`; live Mac verification is pending.
+- Finish Mac notification verification. Basic forwarding works. After applying
+  the Codex hook filter, verify that fresh-conversation thread/branch naming stays
+  silent, replies notify once, and questions/permission requests notify on both
+  desktops. Reconnect and sleep behavior still need verification.
 - Install and authenticate the Bitbucket CLI expected by the resolve-pr-comments skill (bkt); until then, the skill reports the missing prerequisite for Bitbucket work.
 
 ## Done
@@ -24,6 +24,8 @@
 - [x] Fix T3 server configuration and T3 Connect access.
 
 ## Replace DankMaterialShell with our own Quickshell
+
+Status: incomplete. Priority: low. Handle after the other TODO items.
 
 Keep DMS until the custom shell covers every feature we want. Replace features
 incrementally, then remove DMS in one deliberate change.
