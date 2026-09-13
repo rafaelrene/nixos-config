@@ -10,16 +10,6 @@
         ]
       }
     ],
-    "Interrupt": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/raf/.local/share/codex/hooks/notification.sh"
-          }
-        ]
-      }
-    ],
     "PermissionRequest": [
       {
         "hooks": [
