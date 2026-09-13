@@ -254,7 +254,12 @@ user journal under `othinus-agent-notify`, even without a desktop service.
 Journal publication times out after one second; local popup delivery after three.
 Notification delivery never answers an agent’s permission request.
 
-- Codex: completion and permission requests. Interrupting a turn stays silent.
+- Codex: conversation replies, explicit question prompts, and permission requests.
+  Interrupting a turn stays silent. Hooks require a nonempty transcript path,
+  so ephemeral jobs such as T3Code's thread and branch naming stay silent.
+  Both `request_user_input` and `request_user_input_async` notify before the
+  question tool runs. Questions written in a final reply use its completion
+  notification. Other automation that persists a conversation still qualifies.
 - Claude: completion, API errors, and permission/idle/elicitation notifications.
 - OpenCode: idle, errors, permissions, and questions; subagent events are ignored.
 
@@ -263,8 +268,8 @@ Do Not Disturb settings and `busctl --user --list` for
 `org.freedesktop.Notifications`. Inspect link activation with
 `journalctl --user -u nixos-activation.service -b` and verify targets with
 `readlink -f ~/.local/bin/agent-notify`. Restart agents after hook configuration
-changes. On first launch, Codex asks you to review the two notification hooks;
-trust them to enable delivery. Use `/hooks` to inspect them later.
+changes. On first launch or after hook changes, Codex may ask you to review the
+notification hooks; trust them to enable delivery. Use `/hooks` to inspect them later.
 
 The Mac Ansible configuration in `/data/code/ansible/roles/agents` installs
 `~/.local/bin/othinus-agent-notify-listen` and the user LaunchAgent

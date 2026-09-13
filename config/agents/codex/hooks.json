@@ -10,6 +10,17 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "^request_user_input(_async)?$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/raf/.local/share/codex/hooks/notification.sh"
+          }
+        ]
+      }
+    ],
     "PermissionRequest": [
       {
         "hooks": [
