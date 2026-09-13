@@ -249,8 +249,10 @@ independently of the Mac and has no Ansible dependency for agent configuration.
 
 `~/.local/bin/agent-notify` sends “Agent needs attention” through the logged-in
 user’s D-Bus notification service. It works from local terminals and SSH while
-the Othinus desktop is running. Without a desktop service it exits quietly;
-notification delivery never answers an agent’s permission request.
+the Othinus desktop is running. It also writes a fixed `attention` event to the
+user journal under `othinus-agent-notify`, even without a desktop service.
+Journal publication times out after one second; local popup delivery after three.
+Notification delivery never answers an agent’s permission request.
 
 - Codex: completion, interruption, and permission requests.
 - Claude: completion, API errors, and permission/idle/elicitation notifications.
@@ -262,8 +264,39 @@ Do Not Disturb settings and `busctl --user --list` for
 `journalctl --user -u nixos-activation.service -b` and verify targets with
 `readlink -f ~/.local/bin/agent-notify`. Restart agents after hook configuration
 changes. On first launch, Codex asks you to review the three new notification hooks;
-trust them to enable delivery. Use `/hooks` to inspect them later. Mac forwarding
-and Bitbucket CLI setup are deferred in `TODO.md`.
+trust them to enable delivery. Use `/hooks` to inspect them later.
+
+The Mac Ansible configuration in `/data/code/ansible/roles/agents` installs
+`~/.local/bin/othinus-agent-notify-listen` and the user LaunchAgent
+`dev.rafr.othinus-agent-notify`. Apply that checkout on the Mac with
+`bash ./run.sh`. The listener connects through `ssh othinus`; SSH configuration
+owns the host, user, credentials, and routing. The alias must authenticate
+noninteractively as the user running the agents. Test it on the Mac with:
+
+```sh
+ssh -o BatchMode=yes othinus '/run/current-system/sw/bin/journalctl --user --lines=0 --no-pager'
+```
+
+Every new `attention` event invokes the Mac's existing notifier, even with
+T3Code closed. The Mac must be logged in and connected. Reconnection starts at
+the live journal end and skips disconnected-period events. An event already
+buffered in a surviving SSH connection can arrive late after sleep. There are
+no project labels or click-through actions; desktop notification permissions
+and Do Not Disturb still apply.
+
+Inspect the stream on Othinus with:
+
+```sh
+journalctl --user --follow --lines=0 --output=cat --quiet --identifier=othinus-agent-notify
+```
+
+On the Mac, inspect the listener with
+`launchctl print gui/$(id -u)/dev.rafr.othinus-agent-notify`. Run
+`~/.local/bin/othinus-agent-notify-listen` in a terminal to see SSH errors.
+Connection attempts time out after ten seconds; SSH detects an unresponsive
+connection after approximately 45 seconds while awake. LaunchAgent restarts
+are throttled to at most once per 30 seconds. The Mac README documents live
+verification and how to stop forwarding.
 
 ## SSH identities
 
