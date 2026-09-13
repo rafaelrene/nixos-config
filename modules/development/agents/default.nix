@@ -114,7 +114,9 @@ in
     CLAUDE_CONFIG_DIR = "$HOME/.local/share/claude";
   };
   environment.systemPackages = [
+    pkgs.coreutils
     pkgs.libnotify
+    pkgs.systemd
     (mkAgentWrapper "claude")
     (mkAgentWrapper "codex")
     (mkAgentWrapper "opencode")

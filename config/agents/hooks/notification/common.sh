@@ -1,7 +1,10 @@
 #!/bin/sh
 
-# SSH sessions share the logged-in user's notification service. No desktop
-# means there is nothing to notify; never hold up an agent waiting for one.
+# Publish independently of the desktop; never wait for a Mac receiver.
+printf 'attention\n' | timeout 1 systemd-cat \
+  --identifier=othinus-agent-notify --priority=info >/dev/null 2>&1 || true
+
+# SSH sessions share the logged-in user's notification service.
 runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 [ -S "$runtime_dir/bus" ] || exit 0
 export DBUS_SESSION_BUS_ADDRESS="unix:path=$runtime_dir/bus"
