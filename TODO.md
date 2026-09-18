@@ -14,7 +14,8 @@
 ## Done
 
 - [x] Keep Catppuccin Mocha Mauve and connect supported application themes to
-  the central palette, including T3Code and Dolphin.
+  the central palette, including T3Code and Dolphin. Native T3Code uses an
+  imported custom theme; manual reimport after palette changes is accepted.
 - [x] Review dedicated coding workspace rules in Niri; no additional rules needed
   for now.
 - [x] Lower the internal display to 60 Hz on battery and restore 165 Hz on AC.
