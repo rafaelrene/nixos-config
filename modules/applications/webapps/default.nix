@@ -12,17 +12,7 @@ let
         "config"
       ];
     };
-    t3code-othinus = {
-      name = "T3Code (Othinus)";
-      url = "http://othinus.local:3773";
-      icon = ./icons/t3code.png;
-      keywords = [
-        "t3"
-        "t3code"
-        "othinus"
-        "coding"
-      ];
-    };
+
   };
 
   # Desktop Exec quoting has different escape rules from shell quoting.

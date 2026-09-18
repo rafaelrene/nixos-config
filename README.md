@@ -214,14 +214,13 @@ environment when the project contains `devenv.nix` or `devenv.yaml`.
 
 ## Shared agent configuration
 
-Codex, Claude Code, and OpenCode share instructions, skills, and desktop
-notifications from `config/agents/`. NixOS links these files directly into:
+Codex, Claude Code, and OpenCode share instructions and skills from `config/agents/`. NixOS links these files directly into:
 
 - Codex: `~/.local/share/codex` (`CODEX_HOME`)
 - Claude: `~/.local/share/claude` (`CLAUDE_CONFIG_DIR`)
 - OpenCode: `~/.config/opencode`
 
-Editing a linked skill, hook, or setting changes the repository file immediately.
+Editing a linked skill or setting changes the repository file immediately.
 Restart the agent when it needs to reload configuration. Add or remove skill
 directories under `config/agents/skills/`, then rebuild to reconcile their links.
 Built-in skills, separately installed skills, credentials, sessions, databases,
@@ -247,61 +246,18 @@ independently of the Mac and has no Ansible dependency for agent configuration.
 
 ### Agent notifications
 
-`~/.local/bin/agent-notify` sends “Agent needs attention” through the logged-in
-user’s D-Bus notification service. It works from local terminals and SSH while
-the Othinus desktop is running. It also writes a fixed `attention` event to the
-user journal under `othinus-agent-notify`, even without a desktop service.
-Journal publication times out after one second; local popup delivery after three.
-Notification delivery never answers an agent’s permission request.
+T3Code handles agent notifications on each connected device. In Settings,
+choose **Thread notifications → Notifications with sound** and allow browser
+or system notification permission. T3Code must remain open. This setting is
+stored on the client, not in the server's `settings.json`.
 
-- Codex: conversation replies, explicit question prompts, and permission requests.
-  Interrupting a turn stays silent. Hooks require a nonempty transcript path,
-  so ephemeral jobs such as T3Code's thread and branch naming stay silent.
-  Both `request_user_input` and `request_user_input_async` notify before the
-  question tool runs. Questions written in a final reply use its completion
-  notification. Other automation that persists a conversation still qualifies.
-- Claude: completion, API errors, and permission/idle/elicitation notifications.
-- OpenCode: idle, errors, permissions, and questions; subagent events are ignored.
+Use the desktop app or a secure browser origin. On Othinus, `http://localhost:3773`
+is supported; `http://othinus.local:3773` is not a secure origin. For remote
+browser access, use T3 Connect over HTTPS.
 
-Test delivery with `~/.local/bin/agent-notify`. If no popup appears, check desktop
-Do Not Disturb settings and `busctl --user --list` for
-`org.freedesktop.Notifications`. Inspect link activation with
-`journalctl --user -u nixos-activation.service -b` and verify targets with
-`readlink -f ~/.local/bin/agent-notify`. Restart agents after hook configuration
-changes. On first launch or after hook changes, Codex may ask you to review the
-notification hooks; trust them to enable delivery. Use `/hooks` to inspect them later.
-
-The Mac Ansible configuration in `/data/code/ansible/roles/agents` installs
-`~/.local/bin/othinus-agent-notify-listen` and the user LaunchAgent
-`dev.rafr.othinus-agent-notify`. Apply that checkout on the Mac with
-`bash ./run.sh`. The listener connects through `ssh othinus`; SSH configuration
-owns the host, user, credentials, and routing. The alias must authenticate
-noninteractively as the user running the agents. Test it on the Mac with:
-
-```sh
-ssh -o BatchMode=yes othinus '/run/current-system/sw/bin/journalctl --user --lines=0 --no-pager'
-```
-
-Every new `attention` event invokes the Mac's existing notifier, even with
-T3Code closed. The Mac must be logged in and connected. Reconnection starts at
-the live journal end and skips disconnected-period events. An event already
-buffered in a surviving SSH connection can arrive late after sleep. There are
-no project labels or click-through actions; desktop notification permissions
-and Do Not Disturb still apply.
-
-Inspect the stream on Othinus with:
-
-```sh
-journalctl --user --follow --lines=0 --output=cat --quiet --identifier=othinus-agent-notify
-```
-
-On the Mac, inspect the listener with
-`launchctl print gui/$(id -u)/dev.rafr.othinus-agent-notify`. Run
-`~/.local/bin/othinus-agent-notify-listen` in a terminal to see SSH errors.
-Connection attempts time out after ten seconds; SSH detects an unresponsive
-connection after approximately 45 seconds while awake. LaunchAgent restarts
-are throttled to at most once per 30 seconds. The Mac README documents live
-verification and how to stop forwarding.
+The NixOS rebuild removes the old notifier and agent hook links. On the Mac,
+apply `/data/code/ansible` with `bash ./run.sh` to remove local hooks and unload
+the SSH journal-forwarding LaunchAgent.
 
 ## SSH identities
 
@@ -379,7 +335,14 @@ directories under `/home/raf/.local/share`. Its usage scanner does not use
 directories and reports zero usage. Before each server start, systemd merges
 the declared provider paths into the saved settings, preserving other preferences.
 
-Create a one-time pairing URL for the Mac desktop app or another client:
+The **T3 Code** desktop launcher uses the official nightly AppImage packaged
+with Nix. Its embedded server is disabled; pair it with the systemd server.
+Native desktop settings under `~/.local/share/t3code/userdata/` start with
+`localEnvironmentEnabled: false` and `notificationMode: "notifications-and-sound"`.
+These are writable defaults, so later desktop preferences are preserved.
+Desktop updates come from this NixOS package, with Electron auto-updates disabled.
+
+Create a one-time pairing URL for the Othinus or Mac desktop client:
 
 ```sh
 ssh raf@192.168.86.136
@@ -417,7 +380,6 @@ t3 connect link --headless --base-dir /home/raf/.local/share/t3code
 nix flake check --no-build path:/data/code/nixos-config
 nix build --no-link path:/data/code/nixos-config#nixosConfigurations.othinus.config.system.build.toplevel
 nix shell --inputs-from path:/data/code/nixos-config nixpkgs#python3 -c python3 -m unittest discover -s tests -v
-node --test tests/test_opencode_notification.mjs
 ```
 
 Use a previous NixOS generation from Limine if a system update fails. T3Code
@@ -429,9 +391,8 @@ that should not be reopened without a changed constraint.
 
 ## Web apps
 
-`T3Code (Othinus) Webapp` opens `http://othinus.local:3773` in a dedicated
-Helium window using the normal profile's logins and cookies. Search
-`Webapp` in Vicinae to find all web app launchers.
+Search `Webapp` in Vicinae for browser app launchers. T3Code uses the native
+desktop client instead.
 
 `Oryx (ZSA Voyager Keyboard Config) Webapp` opens
 `https://configure.zsa.io/voyager` in Helium and uses the browser icon.

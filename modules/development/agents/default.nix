@@ -14,19 +14,14 @@ let
     ) (builtins.readDir ../../../config/agents/skills)
   );
   agentLinks = {
-    ".local/bin/agent-notify" = "hooks/notification/common.sh";
     ".local/share/codex/AGENTS.md" = "AGENTS.md";
     ".local/share/codex/config.toml" = "codex/config.toml";
-    ".local/share/codex/hooks.json" = "codex/hooks.json";
-    ".local/share/codex/hooks/notification.sh" = "hooks/notification/codex.sh";
     ".local/share/claude/AGENTS.md" = "AGENTS.md";
     ".local/share/claude/CLAUDE.md" = "CLAUDE.md";
     ".local/share/claude/settings.json" = "claude/settings.json";
-    ".local/share/claude/hooks/notification.sh" = "hooks/notification/claude.sh";
     ".config/opencode/AGENTS.md" = "AGENTS.md";
     ".config/opencode/opencode.jsonc" = "opencode/opencode.jsonc";
     ".config/opencode/tui.json" = "opencode/tui.json";
-    ".config/opencode/plugins/notification.ts" = "hooks/notification/opencode.ts";
   }
   // lib.listToAttrs (
     lib.concatMap (
@@ -115,7 +110,6 @@ in
   };
   environment.systemPackages = [
     pkgs.coreutils
-    pkgs.libnotify
     pkgs.systemd
     (mkAgentWrapper "claude")
     (mkAgentWrapper "codex")
@@ -132,7 +126,14 @@ in
   '';
 
   systemd = {
-    tmpfiles.rules = map (directory: "d /home/raf/${directory} 0700 raf raf - -") (
+    tmpfiles.rules = [
+      "r /home/raf/.local/bin/agent-notify - - - - -"
+      "r /home/raf/.local/share/codex/hooks.json - - - - -"
+      "r /home/raf/.local/share/codex/hooks/notification.sh - - - - -"
+      "r /home/raf/.local/share/claude/hooks/notification.sh - - - - -"
+      "r /home/raf/.config/opencode/plugins/notification.ts - - - - -"
+    ]
+    ++ map (directory: "d /home/raf/${directory} 0700 raf raf - -") (
       [
         ".local/share/codex"
         ".local/share/claude"

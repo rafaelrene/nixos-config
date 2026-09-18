@@ -6,6 +6,7 @@
     ./neovim
     ./tealdeer
     ./vicinae
+    ./t3code
     ./webapps
   ];
   environment.systemPackages = with pkgs; [
