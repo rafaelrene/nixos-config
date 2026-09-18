@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-05
+- Amended: 2026-09-18
 
 ## Context
 
@@ -11,12 +12,16 @@ whole operating system.
 
 ## Decision
 
-Package the official T3Code nightly artifact with Nix and stage it in its
-independent profile every three hours. Restart the server daily at 04:00 to
+Package the official T3Code nightly server and desktop artifacts from the same
+release with Nix. Stage them together in one independent profile every three
+hours, only after both build successfully. Desktop launches follow this profile;
+an open desktop must be reopened to use the new client.
+Restart the server daily at 04:00 to
 activate the staged generation. For manual updates, `nix-update-packages`
 refreshes the workstation flake inputs, runs the T3Code updater, and restarts
-the server immediately. Applying workstation package updates remains a separate
-NixOS rebuild and switch.
+the server immediately. `t3-update-now` updates only T3Code. Manual updates print
+progress and build output in the terminal and share a lock with scheduled updates.
+Applying workstation package updates remains a separate NixOS rebuild and switch.
 
 Update Codex CLI, Claude Code, and OpenCode from
 `numtide/llm-agents.nix` in another independent profile each day. Never use

@@ -246,9 +246,11 @@ Ansible; the Zentty scripts are deferred in `TODO.md`.
 
 Run `nix-update-packages` from any directory to refresh the flake inputs in
 `/data/code/nixos-config`, then build and stage the latest T3Code nightly and
-restart T3Code immediately. The command replaces `t3-update-now` and stops if
-any command fails. T3Code's updater retains a usable generation if a nightly
-cannot be built.
+restart the server immediately. It prints T3Code update progress, downloads,
+and build logs in the terminal. Run `t3-update-now` to update only T3Code.
+Reopen the desktop app to use the staged client. Both commands stop if a
+command fails; the updater retains a usable generation if a nightly cannot
+be built and reports the fallback explicitly.
 
 The operating system stays on its current packages until a separate rebuild
 and switch applies the updated pins:
@@ -277,7 +279,9 @@ with `--force-dark-mode` for its browser UI. Theme defaults also live in
 and back in so applications inherit the Qt plugin paths and theme environment.
 
 T3Code checks the npm nightly tag every three hours, builds the official
-artifact with Nix, and stages it in its own Nix profile. The server restarts at
+server archive and desktop AppImage from the same release with Nix, and stages
+them together in its own Nix profile only after both build successfully.
+Scheduled and manual updates share a lock. The server restarts at
 04:00 to use the staged generation. Manual `nix-update-packages` runs activate
 T3Code immediately instead of waiting until 04:00.
 
@@ -413,7 +417,12 @@ with Nix. Its embedded server is disabled; pair it with the systemd server.
 Native desktop settings under `~/.local/share/t3code/userdata/` start with
 `localEnvironmentEnabled: false` and `notificationMode: "notifications-and-sound"`.
 These are writable defaults, so later desktop preferences are preserved.
-Desktop updates come from this NixOS package, with Electron auto-updates disabled.
+Desktop updates come from the rolling T3Code profile, with Electron auto-updates
+disabled. The launcher uses the staged client each time it opens; updating the
+profile does not close an already running desktop app. After the initial NixOS
+switch installs this updater, neither server nor desktop updates need a system
+rebuild. The updater uses `~/.local/state/t3code-bundle-updater`; the old
+server-only updater directory is no longer used.
 
 Create a one-time pairing URL for the Othinus or Mac desktop client:
 

@@ -3,11 +3,11 @@
   fetchurl,
   lib,
 }:
-appimageTools.wrapType2 {
+appimageTools.wrapType2 rec {
   pname = "t3code-desktop";
   version = "0.0.43-nightly.20260918.1895";
   src = fetchurl {
-    url = "https://github.com/pingdotgg/t3code/releases/download/v0.0.43-nightly.20260918.1895/T3-Code-0.0.43-nightly.20260918.1895-x86_64.AppImage";
+    url = "https://github.com/pingdotgg/t3code/releases/download/v${version}/T3-Code-${version}-x86_64.AppImage";
     hash = "sha256-h73VlZInR+4c9ywQN54czs/t1FGYX/T+SbEKViAds3k=";
   };
   extraPkgs = pkgs: [ pkgs.libsecret ];
