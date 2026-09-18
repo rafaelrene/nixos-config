@@ -55,10 +55,40 @@ let
   accentTitle =
     lib.toUpper (builtins.substring 0 1 accent)
     + builtins.substring 1 ((builtins.stringLength accent) - 1) accent;
+  flavorTitle = lib.toUpper (builtins.substring 0 1 flavor) + builtins.substring 1 (-1) flavor;
+  blend =
+    percent: foreground:
+    lib.concatMapStrings
+      (
+        offset:
+        lib.fixedWidthString 2 "0" (
+          lib.toLower (
+            lib.toHexString (
+              builtins.div (
+                percent * lib.fromHexString (builtins.substring offset 2 foreground)
+                + (100 - percent) * lib.fromHexString (builtins.substring offset 2 colors.base)
+              ) 100
+            )
+          )
+        )
+      )
+      [
+        0
+        2
+        4
+      ];
+  diff = {
+    added = blend 10 colors.green;
+    removed = blend 10 colors.red;
+    addedEmphasis = blend 25 colors.green;
+    removedEmphasis = blend 25 colors.red;
+  };
 in
 palette
 // {
-  name = "Catppuccin Mocha";
+  name = "Catppuccin ${flavorTitle}";
+  dark = flavor != "latte";
+  inherit diff;
   accentColor = colors.${accent};
   gtk = {
     name = "catppuccin-${flavor}-${accent}-standard";
@@ -72,7 +102,7 @@ palette
     package = pkgs.catppuccin-cursors."${flavor}${accentTitle}";
   };
   kde = {
-    colorScheme = "CatppuccinMocha${accentTitle}";
+    colorScheme = "Catppuccin${flavorTitle}${accentTitle}";
     package = pkgs.catppuccin-kde.override {
       flavour = [ flavor ];
       accents = [ accent ];
@@ -93,10 +123,9 @@ palette
     name = "catppuccin-${flavor}";
     package = pkgs.catppuccin-plymouth.override { variant = flavor; };
   };
-  ghostty = "Catppuccin Mocha";
   delta = {
-    dark = true;
-    syntax-theme = "Catppuccin Mocha";
+    dark = flavor != "latte";
+    syntax-theme = "Catppuccin ${flavorTitle}";
     blame-palette = "#${colors.base} #${colors.mantle} #${colors.crust} #${colors.surface0} #${colors.surface1}";
     commit-decoration-style = "box ul";
     file-decoration-style = "#${colors.text}";
@@ -110,15 +139,14 @@ palette
     line-numbers-plus-style = "bold #${colors.green}";
     line-numbers-right-style = "#${colors.overlay0}";
     line-numbers-zero-style = "#${colors.overlay0}";
-    # Catppuccin Mocha blends: 25% accent for emphasis, 10% otherwise.
-    minus-emph-style = "bold syntax #53394c";
-    minus-style = "syntax #34293a";
-    plus-emph-style = "bold syntax #404f4a";
-    plus-style = "syntax #2c3239";
-    map-styles = "bold purple => syntax #494060, bold blue => syntax #384361, bold cyan => syntax #384d5d, bold yellow => syntax #544f4e";
+    minus-emph-style = "bold syntax #${diff.removedEmphasis}";
+    minus-style = "syntax #${diff.removed}";
+    plus-emph-style = "bold syntax #${diff.addedEmphasis}";
+    plus-style = "syntax #${diff.added}";
+    map-styles = "bold purple => syntax #${blend 25 colors.mauve}, bold blue => syntax #${blend 25 colors.blue}, bold cyan => syntax #${blend 25 colors.teal}, bold yellow => syntax #${blend 25 colors.yellow}";
   };
-  vicinae = "catppuccin-${flavor}";
   neovim = {
+    background = "#${colors.base}";
     plugin = "catppuccin/nvim";
     name = "catppuccin";
     colorscheme = "catppuccin-nvim";
@@ -128,6 +156,13 @@ palette
       custom_highlights = {
         NormalFloat.bg = "NONE";
         FloatBorder.bg = "NONE";
+        FloatBorder.fg = "#${colors.${accent}}";
+        CursorLineNr.fg = "#${colors.${accent}}";
+        Visual.bg = "#${colors.surface2}";
+        IncSearch = {
+          bg = "#${colors.${accent}}";
+          fg = "#${colors.crust}";
+        };
       };
     };
   };

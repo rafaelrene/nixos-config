@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  utils,
   ...
 }:
 let
@@ -35,25 +36,44 @@ let
     )) (builtins.attrValues tokens) (builtins.readFile ./theme.json)
   );
   defaults = builtins.fromJSON (builtins.readFile ./default-settings.json);
-  dmsSettings = pkgs.writeText "dms-default-settings.json" (
-    builtins.toJSON (
-      defaults
-      // {
-        fontFamily = theme.font.interface;
-        monoFontFamily = theme.font.monospace;
-      }
-    )
-  );
+  appearance = {
+    currentThemeName = "custom";
+    customThemeFile = "/home/raf/.config/DankMaterialShell/theme.json";
+    fontFamily = theme.font.interface;
+    monoFontFamily = theme.font.monospace;
+    syncModeWithPortal = true;
+    # Nix owns application themes; wallpaper changes must not overwrite them.
+    runDmsMatugenTemplates = false;
+    runUserMatugenTemplates = false;
+  };
+  appearanceSettings = pkgs.writeText "dms-appearance.json" (builtins.toJSON appearance);
+  dmsSettings = pkgs.writeText "dms-default-settings.json" (builtins.toJSON (defaults // appearance));
 in
 {
   programs.dms-shell.enable = true;
-  # Log hook failures without restarting the desktop shell.
-  systemd.user.services.dms.serviceConfig.ExecStartPost = [
-    "-${lib.getExe enableBarAutoHide}"
-  ];
-  systemd.tmpfiles.rules = [
-    "d /home/raf/.config/DankMaterialShell 0700 raf raf - -"
-    "L+ /home/raf/.config/DankMaterialShell/theme.json - - - - ${dmsTheme}"
-    "C /home/raf/.config/DankMaterialShell/settings.json 0600 raf raf - ${dmsSettings}"
-  ];
+  systemd = {
+    user.services.dms = {
+      restartTriggers = [ dmsTheme ];
+      serviceConfig = {
+        ExecStartPre = [
+          (utils.escapeSystemdExecArgs [
+            (lib.getExe pkgs.yq-go)
+            "--inplace"
+            "--output-format=json"
+            ". *= load(\"${appearanceSettings}\")"
+            "/home/raf/.config/DankMaterialShell/settings.json"
+          ])
+        ];
+        # Log hook failures without restarting the desktop shell.
+        ExecStartPost = [
+          "-${lib.getExe enableBarAutoHide}"
+        ];
+      };
+    };
+    tmpfiles.rules = [
+      "d /home/raf/.config/DankMaterialShell 0700 raf raf - -"
+      "L+ /home/raf/.config/DankMaterialShell/theme.json - - - - ${dmsTheme}"
+      "C /home/raf/.config/DankMaterialShell/settings.json 0600 raf raf - ${dmsSettings}"
+    ];
+  };
 }

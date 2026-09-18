@@ -7,6 +7,84 @@
 
 let
   baseDir = "/home/raf/.local/share/t3code";
+  theme = import ../../../themes { inherit lib pkgs; };
+  colors = lib.mapAttrs (_: color: "#${color}") theme.colors;
+  themeJSON = builtins.toJSON {
+    inherit (theme) name;
+    appearance = if theme.dark then "dark" else "light";
+    canvas = colors.base;
+    accent = "#${theme.accentColor}";
+    colors = {
+      canvas = colors.base;
+      chrome = colors.mantle;
+      toolbar = colors.mantle;
+      toolbarForeground = colors.text;
+      toolbarBorder = colors.surface0;
+      toolbarControl = colors.surface0;
+      toolbarControlForeground = colors.text;
+      toolbarControlHover = colors.surface1;
+      surface = colors.base;
+      surfaceRaised = colors.surface0;
+      surfaceOverlay = colors.surface1;
+      inherit (colors) text;
+      textMuted = colors.subtext0;
+      border = colors.surface1;
+      input = colors.mantle;
+      focus = "#${theme.accentColor}";
+      accent = "#${theme.accentColor}";
+      accentForeground = colors.crust;
+      secondary = colors.surface0;
+      secondaryForeground = colors.text;
+      muted = colors.surface0;
+      mutedForeground = colors.subtext0;
+      placeholder = colors.overlay1;
+      secondaryLabel = colors.subtext1;
+      iconMuted = colors.overlay2;
+      error = colors.red;
+      errorForeground = colors.crust;
+      errorSurface = colors.surface0;
+      warning = colors.yellow;
+      warningForeground = colors.crust;
+      warningSurface = colors.surface0;
+      update = colors.green;
+      updateForeground = colors.crust;
+      updateSurface = colors.surface0;
+      accentSurface = colors.surface0;
+      accentSurfaceForeground = "#${theme.accentColor}";
+      messageSurface = colors.mantle;
+      messageForeground = colors.text;
+      messageAction = colors.surface0;
+      messageActionForeground = colors.text;
+      messageActionHover = colors.surface1;
+      codeBackground = colors.mantle;
+      codeForeground = colors.text;
+      sidebar = colors.mantle;
+      sidebarForeground = colors.text;
+      sidebarMutedForeground = colors.subtext0;
+      sidebarControlSurface = colors.surface0;
+      sidebarRowHover = colors.surface0;
+      sidebarRowActive = colors.surface1;
+      sidebarRowSelected = colors.surface1;
+      sidebarBorder = colors.surface0;
+      terminalBackground = colors.base;
+      terminalForeground = colors.text;
+      terminalCursor = "#${theme.accentColor}";
+      terminalSelection = colors.surface2;
+      terminalScrollbar = colors.surface1;
+      terminalScrollbarHover = colors.surface2;
+    };
+  };
+  publishedTheme = pkgs.writeText "t3code-workstation-theme.json" themeJSON;
+  serverSettings = pkgs.writeText "t3code-declared-settings.json" (
+    builtins.toJSON (
+      (builtins.fromJSON (builtins.readFile ./settings.json))
+      // {
+        defaultTheme = "othinus";
+        # Reapply the selection when the declared palette changes, not every restart.
+        defaultThemeSetAt = builtins.hashString "sha256" themeJSON;
+      }
+    )
+  );
   # A fresh source directory migrates the old server-only updater on rebuild.
   updaterDir = "/home/raf/.local/state/t3code-bundle-updater";
   profile = "/home/raf/.local/state/nix/profiles/t3code";
@@ -230,14 +308,21 @@ in
           DBUS_SESSION_BUS_ADDRESS = "unix:path=%t/bus";
         };
         serviceConfig = {
-          # The usage scanner reads provider settings, not CODEX_HOME or
-          # CLAUDE_CONFIG_DIR. Merge the paths into existing mutable settings.
-          ExecStartPre = utils.escapeSystemdExecArgs [
-            (lib.getExe pkgs.yq-go)
-            "--inplace"
-            "--output-format=json"
-            ".providers *= load(\"${./settings.json}\").providers"
-            "${baseDir}/userdata/settings.json"
+          # Published theme files must be regular files: T3 rejects file symlinks.
+          ExecStartPre = [
+            (utils.escapeSystemdExecArgs [
+              "${pkgs.coreutils}/bin/install"
+              "-Dm600"
+              publishedTheme
+              "${baseDir}/userdata/themes/othinus.json"
+            ])
+            (utils.escapeSystemdExecArgs [
+              (lib.getExe pkgs.yq-go)
+              "--inplace"
+              "--output-format=json"
+              "load(\"${serverSettings}\") as $declared | .providers *= $declared.providers | .defaultTheme = $declared.defaultTheme | .defaultThemeSetAt = $declared.defaultThemeSetAt"
+              "${baseDir}/userdata/settings.json"
+            ])
           ];
           ExecStart = lib.getExe runT3Code;
           Restart = "always";

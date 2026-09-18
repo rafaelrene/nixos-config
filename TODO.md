@@ -5,8 +5,6 @@
 - Migrate `zentty-project` and `zentty-subrepo` (alias `zsr`) from
   `/data/code/ansible/roles/scripts/files/` once we have a replacement for their
   Zentty pane/worklane integration. They require Zentty and are not installed here.
-- Revisit dedicated coding workspace rules after the Niri workflow settles.
-- Revisit the global Catppuccin accent. It is currently Mocha Mauve.
 - Revisit Helium as the default browser if work and personal usage changes.
 - Finish Bitbucket OAuth setup after rebuilding: log into the desktop, run
   `bkt auth login https://bitbucket.org --kind cloud --web`, then verify PR access
@@ -15,6 +13,10 @@
 
 ## Done
 
+- [x] Keep Catppuccin Mocha Mauve and connect supported application themes to
+  the central palette, including T3Code and Dolphin.
+- [x] Review dedicated coding workspace rules in Niri; no additional rules needed
+  for now.
 - [x] Lower the internal display to 60 Hz on battery and restore 165 Hz on AC.
 - [x] Remove `nh`; use `ns`, `nup`, and `nups` for rebuilds and updates.
 - [x] Settle the rebuild and update workflow with `ns`, `nup`, and `nups`;

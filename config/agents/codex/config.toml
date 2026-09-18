@@ -10,5 +10,8 @@ trust_level = "trusted"
 [projects."/data"]
 trust_level = "trusted"
 
+[tui]
+theme = "workstation"
+
 [tui.model_availability_nux]
 gpt-6-astra = 4
