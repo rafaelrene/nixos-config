@@ -18,7 +18,7 @@ input {
 output "eDP-1" {
     // Omitting the refresh rate selects the highest 2560x1440 mode, 165 Hz on
     // Othinus. The niri-battery-refresh-rate service selects 60 Hz on battery.
-    // VRR remains disabled because it is not enabled here.
+    // The service enables VRR on AC and disables it on battery.
     mode "@displayResolution@"
     scale 1.5
 }
