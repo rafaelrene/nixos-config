@@ -81,6 +81,31 @@ After changing `themes/default.nix`, rebuild the system to regenerate
 `/etc/xdg/ghostty/theme`, then reload Ghostty's configuration or restart it.
 The selected theme supplies both the terminal colors and monospace font family.
 
+## Screenshots
+
+Niri captures screenshots into the clipboard and automatically opens Satty for
+annotation. Packages, editor settings, and the user service are managed by NixOS.
+
+| Shortcut | Capture |
+| --- | --- |
+| Print | Select a region, then confirm in Niri. |
+| Ctrl+Print | Full focused screen. |
+| Alt+Print | Focused window. |
+
+In Satty, add arrows, text, highlights, or other annotations. Press **Enter**
+to copy the edited image to the clipboard and close, or **Escape** to discard
+edits and close. The original capture stays in the clipboard until replaced.
+Cancelling Niri's region selector does not open the editor.
+
+Captures pass from the clipboard to Satty through a pipe; no screenshot files
+are created. Satty has no default output filename and does not save after
+copying. Explicitly choosing Save As in the editor can still save a file.
+Existing files in `~/Pictures/Screenshots` are left untouched.
+
+Apply through the normal NixOS rebuild. The `screenshot-annotation` user
+service runs with the graphical session and listens for Niri capture events;
+ordinary clipboard changes do not open Satty.
+
 ## Wallpapers
 
 The repository's `wallpapers/` directory contains the wallpaper images and a

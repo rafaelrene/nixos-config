@@ -50,7 +50,8 @@ blur {
     offset 1
 }
 
-screenshot-path "~/Pictures/Screenshots/%Y-%m-%d_%H-%M-%S.png"
+// The screenshot service opens clipboard captures in Satty for annotation.
+screenshot-path null
 
 window-rule {
     geometry-corner-radius 0
