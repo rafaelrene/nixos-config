@@ -34,10 +34,16 @@ let
       export NIX_CONFIG="experimental-features = nix-command flakes
       accept-flake-config = false"
 
+      # User services restart before system tmpfiles during a NixOS switch.
+      install -d -m 0700 ${lib.escapeShellArg updaterDir}
       cd ${lib.escapeShellArg updaterDir}
       echo "T3 Code: waiting for any existing update to finish..."
       exec 9>update.lock
       flock 9
+
+      # Preserve staged versions and make old tmpfiles copies writable too.
+      cp --update=none ${updaterSource}/*.nix .
+      chmod u+w flake.nix package.nix desktop.nix
 
       if ! test -d .git; then
         git init -q
@@ -277,7 +283,6 @@ in
       "d ${baseDir} 0700 raf raf - -"
       "d ${baseDir}/userdata 0700 raf raf - -"
       "d /home/raf/.local/state/nix/profiles 0700 raf raf - -"
-      "C ${updaterDir} 0700 raf raf - ${updaterSource}"
       "C ${baseDir}/userdata/settings.json 0600 raf raf - ${./settings.json}"
     ];
   };

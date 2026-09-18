@@ -422,7 +422,9 @@ disabled. The launcher uses the staged client each time it opens; updating the
 profile does not close an already running desktop app. After the initial NixOS
 switch installs this updater, neither server nor desktop updates need a system
 rebuild. The updater uses `~/.local/state/t3code-bundle-updater`; the old
-server-only updater directory is no longer used.
+server-only updater directory is no longer used. The updater creates its own
+directory before use, including during a NixOS switch, and keeps its package
+files writable without overwriting versions staged by earlier updates.
 
 Create a one-time pairing URL for the Othinus or Mac desktop client:
 
