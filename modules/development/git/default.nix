@@ -8,6 +8,7 @@ in
     pkgs.git
     pkgs.delta
     pkgs.gh
+    (pkgs.callPackage ./bitbucket.nix { })
   ];
   systemd.tmpfiles.rules = [
     "d /home/raf/.config/git 0700 raf raf - -"

@@ -9,7 +9,10 @@
 - Revisit dedicated coding workspace rules after the Niri workflow settles.
 - Revisit the global Catppuccin accent. It is currently Mocha Mauve.
 - Revisit Helium as the default browser if work and personal usage changes.
-- Install and authenticate the Bitbucket CLI expected by the resolve-pr-comments skill (bkt); until then, the skill reports the missing prerequisite for Bitbucket work.
+- Finish Bitbucket OAuth setup after rebuilding: log into the desktop, run
+  `bkt auth login https://bitbucket.org --kind cloud --web`, then verify PR access
+  from T3Code. The CLI and desktop keyring are declared; live authentication and
+  automatic refresh still need verification.
 
 ## Done
 
