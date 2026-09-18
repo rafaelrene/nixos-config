@@ -14,8 +14,7 @@ let
     ];
     text = ''
       nix flake update --flake path:/data/code/nixos-config
-      systemctl --user start t3code-update.service
-      systemctl --user restart t3code.service
+      /run/current-system/sw/bin/t3-update-now
     '';
   };
 in

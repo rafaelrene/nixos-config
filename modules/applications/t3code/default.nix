@@ -1,6 +1,16 @@
 { lib, pkgs, ... }:
 let
-  desktop = pkgs.callPackage ./package.nix { };
+  desktop = pkgs.writeShellApplication {
+    name = "t3code-desktop";
+    text = ''
+      client=/home/raf/.local/state/nix/profiles/t3code/bin/t3code-desktop
+      if ! test -x "$client"; then
+        echo "T3 Code desktop is not installed yet. Run: t3-update-now" >&2
+        exit 1
+      fi
+      exec "$client" "$@"
+    '';
+  };
   stateDir = "/home/raf/.local/share/t3code/userdata";
 in
 {

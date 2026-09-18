@@ -7,13 +7,15 @@
 
 let
   baseDir = "/home/raf/.local/share/t3code";
-  updaterDir = "/home/raf/.local/state/t3code-updater";
+  # A fresh source directory migrates the old server-only updater on rebuild.
+  updaterDir = "/home/raf/.local/state/t3code-bundle-updater";
   profile = "/home/raf/.local/state/nix/profiles/t3code";
 
   updaterSource = pkgs.runCommand "t3code-updater-source" { } ''
     mkdir -p "$out"
     cp ${./package/flake.nix} "$out/flake.nix"
     cp ${./package/package.nix} "$out/package.nix"
+    cp ${./package/desktop.nix} "$out/desktop.nix"
   '';
 
   updateT3Code = pkgs.writeShellApplication {
@@ -26,12 +28,16 @@ let
       jq
       nix
       nix-update
+      util-linux
     ];
     text = ''
       export NIX_CONFIG="experimental-features = nix-command flakes
       accept-flake-config = false"
 
       cd ${lib.escapeShellArg updaterDir}
+      echo "T3 Code: waiting for any existing update to finish..."
+      exec 9>update.lock
+      flock 9
 
       if ! test -d .git; then
         git init -q
@@ -39,38 +45,49 @@ let
 
       # Nix only sees files tracked by a Git-backed flake. Stage the copied
       # sources before creating or evaluating its lock file.
-      git add flake.nix package.nix
+      git add flake.nix package.nix desktop.nix
       if ! test -e flake.lock; then
         nix flake lock --no-accept-flake-config
-        git add flake.lock
       fi
+      git add flake.lock
 
       current=$(sed -n 's/^  version = "\([^"]*\)";/\1/p' package.nix)
+      desktopCurrent=$(sed -n 's/^  version = "\([^"]*\)";/\1/p' desktop.nix)
+      echo "T3 Code: checking the nightly channel (packaged version: $current)..."
       latest=$(curl --fail --silent --show-error --retry 3 \
         https://registry.npmjs.org/t3 \
-        | jq -er '."dist-tags".nightly') || latest="$current"
+        | jq -er '."dist-tags".nightly') || {
+          echo "Could not check the nightly channel; using packaged version $current." >&2
+          latest="$current"
+        }
 
-      if test "$latest" != "$current"; then
+      if test "$latest" != "$current" || test "$latest" != "$desktopCurrent"; then
         echo "Updating T3 Code $current -> $latest"
-        if ! nix-update --flake --version "$latest" t3code-nightly; then
+        if ! nix-update --flake --version "$latest" t3code-nightly \
+          || ! nix-update --flake --version "$latest" t3code-desktop; then
           echo "Nightly metadata is not buildable yet; retaining $current" >&2
-          git restore package.nix flake.lock
+          git restore package.nix desktop.nix flake.lock
         fi
+      else
+        echo "T3 Code: no newer nightly found."
       fi
 
-      if new=$(nix build --no-link --print-out-paths --no-accept-flake-config .#t3code-nightly); then
+      echo "T3 Code: building server and desktop (downloads and build logs follow)..."
+      if new=$(nix build --print-build-logs --no-link --print-out-paths --no-accept-flake-config .#default); then
         previous=$(readlink -f ${lib.escapeShellArg profile} || true)
         if test "$new" != "$previous"; then
           mkdir -p "$(dirname ${lib.escapeShellArg profile})"
           nix-env --profile ${lib.escapeShellArg profile} --set "$new"
-          echo "Staged $("$new/bin/t3" --version)"
+          echo "Staged server and desktop: $("$new/bin/t3" --version)"
+        else
+          echo "T3 Code: server and desktop are already staged."
         fi
-        git add package.nix flake.lock
+        git add package.nix desktop.nix flake.lock
       elif test -x ${lib.escapeShellArg profile}/bin/t3; then
         echo "Nightly build failed; retaining $("${profile}/bin/t3" --version)" >&2
-        git restore package.nix flake.lock
+        git restore package.nix desktop.nix flake.lock
       else
-        git restore package.nix flake.lock
+        git restore package.nix desktop.nix flake.lock
         echo "T3 Code has no usable generation" >&2
         exit 1
       fi
@@ -80,6 +97,17 @@ let
           --base-dir ${lib.escapeShellArg baseDir}
         touch ${lib.escapeShellArg baseDir}/.nixos-config-registered
       fi
+      echo "T3 Code: update check complete. Reopen the desktop to use the staged client."
+    '';
+  };
+
+  updateNow = pkgs.writeShellApplication {
+    name = "t3-update-now";
+    text = ''
+      ${lib.getExe updateT3Code}
+      echo "T3 Code: restarting the server..."
+      ${pkgs.systemd}/bin/systemctl --user restart t3code.service
+      echo "T3 Code: server restarted. Reopen the desktop to use the staged client."
     '';
   };
 
@@ -125,7 +153,10 @@ in
     ip saddr 192.168.86.0/24 tcp dport 3773 accept comment "Othinus LAN T3Code"
   '';
   environment.variables.T3CODE_HOME = "$HOME/.local/share/t3code";
-  environment.systemPackages = [ t3Command ];
+  environment.systemPackages = [
+    t3Command
+    updateNow
+  ];
 
   systemd = {
     user.services = {
