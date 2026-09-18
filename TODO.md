@@ -5,7 +5,6 @@
 - Migrate `zentty-project` and `zentty-subrepo` (alias `zsr`) from
   `/data/code/ansible/roles/scripts/files/` once we have a replacement for their
   Zentty pane/worklane integration. They require Zentty and are not installed here.
-- Consider lowering the internal display to 60 Hz on battery.
 - Revisit dedicated coding workspace rules after the Niri workflow settles.
 - Revisit the global Catppuccin accent. It is currently Mocha Mauve.
 - Revisit Helium as the default browser if work and personal usage changes.
@@ -16,6 +15,7 @@
 
 ## Done
 
+- [x] Lower the internal display to 60 Hz on battery and restore 165 Hz on AC.
 - [x] Remove `nh`; use `ns`, `nup`, and `nups` for rebuilds and updates.
 - [x] Settle the rebuild and update workflow with `ns`, `nup`, and `nups`;
   retain the canonical `/data/code/nixos-config` checkout path.

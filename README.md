@@ -106,6 +106,16 @@ Apply through the normal NixOS rebuild. The `screenshot-annotation` user
 service runs with the graphical session and listens for Niri capture events;
 ordinary clipboard changes do not open Satty.
 
+## Display refresh rate
+
+The internal display runs at 2560×1440, using fixed 60 Hz on battery and the
+165 Hz mode with VRR enabled on AC power, including when fully charged.
+The `niri-battery-refresh-rate` user service checks UPower at graphical
+session startup and on power events, then applies temporary Niri mode and VRR settings.
+It leaves external displays and disabled outputs alone. NixOS manages the helper
+and its dependencies; it takes effect through the normal rebuild and switch.
+Check unplug/replug and suspend/resume behavior after applying the change.
+
 ## Wallpapers
 
 The repository's `wallpapers/` directory contains the wallpaper images and a

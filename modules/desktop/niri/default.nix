@@ -1,6 +1,22 @@
-{ lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   displayResolution = "2560x1440";
+  batteryRefreshRate = pkgs.writeShellApplication {
+    name = "niri-battery-refresh-rate";
+    runtimeInputs = [
+      config.programs.niri.package
+      pkgs.coreutils
+      pkgs.jq
+      pkgs.systemd
+      pkgs.upower
+    ];
+    text = builtins.readFile ./battery-refresh-rate.sh;
+  };
   wallpaperSource = ../../../wallpapers;
   wallpaperFiles = builtins.readDir wallpaperSource;
   # Resolution variants belong to their original, never to a separate rotation entry.
@@ -46,6 +62,18 @@ in
   services.displayManager.defaultSession = "niri";
   xdg.portal.config.niri."org.freedesktop.impl.portal.Settings" = [ "gtk" ];
   environment.systemPackages = [ pkgs.xwayland-satellite ];
+  systemd.user.services.niri-battery-refresh-rate = {
+    description = "Adjust the internal display refresh rate to AC power";
+    wantedBy = [ "graphical-session.target" ];
+    partOf = [ "graphical-session.target" ];
+    after = [ "graphical-session.target" ];
+    unitConfig.ConditionUser = "raf";
+    serviceConfig = {
+      ExecStart = "${lib.getExe batteryRefreshRate} ${displayResolution}";
+      Restart = "always";
+      RestartSec = 2;
+    };
+  };
   systemd.tmpfiles.rules = [
     "d /home/raf/Pictures 0755 raf raf - -"
     "L+ /home/raf/Pictures/Wallpapers - - - - ${wallpapers}"
