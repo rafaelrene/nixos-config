@@ -71,6 +71,12 @@ Its focus ring draws only around the window so it does not cover the wallpaper.
 Selecting text copies it to the clipboard, trailing spaces are trimmed, and
 terminal applications can read and write the clipboard. Super+Enter opens Ghostty.
 
+Ctrl+Shift+2 triggers T3 Code's snapshot capture over the session D-Bus when
+capture is enabled in T3 Code. The shortcut is declared in Niri's configuration
+here because the generated `~/.config/niri/config.kdl` is read-only. After
+applying this configuration, choose “I've added the shortcut” in T3 Code's
+snapshot setup.
+
 After changing `themes/default.nix`, rebuild the system to regenerate
 `/etc/xdg/ghostty/theme`, then reload Ghostty's configuration or restart it.
 The selected theme supplies both the terminal colors and monospace font family.
