@@ -6,6 +6,8 @@
     ./theming
   ];
   services = {
+    # greetd's PAM integration unlocks the login keyring at desktop login.
+    gnome.gnome-keyring.enable = true;
     pipewire = {
       enable = true;
       alsa.enable = true;

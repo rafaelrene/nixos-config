@@ -182,6 +182,38 @@ branch; `su`, `sui`, and `sup` update submodules, initialize them recursively,
 and update them from remotes recursively. `git c` discards unstaged changes to
 tracked files beneath the current directory.
 
+## Bitbucket
+
+Nix installs `bkt` alongside `gh` from the pinned upstream Linux release in
+`modules/development/git/bitbucket.nix`. The release binary includes upstream's
+public OAuth client configuration, allowing browser login and automatic token
+refresh without creating a separate OAuth consumer.
+
+After rebuilding, log out and back into the desktop with your password so
+greetd can unlock GNOME Keyring. Then run this once in a desktop terminal:
+
+```sh
+bkt auth login https://bitbucket.org --kind cloud --web
+bkt auth status
+```
+
+OAuth credentials stay in the local keyring, outside the repository and Nix
+store. Host settings live in `~/.config/bkt/config.yml`. T3Code explicitly uses
+Secret Service on the user's D-Bus, so its agents share the desktop credentials.
+After a reboot, log into the desktop before using Bitbucket through T3Code.
+
+In a Bitbucket checkout, verify `bkt pr list --json` from both the desktop and
+T3Code. Repeat after the two-hour access-token lifetime to verify automatic
+refresh. Bitbucket expires refresh tokens after three months without use;
+revoked credentials or expired refresh tokens require another browser login.
+See [Bitbucket's OAuth rules](https://developer.atlassian.com/cloud/bitbucket/rest/intro/#refresh-tokens).
+
+For an SSH terminal after desktop login, select the same keyring explicitly:
+
+```sh
+env KEYRING_BACKEND=secret-service bkt auth status
+```
+
 ## Scripts and command help
 
 Nix packages the scripts in `modules/shell/scripts/` with their runtime

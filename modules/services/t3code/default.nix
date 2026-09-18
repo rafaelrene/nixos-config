@@ -188,6 +188,9 @@ in
           T3CODE_TELEMETRY_ENABLED = "false";
           CODEX_HOME = "/home/raf/.local/share/codex";
           CLAUDE_CONFIG_DIR = "/home/raf/.local/share/claude";
+          # bkt otherwise skips Secret Service when running without a display.
+          KEYRING_BACKEND = "secret-service";
+          DBUS_SESSION_BUS_ADDRESS = "unix:path=%t/bus";
         };
         serviceConfig = {
           # The usage scanner reads provider settings, not CODEX_HOME or
