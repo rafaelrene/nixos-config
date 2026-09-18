@@ -48,16 +48,45 @@ package wrapper.
 
 `themes/default.nix` selects `catppuccin.nix`, currently Mocha with a Mauve
 accent. To add a theme, supply the same palette, font, and application-style
-fields in another Nix file and select it there. GTK, Qt, the greeter, boot,
-Niri, DMS, Ghostty, Neovim, Vicinae, Starship, and Git's Delta pager consume this selection.
+fields in another Nix file and select it there. The theme also declares whether
+it is dark and supplies diff background colors. Keep its palette and packaged
+GTK/Qt variants consistent. Changing `accent` in `themes/catppuccin.nix` selects
+another color from the current palette.
+
+| Applications | Managed appearance |
+| --- | --- |
+| GTK, including GTK 4/libadwaita | GTK theme, stylesheet, fonts, icons, cursor, and light/dark preference. |
+| Dolphin, Ark, Gwenview, Okular, other Qt apps | Kvantum style and explicit KDE color roles, fonts, and icons. |
+| T3Code | Published `othinus` palette for connected clients, including the desktop app. |
+| Niri, DMS, greeter, boot | Borders, shell colors, login and boot themes. |
+| Ghostty, Neovim, Vicinae | Generated terminal palette, editor theme, and launcher palette. |
+| Codex, Claude Code, OpenCode | Generated `workstation` themes selected in their shared configuration. |
+| Starship, Delta, fzf | Palette, diff colors, and picker colors. |
+| Helium, Zen | Browser accent and light/dark appearance through native settings. |
+| Satty, mpv | Annotation palette and GTK styling; playback background and on-screen text. |
+
+Browser controls derive some colors themselves; web pages keep their own styles.
+Application-specific themes and project-local agent settings can still override
+system defaults. Newly installed applications with independent theme engines
+need an explicit integration here.
 
 Application templates stay with their modules. Ghostty and Neovim keep editable
 checkout configuration and read generated theme settings from `/etc/xdg`.
 Vicinae keeps writable user settings; its native `VICINAE_OVERRIDES` mechanism
 applies the selected theme and font without replacing other preferences.
-DMS keeps its writable settings and receives the selected palette through its
-linked `theme.json`; font settings are initial defaults and existing UI overrides
-remain in effect.
+DMS keeps its writable settings. Before starting, its service merges only the
+declared theme and font settings and disables Matugen's application-theme
+generation so wallpaper changes cannot overwrite Nix-managed themes. Other
+preferences remain intact. GNOME appearance keys are locked to the declared
+theme so old per-user dconf values cannot mask a rebuild.
+
+T3Code receives a regular JSON theme file before its server starts, since its
+theme loader rejects file symlinks. The server selects `othinus` as its default;
+a palette change reapplies that selection on clients. A client can choose a
+different theme until the next declared palette change. The theme uses T3Code's
+[native environment-theme support](https://github.com/pingdotgg/t3code/blob/main/apps/server/src/environmentTheme.ts).
+Codex uses its [custom TextMate theme support](https://learn.chatgpt.com/docs/cli-customization);
+Claude uses its [custom theme tokens](https://code.claude.com/docs/en/terminal-config#create-a-custom-theme).
 
 The DMS top bar hides until the pointer reaches the top edge, leaving its space
 available to windows. It appears over windows and stays visible while a bar menu
@@ -77,9 +106,10 @@ in Niri's configuration here because the generated `~/.config/niri/config.kdl` i
 applying this configuration, choose “I've added the shortcut” in T3 Code's
 snapshot setup.
 
-After changing `themes/default.nix`, rebuild the system to regenerate
-`/etc/xdg/ghostty/theme`, then reload Ghostty's configuration or restart it.
-The selected theme supplies both the terminal colors and monospace font family.
+After changing the theme, rebuild and switch through the normal workflow, then
+log out and back in so GUI apps inherit the new settings. Reload Ghostty or open
+a new terminal, and restart editor and agent sessions. No separate theme setup
+commands are required. Builds alone do not change the live desktop.
 
 ## Screenshots
 
@@ -271,10 +301,11 @@ Nushell provides three shortcuts:
 Plain `nix flake update` still only refreshes flake inputs. T3Code's rolling
 version remains in its independent updater state, outside the root `flake.lock`.
 
-Dark mode is the machine-wide default through dconf and the desktop settings
-portal. GTK and Qt use Catppuccin Mocha; Qt applications such as Dolphin use
-Kvantum with KDE integration and the matching color scheme. Helium launches
-with `--force-dark-mode` for its browser UI. Theme defaults also live in
+The selected theme's light/dark preference is exposed through dconf and the
+desktop settings portal. GTK and Qt use Catppuccin Mocha; Qt applications such
+as Dolphin use Kvantum with KDE integration and explicit palette settings.
+Helium derives its browser theme from the declared accent and launches with
+`--force-dark-mode` when the selected theme is dark. Theme defaults also live in
 `/etc/xdg` for other users. After changing desktop theming, rebuild and log out
 and back in so applications inherit the Qt plugin paths and theme environment.
 

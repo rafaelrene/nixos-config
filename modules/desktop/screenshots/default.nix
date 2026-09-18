@@ -5,6 +5,7 @@
   ...
 }:
 let
+  theme = import ../../../themes { inherit lib pkgs; };
   sattyConfig = (pkgs.formats.toml { }).generate "satty-config.toml" {
     general = {
       copy-command = "${pkgs.wl-clipboard}/bin/wl-copy --type image/png";
@@ -16,6 +17,17 @@ let
       ];
       actions-on-escape = [ "exit" ];
     };
+    color-palette.palette = map (name: "#${theme.colors.${name}}") [
+      theme.accent
+      "red"
+      "peach"
+      "yellow"
+      "green"
+      "teal"
+      "blue"
+      "text"
+      "base"
+    ];
   };
   annotateScreenshots = pkgs.writeShellApplication {
     name = "annotate-screenshots";
