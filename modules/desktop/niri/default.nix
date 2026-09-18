@@ -27,8 +27,14 @@ let
   theme = import ../../../themes { inherit lib pkgs; };
   niriConfig = pkgs.writeText "niri-config.kdl" (
     lib.replaceStrings
-      [ "@accent@" "@surface2@" "@urgent@" "@displayResolution@" ]
-      [ theme.accentColor theme.colors.surface2 theme.colors.red displayResolution ]
+      [ "@accent@" "@surface2@" "@urgent@" "@displayResolution@" "@gdbus@" ]
+      [
+        theme.accentColor
+        theme.colors.surface2
+        theme.colors.red
+        displayResolution
+        "${pkgs.glib.bin}/bin/gdbus"
+      ]
       (builtins.readFile ./config.kdl)
   );
 in
