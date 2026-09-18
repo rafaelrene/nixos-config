@@ -153,7 +153,8 @@ binds {
     Print { screenshot; }
     Ctrl+Print { screenshot-screen; }
     Alt+Print { screenshot-window; }
-    Ctrl+Shift+2 repeat=false { spawn "@gdbus@" "call" "--session" "--dest" "com.t3tools.T3Code.SnapShot" "--object-path" "/com/t3tools/SnapShot" "--method" "com.t3tools.SnapShot.Capture"; }
+    Shift+Shift_L repeat=false { spawn "@gdbus@" "call" "--session" "--dest" "com.t3tools.T3Code.SnapShot" "--object-path" "/com/t3tools/SnapShot" "--method" "com.t3tools.SnapShot.Capture"; }
+    Shift+Shift_R repeat=false { spawn "@gdbus@" "call" "--session" "--dest" "com.t3tools.T3Code.SnapShot" "--object-path" "/com/t3tools/SnapShot" "--method" "com.t3tools.SnapShot.Capture"; }
 
     XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05+ -l 1.0"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.05-"; }
