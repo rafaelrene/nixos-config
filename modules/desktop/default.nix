@@ -1,6 +1,7 @@
 { pkgs, ... }: {
   imports = [
     ./niri
+    ./screenshots
     ./dms
     ./theming
   ];

@@ -48,7 +48,6 @@ in
   environment.systemPackages = [ pkgs.xwayland-satellite ];
   systemd.tmpfiles.rules = [
     "d /home/raf/Pictures 0755 raf raf - -"
-    "d /home/raf/Pictures/Screenshots 0755 raf raf - -"
     "L+ /home/raf/Pictures/Wallpapers - - - - ${wallpapers}"
     "d /home/raf/.config/niri 0700 raf raf - -"
     "L+ /home/raf/.config/niri/config.kdl - - - - ${niriConfig}"
