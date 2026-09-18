@@ -10,6 +10,9 @@ let
   theme = import ../../../themes { inherit lib pkgs; };
   colors = lib.mapAttrs (_: color: "#${color}") theme.colors;
   themeJSON = builtins.toJSON {
+    # Also accept this file in the desktop's native custom-theme importer.
+    version = 1;
+    id = "othinus";
     inherit (theme) name;
     appearance = if theme.dark then "dark" else "light";
     canvas = colors.base;

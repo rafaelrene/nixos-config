@@ -57,7 +57,7 @@ another color from the current palette.
 | --- | --- |
 | GTK, including GTK 4/libadwaita | GTK theme, stylesheet, fonts, icons, cursor, and light/dark preference. |
 | Dolphin, Ark, Gwenview, Okular, other Qt apps | Kvantum style and explicit KDE color roles, fonts, and icons. |
-| T3Code | Published `othinus` palette for connected clients, including the desktop app. |
+| T3Code | Published `othinus` palette; native desktop uses a custom-theme import, refreshed manually after palette changes. |
 | Niri, DMS, greeter, boot | Borders, shell colors, login and boot themes. |
 | Ghostty, Neovim, Vicinae | Generated terminal palette, editor theme, and launcher palette. |
 | Codex, Claude Code, OpenCode | Generated `workstation` themes selected in their shared configuration. |
@@ -82,8 +82,17 @@ theme so old per-user dconf values cannot mask a rebuild.
 
 T3Code receives a regular JSON theme file before its server starts, since its
 theme loader rejects file symlinks. The server selects `othinus` as its default;
-a palette change reapplies that selection on clients. A client can choose a
-different theme until the next declared palette change. The theme uses T3Code's
+a palette change reapplies that selection on clients with Othinus as their
+primary environment. The native desktop currently ignores published themes
+when its local environment is disabled and Othinus is a remote connection.
+For that setup, import `~/.local/share/t3code/userdata/themes/othinus.json`
+through Settings → Appearance → Add theme and select Catppuccin Mocha.
+The generated file supports both server publication and custom-theme import.
+After changing the central palette and rebuilding, reimport it and choose
+to update the existing theme. Its stable `othinus` ID avoids duplicate themes.
+This manual reimport is an accepted exception to automatic theme propagation.
+A client following the published palette can choose a different theme until
+the next declared palette change. The theme uses T3Code's
 [native environment-theme support](https://github.com/pingdotgg/t3code/blob/main/apps/server/src/environmentTheme.ts).
 Codex uses its [custom TextMate theme support](https://learn.chatgpt.com/docs/cli-customization);
 Claude uses its [custom theme tokens](https://code.claude.com/docs/en/terminal-config#create-a-custom-theme).
