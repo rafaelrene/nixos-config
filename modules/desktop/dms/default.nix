@@ -46,21 +46,40 @@ let
     runDmsMatugenTemplates = false;
     runUserMatugenTemplates = false;
   };
-  appearanceSettings = pkgs.writeText "dms-appearance.json" (builtins.toJSON appearance);
+  # Reapply the declared power policy to existing, writable DMS settings.
+  managedSettings = pkgs.writeText "dms-managed-settings.json" (
+    builtins.toJSON (
+      appearance
+      // lib.getAttrs [
+        "acMonitorTimeout"
+        "acLockTimeout"
+        "acSuspendTimeout"
+        "acProfileName"
+        "batteryMonitorTimeout"
+        "batteryLockTimeout"
+        "batterySuspendTimeout"
+        "batteryProfileName"
+        "lockBeforeSuspend"
+      ] defaults
+    )
+  );
   dmsSettings = pkgs.writeText "dms-default-settings.json" (builtins.toJSON (defaults // appearance));
 in
 {
   programs.dms-shell.enable = true;
   systemd = {
     user.services.dms = {
-      restartTriggers = [ dmsTheme ];
+      restartTriggers = [
+        dmsTheme
+        managedSettings
+      ];
       serviceConfig = {
         ExecStartPre = [
           (utils.escapeSystemdExecArgs [
             (lib.getExe pkgs.yq-go)
             "--inplace"
             "--output-format=json"
-            ". *= load(\"${appearanceSettings}\")"
+            ". *= load(\"${managedSettings}\")"
             "/home/raf/.config/DankMaterialShell/settings.json"
           ])
         ];

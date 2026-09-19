@@ -74,8 +74,8 @@ Application templates stay with their modules. Ghostty and Neovim keep editable
 checkout configuration and read generated theme settings from `/etc/xdg`.
 Vicinae keeps writable user settings; its native `VICINAE_OVERRIDES` mechanism
 applies the selected theme and font without replacing other preferences.
-DMS keeps its writable settings. Before starting, its service merges only the
-declared theme and font settings and disables Matugen's application-theme
+DMS keeps its writable settings. Before starting, its service merges the
+declared appearance and power settings and disables Matugen's application-theme
 generation so wallpaper changes cannot overwrite Nix-managed themes. Other
 preferences remain intact. GNOME appearance keys are locked to the declared
 theme so old per-user dconf values cannot mask a rebuild.
@@ -144,6 +144,28 @@ Existing files in `~/Pictures/Screenshots` are left untouched.
 Apply through the normal NixOS rebuild. The `screenshot-annotation` user
 service runs with the graphical session and listens for Niri capture events;
 ordinary clipboard changes do not open Satty.
+
+## Power management
+
+DMS applies separate idle settings for external power and battery:
+
+| Power source | Screen lock | Display off | Suspend |
+| --- | --- | --- | --- |
+| Plugged in, including fully charged | Never | Never | Never |
+| Battery | After 10 idle minutes | After 15 idle minutes | After 15 idle minutes |
+
+Locking keeps apps and agents running. Suspension pauses them and makes the
+machine unreachable until resume. The AC policy keeps the desktop available
+for agent control. DMS respects application idle inhibitors, which can delay
+the battery timers. The power profile remains balanced on AC and power-saver
+on battery.
+
+Closing the lid suspends on battery unless docked, and is ignored on AC or
+when docked. Lid-triggered and explicit suspend also lock first.
+`Super+Alt+L` locks manually.
+
+Rebuilds apply this policy to existing DMS settings. Changes made through the
+DMS power settings last until its next service start.
 
 ## Display refresh rate
 
@@ -396,8 +418,9 @@ recovery details.
 ## Tailscale
 
 NixOS runs Tailscale as a system service, starting at boot and retaining its
-login in `/var/lib/tailscale`. It reconnects after sleep; the existing sleep
-policy is unchanged, and the machine is unreachable while suspended.
+login in `/var/lib/tailscale`. It reconnects after sleep. Othinus stays awake
+when idle on AC and suspends after 15 idle minutes on battery; it is unreachable
+while suspended.
 
 After the first rebuild and switch, enroll Othinus in your existing tailnet:
 

@@ -26,7 +26,7 @@ outside the repository and Nix store.
 ## Consequences
 
 SSH and T3Code work over both the LAN and the tailnet. Tailscale starts at boot
-and reuses its saved login. The existing sleep policy remains: Othinus is
+and reuses its saved login. Othinus is
 unreachable while suspended and reconnects after resume. MagicDNS names depend
 on the tailnet's DNS configuration. Device enrollment and expiry settings remain
 external to NixOS.
