@@ -535,6 +535,7 @@ sends every result to `https://ntfy.rafr.dev/pro20x`. The user timer runs at
 09:00 and 21:00 Europe/Bratislava. Missed checks run when the workstation next
 starts or resumes; it cannot check while powered off or asleep.
 
+The checker uses the system Helium browser for login and scheduled checks.
 After rebuilding, run `pro20x-check --login` from the Othinus desktop, sign into
 ChatGPT, open the upgrade screen, and close the browser. This approved one-time
 login is an exception to the usual no-manual-setup policy. The dedicated browser
