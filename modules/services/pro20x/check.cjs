@@ -68,6 +68,11 @@ async function main() {
     throw new Error("Usage: pro20x-check [--login | --dry-run]");
   }
   const login = args[0] === "--login";
+  if (login) {
+    console.log(
+      `Open this link in the browser window launched by this command:\n${pricingUrl}\nSign into ChatGPT, open the upgrade screen, then close that browser to save the session.\nYour usual browser uses a different profile and will not sign the checker in.`,
+    );
+  }
   let context;
   let result;
   process.umask(0o077);
@@ -81,13 +86,6 @@ async function main() {
     });
     const page = context.pages()[0] || (await context.newPage());
     if (login) {
-      console.log(
-        "Sign into ChatGPT, open the upgrade screen, then close the browser to save the session.",
-      );
-      await page.goto(pricingUrl, {
-        waitUntil: "domcontentloaded",
-        timeout: 60000,
-      });
       await new Promise((resolve) => context.once("close", resolve));
       return;
     }
