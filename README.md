@@ -537,8 +537,11 @@ sends every result to `https://ntfy.rafr.dev/pro20x`. The user timer runs at
 starts or resumes; it cannot check while powered off or asleep.
 
 The checker uses the system Helium browser for login and scheduled checks.
-After rebuilding, run `pro20x-check --login` from the Othinus desktop, sign into
-ChatGPT, open the upgrade screen, and close the browser. This approved one-time
+After rebuilding, run `pro20x-check --login` from the Othinus desktop. It prints
+a link and opens a blank browser window. Paste the link into that window, sign
+into ChatGPT, open the upgrade screen, and close the browser. Opening the link
+in your usual browser will not sign the checker in because it uses a different
+profile. This approved one-time
 login is an exception to the usual no-manual-setup policy. The dedicated browser
 profile stays in `~/.local/state/pro20x-check/browser`, outside Git and the Nix
 store. Repeat login if the session expires.
