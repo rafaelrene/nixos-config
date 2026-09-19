@@ -66,7 +66,16 @@ let
   dmsSettings = pkgs.writeText "dms-default-settings.json" (builtins.toJSON (defaults // appearance));
 in
 {
-  programs.dms-shell.enable = true;
+  programs.dms-shell = {
+    enable = true;
+    package = pkgs.dms-shell.overrideAttrs (previous: {
+      # DMS copies QML directly from src during installation, bypassing patches.
+      src = pkgs.applyPatches {
+        inherit (previous) src;
+        patches = [ ./wallpaper-rendering.patch ];
+      };
+    });
+  };
   systemd = {
     user.services.dms = {
       restartTriggers = [
