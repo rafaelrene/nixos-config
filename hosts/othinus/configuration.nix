@@ -90,6 +90,8 @@
   services.xserver.videoDrivers = [ "nvidia" ];
 
   services.logind.settings.Login = {
+    # DMS owns the idle timers and selects them based on the power source.
+    IdleAction = "ignore";
     HandleLidSwitch = "suspend";
     HandleLidSwitchExternalPower = "ignore";
     HandleLidSwitchDocked = "ignore";

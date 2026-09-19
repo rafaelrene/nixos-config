@@ -9,13 +9,13 @@
   "niriLayoutGapsOverride": 2,
   "niriLayoutRadiusOverride": 0,
   "niriLayoutBorderSize": 1,
-  "acMonitorTimeout": 900,
-  "acLockTimeout": 600,
+  "acMonitorTimeout": 0,
+  "acLockTimeout": 0,
   "acSuspendTimeout": 0,
   "acProfileName": "balanced",
-  "batteryMonitorTimeout": 600,
-  "batteryLockTimeout": 300,
-  "batterySuspendTimeout": 1200,
+  "batteryMonitorTimeout": 900,
+  "batteryLockTimeout": 600,
+  "batterySuspendTimeout": 900,
   "batteryProfileName": "power-saver",
   "lockBeforeSuspend": true
 }
