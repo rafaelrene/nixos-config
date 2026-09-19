@@ -185,6 +185,13 @@ source catalogue. Nix selects one image per wallpaper and exposes the collection
 picker, browse that directory and select an image. DMS keeps the selection in
 its writable settings, so rebuilds do not reset it.
 
+The DMS package includes `modules/desktop/dms/wallpaper-rendering.patch` to keep
+Qt's normal wallpaper update scheduling. DMS 1.4.6 otherwise disables updates
+after a one-second timer, which can expire before the first frame if DMS starts
+while the display is powered off. The result is a blank wallpaper on wake despite
+the image loading successfully. When updating DMS, retain this fix until the
+replacement passes a restart with the display off, wake, and wallpaper rotation.
+
 Selection happens at rebuild time using `displayResolution` in
 `modules/desktop/niri/default.nix`, which also sets Niri's display mode. Nix
 prefers a matching `-2560x1440` variant with the same extension and otherwise
