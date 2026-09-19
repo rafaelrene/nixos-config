@@ -74,7 +74,7 @@ async function main() {
   try {
     await mkdir(profile, { recursive: true, mode: 0o700 });
     context = await chromium.launchPersistentContext(profile, {
-      channel: "chromium",
+      executablePath: "/run/current-system/sw/bin/helium",
       headless: !login,
       locale: "en-US",
       timeout: 30000,

@@ -1,16 +1,9 @@
 { pkgs, lib, ... }:
 let
-  browsers = pkgs.playwright-driver.browsers.override {
-    withFirefox = false;
-    withWebkit = false;
-    withFfmpeg = false;
-    withChromiumHeadlessShell = false;
-  };
   checker = pkgs.writeShellApplication {
     name = "pro20x-check";
     text = ''
       export PLAYWRIGHT_DRIVER=${pkgs.playwright-driver}
-      export PLAYWRIGHT_BROWSERS_PATH=${browsers}
       exec ${lib.getExe pkgs.nodejs_24} ${./check.cjs} "$@"
     '';
   };
