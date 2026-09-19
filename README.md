@@ -528,6 +528,31 @@ ssh raf@192.168.86.136
 t3 connect link --headless --base-dir /home/raf/.local/share/t3code
 ```
 
+## Pro 20x availability notifications
+
+`pro20x-check` checks the 20x control in ChatGPT's signed-in upgrade screen and
+sends every result to `https://ntfy.rafr.dev/pro20x`. The user timer runs at
+09:00 and 21:00 Europe/Bratislava. Missed checks run when the workstation next
+starts or resumes; it cannot check while powered off or asleep.
+
+After rebuilding, run `pro20x-check --login` from the Othinus desktop, sign into
+ChatGPT, open the upgrade screen, and close the browser. This approved one-time
+login is an exception to the usual no-manual-setup policy. The dedicated browser
+profile stays in `~/.local/state/pro20x-check/browser`, outside Git and the Nix
+store. Repeat login if the session expires.
+
+Run `pro20x-check --dry-run` to verify detection without sending a notification,
+or `pro20x-check` to check and notify immediately. An enabled, actionable 20x
+control sends a high-priority notification; a disabled control sends an ordinary
+status. Selectability is a signal to try upgrading, not a guarantee that checkout
+will succeed. The checker never purchases or changes subscriptions.
+
+Login failures, blocked automation, unexpected page layouts, and network errors
+produce a check-failed notification rather than an availability claim. Notification
+delivery failures fail the service and appear in
+`journalctl --user -u pro20x-check`. Inspect the schedule with
+`systemctl --user list-timers pro20x-check.timer`.
+
 ## Validation
 
 ```sh
