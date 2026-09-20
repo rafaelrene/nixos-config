@@ -370,6 +370,8 @@ Codex, Claude Code, and OpenCode share instructions and skills from `config/agen
 Editing a linked skill or setting changes the repository file immediately.
 Restart the agent when it needs to reload configuration. Add or remove skill
 directories under `config/agents/skills/`, then rebuild to reconcile their links.
+The shared `login-dashboard` skill handles GroupSolver Dashboard authentication
+in T3Code's browser. Its source lives here independently of the Ansible checkout.
 Built-in skills, separately installed skills, credentials, sessions, databases,
 and generated plugin dependencies remain outside the checkout.
 
