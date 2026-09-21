@@ -1,12 +1,23 @@
 ---
 name: create-skill
-description: Use when the user wants to create or add a new skill to Othinus’s shared agent configuration, whether they already have its content or need help designing it.
+description: Use when the user wants to create or add a new skill to the workstation’s shared agent configuration, whether they already have its content or need help designing it.
 disable-model-invocation: true
 ---
 
 # Add a skill
 
-Create new skills under `/data/code/nixos-config/config/agents/skills/`.
+Use the checkout and rebuild command for the current host:
+
+| Host | `<checkout>` | Rebuild command |
+| --- | --- | --- |
+| Othinus (NixOS) | `/data/code/nixos-config` | `sudo nixos-rebuild switch --flake path:/data/code/nixos-config#othinus` |
+| Proserpina (macOS) | `/Users/rafael/code/.personal/nixos-config` | `sudo darwin-rebuild switch --flake path:/Users/rafael/code/.personal/nixos-config#Proserpina` |
+
+If working in a worktree, edit that checkout. Distribution uses the host's
+declared checkout after the changes reach it. Do not activate either host
+without explicit permission.
+
+Create new skills under `<checkout>/config/agents/skills/`.
 
 Ask one question at a time. For each design decision, include a recommended
 answer. If the repository can answer a question, inspect it instead of asking
@@ -131,7 +142,7 @@ overwrite automatically.
 
 After explicit approval:
 
-1. Create the skill under `/data/code/nixos-config/config/agents/skills/<name>/`.
+1. Create the skill under `<checkout>/config/agents/skills/<name>/`.
 2. Write supplied content verbatim.
 3. Run any already-configured formatter that applies. Formatter-only changes are
    allowed.
@@ -142,7 +153,6 @@ After explicit approval:
 If validation requires a substantive correction, preview the proposed change
 and obtain approval before applying it.
 
-Do not commit, push, or activate the system. Tell the user to run
-`sudo nixos-rebuild switch --flake path:/data/code/nixos-config#othinus`
-to distribute a new skill. Existing skill edits change the shared source
-immediately; restart agents when they need to reload it.
+Do not commit, push, or activate the system. Tell the user to run the host's
+rebuild command above to distribute a new skill. Existing skill edits change
+the shared source immediately; restart agents when they need to reload it.
