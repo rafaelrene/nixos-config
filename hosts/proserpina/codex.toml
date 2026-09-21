@@ -1,0 +1,8 @@
+[projects."/Users/rafael"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/.personal/nixos-config"]
+trust_level = "trusted"
+
+[tui]
+theme = "workstation"

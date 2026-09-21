@@ -32,8 +32,8 @@ alias gll = git log --color=auto --date=format:'%Y-%m-%d %H:%M' --pretty=tformat
 alias vim = nvim
 alias v = nvim
 alias pn = pnpm
-alias ns = sudo nixos-rebuild switch --flake "path:/data/code/nixos-config#othinus"
-alias nup = nix-update-packages
+alias ns = @rebuild-command@
+alias nup = @update-command@
 
 # Update packages, then switch only after a successful update.
 def nups [] {

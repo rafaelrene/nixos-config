@@ -1,13 +1,24 @@
 ---
 name: remove-skill
-description: Use when the user wants to remove or delete an existing skill from Othinus’s shared agent configuration and from every agent it is symlinked into.
+description: Use when the user wants to remove or delete an existing skill from the workstation’s shared agent configuration and from every agent it is symlinked into.
 disable-model-invocation: true
 ---
 
 # Remove a skill
 
-Delete a skill from `/data/code/nixos-config/config/agents/skills/` and clean up what referenced
-it. NixOS discovers shared skills by directory and prunes obsolete managed links
+Use the checkout and rebuild command for the current host:
+
+| Host | `<checkout>` | Rebuild command |
+| --- | --- | --- |
+| Othinus (NixOS) | `/data/code/nixos-config` | `sudo nixos-rebuild switch --flake path:/data/code/nixos-config#othinus` |
+| Proserpina (macOS) | `/Users/rafael/code/.personal/nixos-config` | `sudo darwin-rebuild switch --flake path:/Users/rafael/code/.personal/nixos-config#Proserpina` |
+
+If working in a worktree, edit that checkout. Distribution uses the host's
+declared checkout after the changes reach it. Do not activate either host
+without explicit permission.
+
+Delete a skill from `<checkout>/config/agents/skills/` and clean up what referenced
+it. Both systems discover shared skills by directory and prunes obsolete managed links
 on the next rebuild. Do not remove links by hand; unrelated and built-in skills
 are preserved.
 
@@ -16,12 +27,12 @@ Do not delete or modify anything until the user has approved the removal plan.
 ## Resolve the target
 
 Confirm which skill to remove. If the user did not name one, list
-`/data/code/nixos-config/config/agents/skills/` and ask. If the named skill is not there, say it
+`<checkout>/config/agents/skills/` and ask. If the named skill is not there, say it
 does not exist and stop.
 
 ## Find stale references
 
-Search `/data/code/nixos-config` for the skill's name, excluding its own directory. Expect
+Search `<checkout>` for the skill's name, excluding its own directory. Expect
 hits in:
 
 - `config/agents/AGENTS.md`
@@ -48,6 +59,5 @@ separate decision, so keep them out of that approval.
 ## Verify and report
 
 Show the resulting `git diff` and `git status`. Do not commit, push, or activate
-the system. Tell the user to run
-`sudo nixos-rebuild switch --flake path:/data/code/nixos-config#othinus`
-to prune the removed skill’s links, then restart agents to refresh discovery.
+the system. Tell the user to run the host's rebuild command above to prune the
+removed skill’s links, then restart agents to refresh discovery.

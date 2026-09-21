@@ -1,7 +1,7 @@
-# Othinus workstation configuration
+# Workstation configuration
 
-This repository is the full NixOS configuration for Rene's workstation PC,
-Othinus. Everything configurable belongs here: hardware and boot, networking,
+This repository configures Othinus with NixOS and Proserpina with nix-darwin.
+Everything configurable belongs here: hardware and boot, networking,
 users, packages and runtimes, services, desktop and themes, SSH, editor and
 shell configuration, and agent tools.
 
@@ -17,7 +17,7 @@ sudo nixos-rebuild switch --flake /data/code/nixos-config#othinus
 Keep the existing hardcoded checkout paths for now. Checkout-location
 independence is deferred in TODO.md.
 
-Do everything the NixOS way. Declare packages, services, configuration, and
+Use native NixOS and nix-darwin options. Declare packages, services, configuration, and
 themes here and apply them through the system rebuild. Do not introduce extra
 manual setup scripts or post-rebuild steps. The existing independent tool
 updaters remain until the unified update work in TODO.md is implemented.
@@ -54,6 +54,11 @@ Update README.md when behavior, setup commands, or required manual steps change.
   Keep existing package build checks enabled.
 - Do not switch the live workstation without Rene's explicit instruction.
   Evaluation and builds do not require approval.
+- Test Proserpina's migration in a disposable macOS VM. Permission to run Tart
+  on the work Mac does not authorize switching the host's configuration.
+- Retain the testing VM, downloaded image and testing tools between sessions.
+  Reuse the environment documented in `hosts/proserpina/README.md`; do not
+  delete it until Rene explicitly requests cleanup after migration testing.
 
 ## Validation
 
@@ -63,3 +68,8 @@ For configuration changes, run Nix evaluation and build checks before finishing:
 nix flake check --no-build
 nix build --no-link .#nixosConfigurations.othinus.config.system.build.toplevel
 ```
+
+For Darwin changes, also evaluate `darwinConfigurations.Proserpina.system.drvPath`.
+Build `.#darwinConfigurations.Proserpina.system` and test activation inside the
+macOS VM. Keep Ansible unchanged and verify that shared refactors preserve
+Othinus's configuration.

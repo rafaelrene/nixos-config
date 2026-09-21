@@ -1,10 +1,15 @@
-# Othinus NixOS configuration
+# Workstation configuration
 
-Declarative configuration for the Othinus development machine.
+Declarative configuration for Othinus (NixOS) and Proserpina (nix-darwin).
+See [Proserpina's migration notes](hosts/proserpina/README.md) for macOS setup,
+Ansible compatibility, and VM validation. The sections below describe Othinus
+unless they explicitly mention macOS.
 
 ## Repository structure
 
 - `hosts/othinus/`: machine hardware, disks, accounts, and explicit module imports.
+- `hosts/proserpina/`: Apple Silicon Mac identity and checkout path.
+- `modules/darwin/`: macOS packages, launchd services, and user-file activation.
 - `modules/applications/`: Ghostty, Helium, Zen, Neovim, Vicinae, and desktop apps.
 - `modules/desktop/`: Niri, DMS, shared desktop services, and GTK/Qt theming.
 - `modules/services/`: SSH, Tailscale, T3Code, and local snapshots.
@@ -17,6 +22,18 @@ Each grouping’s `default.nix` explicitly imports its submodules. Each feature
 owns its configuration, helpers, assets, package definitions, and documentation.
 Use further subdirectories where useful; small shared settings can stay in the
 grouping’s `default.nix`.
+
+Portable generators stay beside their feature: Neovim's package, Ghostty's
+palette, Starship and Nushell configuration, Git helpers, and agent themes and
+updater. Both operating systems import those generators and the same editable
+application files. NixOS retains its systemd wiring; macOS supplies its own
+activation and launchd wiring. Darwin has a separate stable base and an unstable
+package input, so updating macOS packages does not advance Othinus's Nixpkgs pin.
+Proserpina uses Nixpkgs, upstream flakes and brew-nix for applications, runs a
+separate T3Code server through launchd, and uses the desktop as its client.
+Its `nup` updates Nix inputs, pinned vendor downloads, and rolling T3Code and
+agent profiles; `nups` also switches the system. Homebrew is no longer a setup
+dependency or package updater. See the [Mac guide](hosts/proserpina/README.md).
 
 Removing a feature means removing its directory and import, then adjusting
 explicit integrations: Niri shortcuts, Nushell tool settings, default application
