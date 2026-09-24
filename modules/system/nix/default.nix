@@ -15,6 +15,7 @@ let
     text = ''
       nix flake update --flake path:/data/code/nixos-config
       /run/current-system/sw/bin/t3-update-now
+      /run/current-system/sw/bin/update-llm-agents
     '';
   };
 in
