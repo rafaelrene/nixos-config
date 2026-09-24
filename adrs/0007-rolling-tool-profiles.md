@@ -24,7 +24,10 @@ progress and build output in the terminal and share a lock with scheduled update
 Applying workstation package updates remains a separate NixOS rebuild and switch.
 
 Update Codex CLI, Claude Code, and OpenCode from
-`numtide/llm-agents.nix` in another independent profile each day. Never use
+`numtide/llm-agents.nix` in another independent profile each day. On Othinus,
+`nix-update-packages` also updates this profile; `update-llm-agents` updates only
+the agents. Select all profile entries with `nix profile upgrade --all`.
+Never use
 `npx` or an imperative language package manager for these tools.
 
 Do not accept third-party flake configuration automatically. Keep only the

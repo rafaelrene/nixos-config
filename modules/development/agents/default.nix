@@ -50,7 +50,11 @@ let
   profile = "/home/raf/.local/state/nix/profiles/llm-agents";
   flake = "github:numtide/llm-agents.nix";
   mkAgentWrapper = name: import ./wrapper.nix { inherit pkgs profile name; };
-  updateAgents = import ./update.nix { inherit pkgs profile flake; };
+  updateAgents = import ./update.nix {
+    inherit pkgs profile flake;
+    # Current Nix selects all profile entries with a flag, not a regex.
+    upgradeAll = true;
+  };
 in
 {
   environment.variables = {
@@ -58,6 +62,7 @@ in
     CLAUDE_CONFIG_DIR = "$HOME/.local/share/claude";
   };
   environment.systemPackages = [
+    updateAgents
     pkgs.coreutils
     pkgs.systemd
     (mkAgentWrapper "claude")

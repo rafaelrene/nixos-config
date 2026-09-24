@@ -373,7 +373,11 @@ Scheduled and manual updates share a lock. The server restarts at
 T3Code immediately instead of waiting until 04:00.
 
 Codex CLI, Claude Code, and OpenCode update daily from
-`numtide/llm-agents.nix`. Their wrappers automatically enter an allowed Devenv
+`numtide/llm-agents.nix`. `nix-update-packages` also updates these agents;
+`update-llm-agents` updates only the agents. Updates select every entry in their
+independent Nix profile with `--all`. New launches use the updated versions;
+running sessions keep their current processes.
+Their wrappers automatically enter an allowed Devenv
 environment when the project contains `devenv.nix` or `devenv.yaml`.
 
 ## Shared agent configuration
