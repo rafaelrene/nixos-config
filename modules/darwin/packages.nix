@@ -25,7 +25,6 @@ let
     "standard-notes"
     "superwhisper"
     "telegram"
-    "thaw"
     "ungoogled-chromium"
     "whatsapp"
   ];
@@ -35,11 +34,23 @@ let
       iina
       mailspring
       orbstack
-      raycast
       shottr
       slack
       yaak
       ;
+    # Raycast 2.4 cannot open databases already migrated by 2.5.2.
+    raycast =
+      if lib.versionAtLeast unstable.raycast.version "2.5.2.0" then
+        unstable.raycast
+      else
+        unstable.raycast.overrideAttrs {
+          version = "2.5.2.0";
+          src = pkgs.fetchurl {
+            name = "Raycast.dmg";
+            url = "https://x-r2.raycast-releases.com/Raycast_2.5.2.0_67ef5b0f31_arm64.dmg";
+            hash = "sha256-G3l4Ng0blsqWsL8T2bHRlAWZzuxh3YyFoN4/DoJEWyM=";
+          };
+        };
     discord = unstable.discord.overrideAttrs (old: {
       # Keep Nixpkgs' staged modules outside Discord's signed resource seal.
       installPhase =
@@ -49,6 +60,15 @@ let
           old.installPhase;
     });
     proton-pass = unstable.proton-pass.overrideAttrs { dontFixup = true; };
+    # macOS 27 support currently ships on Thaw's alpha channel.
+    thaw = casks.thaw.overrideAttrs {
+      version = "3.0.0-alpha.7";
+      src = pkgs.fetchurl {
+        url = "https://github.com/thaw-app/Thaw/releases/download/3.0.0-alpha.7/Thaw_3.0.0-alpha.7.zip";
+        hash = "sha256-dANNgipCGnQwQgzb3Ir6LUPhQZ7jZLZO42h9DBqNDfE=";
+      };
+      dontFixup = true;
+    };
     ghostty = pkgs.ghostty-bin;
     inherit (vendor) google-drive viber;
     tailscale-app = casks.tailscale-app.overrideAttrs (old: {
@@ -318,10 +338,19 @@ in
       };
 
       defaults = lib.mkIf config.workstation.removeReplacedHomebrewPackages {
-        CustomUserPreferences = lib.genAttrs [ "io.tailscale.ipn.macsys" "ch.protonmail.drive" ] (_: {
-          SUEnableAutomaticChecks = false;
-          SUAutomaticallyUpdate = false;
-        });
+        CustomUserPreferences =
+          lib.genAttrs [ "io.tailscale.ipn.macsys" "ch.protonmail.drive" ] (_: {
+            SUEnableAutomaticChecks = false;
+            SUAutomaticallyUpdate = false;
+          })
+          // {
+            "com.stonerl.Thaw" = {
+              UpdateChannel = "alpha";
+              AllowsBetaUpdates = true;
+              SUEnableAutomaticChecks = false;
+              SUAutomaticallyUpdate = false;
+            };
+          };
       };
     };
   };

@@ -1,8 +1,44 @@
 # Raycast investigation handover
 
-Status: unresolved, 2026-09-25. Continue locally on Proserpina in
-`/Users/rafael/code/.personal/nixos-config`. Rene requested moving this
-investigation from the Othinus-hosted thread to a new Mac-hosted T3Code thread.
+Status: root cause fixed and runtime verified, 2026-09-25. System activation
+remains pending. Investigation continued locally on Proserpina in
+`/Users/rafael/code/.personal/nixos-config` after the Othinus-hosted thread.
+
+## Resolution
+
+The pre-migration launch log at 13:38 records version **2.5.2.0**. Nix installed
+**2.4.1.0**, which cannot open the newer database schemas. Repeated launches
+failed migrations for `ai`, `app_index` and `settings_v2`; the backend exited
+after failing to initialize root search, producing the restart alert.
+
+`modules/darwin/packages.nix` now uses the upstream signed 2.5.2 archive and
+checksum when the unstable package is older. Once Nixpkgs catches up, its package
+takes precedence. No database, settings, hotkey or permission reset was needed.
+
+Validation:
+
+- The archive hash matches both the current upstream Nixpkgs package and cask.
+- The built app passes deep, strict codesign verification.
+- Launching the built 2.5.2 app against existing state initializes all 11
+  databases with no failed migrations; the frontend completes startup.
+- Rene confirmed “It's working now.” The saved hotkey remains Command-Space.
+- Raycast registered a login item for the running Nix-store bundle. Recheck its
+  path after launching the installed copy; an actual login has not been tested.
+- Nix evaluation, the full Darwin build, formatting and lint passed. No new VM
+  activation was performed; the prior testing environment was retired.
+- Othinus's system derivation is unchanged, and its build passed on Othinus.
+
+The working app is currently launched from
+`/nix/store/kj559zwiyl9xmzik4ps0qbkfrvzpaicp-raycast-2.5.2.0/Applications/Raycast.app`.
+The installed `/Applications/Nix Apps/Raycast.app` remains 2.4.1 until an
+authorized system switch. Quit Raycast before switching, then launch its
+installed copy and verify the hotkey and login-item path again.
+
+Existing app-support directories and preferences were backed up locally under
+`~/.local/state/nix-darwin/backups/raycast-2026-09-25` before the successful launch.
+These contain private state and must stay outside the repository and Nix store.
+
+The observations below describe the original failure, before the fix.
 
 ## Symptom
 

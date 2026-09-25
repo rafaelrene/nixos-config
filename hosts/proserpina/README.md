@@ -39,10 +39,19 @@ The system uses flake inputs rather than imperative `nix-channel` subscriptions:
 
 FreeTube, Ghostty, Signal and Teams retain their tested stable Nixpkgs
 packages. brew-nix reads cask metadata and produces Nix derivations; it never
-runs Brew. Thaw uses the newer cask release because even unstable Nixpkgs
-currently trails it. Telegram remains the native Mac client. Filen uses the
-signed vendor bundle through brew-nix; the Nixpkgs launcher uses Electron's
-generic data directory instead of the vendor's application identity.
+runs Brew. Thaw uses the signed **3.0.0-alpha.7** release for macOS 27, with its
+update channel set to `alpha`. Its archive and checksum are pinned in
+`modules/darwin/packages.nix`; update that override for later alpha releases.
+The stable cask does not support macOS 27. Telegram remains the native Mac
+client. Filen uses the signed vendor bundle through brew-nix; the Nixpkgs
+launcher uses Electron's generic data directory instead of the vendor's
+application identity.
+
+Raycast has a 2.5.2 minimum: the migrated Mac's databases already use that
+release's schema, which 2.4.1 cannot open. Until the unstable input catches up,
+the package uses the signed upstream 2.5.2 archive and checksum. Newer Nixpkgs
+versions take precedence automatically. Compare the running app version before
+replacing self-updated applications; a Brew receipt can report an older version.
 
 Google Drive's package extracts only the Apple Silicon app, excluding Google's
 updater and document shortcuts. Viber uses its complete app payload, not the
@@ -149,9 +158,11 @@ nix-darwin installs real app bundles. With Homebrew removal enabled, Google Driv
 compatibility links at their vendor's expected top-level `/Applications` paths;
 activation refuses unrelated files at those paths. Google Drive's installed
 mount helper receives its vendor-required root ownership and setuid permission.
-Tailscale/Proton Drive automatic Sparkle updates and Google Drive's vendor updates
-are disabled so these applications follow `nup`/`nups`. Until then, existing
-vendor paths and updater preferences are left in place, including Discord's
+Tailscale/Proton Drive/Thaw automatic Sparkle updates and Google Drive's vendor
+updates are disabled so Nix controls their installed versions. `nup`/`nups`
+refreshes the normal package sources; Thaw's alpha override requires a
+version/hash edit. Before final handover, existing vendor paths and updater
+preferences are left in place, including Discord's
 settings. Google Drive and RustDesk need the final handover to validate their
 Nix copies at the vendor paths; keeping both copies is only a staging step.
 Unmanaged vendor-path conflicts are checked before activation changes files or
@@ -326,8 +337,21 @@ File Provider extension from the Nix copy. Managed T3Code still returned HTTP 20
 Rene confirmed Google Drive and Proton Drive file access and synchronization,
 Tailscale connectivity, and RustDesk readiness after answering local prompts.
 
-Raycast remains unresolved: its shortcut fails and it shows “Raycast failed to
-restart.” Continue locally using the [Raycast handover](RAYCAST-HANDOVER.md).
+Raycast's “failed to restart” error came from downgrading its self-updated 2.5.2
+bundle to Nixpkgs' 2.4.1. The corrected Nix package opens all 11 existing
+databases, and Rene confirmed it works. The package was launched directly from
+the Nix store; applying the built system to replace the installed copy remains
+pending. See the [Raycast handover](RAYCAST-HANDOVER.md) for validation and state.
+
+Thaw 2.0.1 displayed its macOS 27 incompatibility alert. The replacement
+3.0.0-alpha.7 Nix package passes signature verification and launches on the
+host with the alpha channel selected. Existing preferences and app-support
+state were backed up under `~/.local/state/nix-darwin/backups/thaw-2026-09-25`.
+It is running from the Nix store until the next authorized system switch.
+
+Both fixes pass formatting, lint, full flake evaluation and the Darwin build.
+Othinus's derivation is unchanged and its build passed on Othinus. Activation
+testing in a new VM and the live system switch have not been performed.
 
 ### Nix-only package validation (2026-09-20)
 
