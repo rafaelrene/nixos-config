@@ -1,5 +1,76 @@
+[projects."/Users/rafael/code/.personal/flux"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/global-repo"]
+trust_level = "trusted"
+
 [projects."/Users/rafael"]
 trust_level = "trusted"
+
+[projects."/Users/rafael/code/.personal/.try/2026-04-25 raftix"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/dashboard"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/agatha"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/.personal/ansible"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/.personal/dotforge"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/.personal/.try/2026-05-18 import-freetube-to-youtube"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/research-repo"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/global-repo/src/firebase/libs/gs3-ai-agents"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/.personal/.try/2026-05-28 codearts-brew-tap"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/.personal/.try/2026-05-30 raflux"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/.personal/shosetsu-extensions"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/.personal/.try/2026-07-06 tube"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/e2e"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/.personal/.try/2026-07-26 plans"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/.personal/.try/2026-08-11 pp"]
+trust_level = "trusted"
+
+[projects."/Users/rafael/code/.personal/.try/2026-08-30 echohold"]
+trust_level = "trusted"
+
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
+
+[tui.model_availability_nux]
+"gpt-5.6-sol" = 2
+
+[hooks.state]
+
+[hooks.state."/Users/rafael/.codex/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:f449e36906d318dae9007993485c98d659e24b703a81a47df9812f18d2c6601b"
+
+[hooks.state."/Users/rafael/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:f8d378986c4d79039e591646983bc297623321a2588125d1cddf8a2a36de27ab"
+
+[hooks.state."/Users/rafael/.codex/hooks.json:interrupt:0:0"]
+trusted_hash = "sha256:58ea9ed30e0b5e81a223f3d6b01959e6f16ed8410b9267c9d6e3b9a4fa8c4a70"
 
 [projects."/Users/rafael/code/.personal/nixos-config"]
 trust_level = "trusted"

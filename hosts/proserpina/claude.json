@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "model": "opus[1m]",
+  "effortLevel": "xhigh",
+  "tui": "fullscreen",
+  "theme": "custom:workstation",
+  "editorMode": "vim",
+  "preferredNotifChannel": "ghostty",
+  "autoMemoryEnabled": false
+}

@@ -53,10 +53,12 @@ let
     inherit (vendor) google-drive viber;
     tailscale-app = casks.tailscale-app.overrideAttrs (old: {
       dontFixup = true;
+      # The installed app path exists only after activation.
       installPhase = old.installPhase + ''
         mkdir -p "$out/bin"
-        makeWrapper '/Applications/Nix Apps/Tailscale.app/Contents/MacOS/Tailscale' "$out/bin/tailscale" \
-          --set TAILSCALE_BE_CLI 1
+        makeWrapper /usr/bin/env "$out/bin/tailscale" \
+          --set TAILSCALE_BE_CLI 1 \
+          --add-flag '/Applications/Nix Apps/Tailscale.app/Contents/MacOS/Tailscale'
       '';
     });
     zentty = casks.zentty.overrideAttrs (old: {
@@ -91,7 +93,6 @@ let
     inherit (pkgs)
       age
       btop
-      direnv
       fd
       fzf
       jq
@@ -210,80 +211,118 @@ let
   };
 in
 {
-  # Keep project shells and the agent wrappers on the same current Devenv.
-  nixpkgs.overlays = [ (_final: _prev: { inherit (unstable) devenv; }) ];
+  options.workstation.removeReplacedHomebrewPackages = lib.mkEnableOption "remove migrated Homebrew packages and apply vendor app integration after validation";
 
-  environment.systemPackages =
-    (with pkgs; [
-      bat
-      curl
-      eza
-      freetube
-      gh
-      git
-      gnutar
-      lsof
-      xz
-      yq-go
-      zip
-      unzip
-      zoxide
-    ])
-    ++ lib.attrValues applications
-    ++ lib.attrValues tools;
+  config = {
+    # Keep project shells and the agent wrappers on the same current Devenv.
+    nixpkgs.overlays = [ (_final: _prev: { inherit (unstable) devenv; }) ];
 
-  fonts.packages = with pkgs; [
-    nerd-fonts.hack
-    nerd-fonts.jetbrains-mono
-    jetbrains-mono
-  ];
+    environment.systemPackages =
+      (with pkgs; [
+        bat
+        curl
+        eza
+        freetube
+        gh
+        git
+        gnutar
+        lsof
+        xz
+        yq-go
+        zip
+        unzip
+        zoxide
+      ])
+      ++ lib.attrValues applications
+      ++ lib.attrValues tools;
 
-  # Remove only known replacements, without --zap or a global Brew cleanup.
-  # nix-darwin copies real bundles into /Applications/Nix Apps before cleanup.
-  system.activationScripts.postActivation.text = lib.mkAfter ''
-    /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- ${lib.getExe cleanup}
-    # The native updater ignores SKIP_HOST_UPDATE. Its pinned manifest keeps
-    # Finder launches on Nixpkgs' host/module versions without altering signatures.
-    /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- ${lib.getExe discordUpdateSettings}
-    # Upstream helpers use these fixed paths. Keep just one actual app bundle.
-    for app in 'Google Drive' RustDesk; do
-      destination="/Applications/$app.app"
-      target="/Applications/Nix Apps/$app.app"
-      if test -L "$destination" && test "$(readlink "$destination")" = "$target"; then
-        continue
-      fi
-      if test -e "$destination" || test -L "$destination"; then
-        echo "Refusing to replace unmanaged application: $destination" >&2
-        exit 1
-      fi
-      ln -s "$target" "$destination"
-    done
-    # Match the vendor installer's mount-helper permissions, outside the store.
-    chown root:wheel '/Applications/Nix Apps/Google Drive.app/Contents/MacOS/mount_helper'
-    chmod 4755 '/Applications/Nix Apps/Google Drive.app/Contents/MacOS/mount_helper'
-    # Merge only Drive's update policy; retain policies for other Google apps.
-    (
-      set -eu
-      policy=$(mktemp)
-      trap 'rm -f "$policy" "$policy.json"' EXIT
-      domain=/Library/Preferences/com.google.Keystone
-      if test -f "$domain.plist"; then
-        /usr/bin/defaults export "$domain" - | /usr/bin/plutil -convert json -o "$policy.json" -
-      else
-        echo '{}' > "$policy.json"
-      fi
-      ${lib.getExe pkgs.jq} '.updatePolicies["com.google.drivefs"].UpdateDefault = 3' "$policy.json" > "$policy"
-      /usr/bin/plutil -convert xml1 "$policy"
-      /usr/bin/defaults import "$domain" "$policy"
-    )
-  '';
+    fonts.packages = with pkgs; [
+      nerd-fonts.hack
+      nerd-fonts.jetbrains-mono
+      jetbrains-mono
+    ];
 
-  homebrew.enable = false;
+    homebrew.enable = false;
 
-  system.defaults = {
-    CustomUserPreferences = lib.genAttrs [ "io.tailscale.ipn.macsys" "ch.protonmail.drive" ] (_: {
-      SUEnableAutomaticChecks = false;
-      SUAutomaticallyUpdate = false;
-    });
+    system = {
+      activationScripts = {
+        # Check fixed vendor paths before any application copies or Brew removals.
+        preActivation.text = lib.mkIf config.workstation.removeReplacedHomebrewPackages (
+          lib.mkBefore ''
+            installedCasks=""
+            if test -x /opt/homebrew/bin/brew; then
+              installedCasks=$(/usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- \
+                /usr/bin/env HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ANALYTICS=1 /opt/homebrew/bin/brew list --cask)
+            fi
+            for entry in 'Google Drive:google-drive' 'RustDesk:rustdesk'; do
+              app=''${entry%:*}
+              cask=''${entry#*:}
+              destination="/Applications/$app.app"
+              target="/Applications/Nix Apps/$app.app"
+              if test -L "$destination" && test "$(readlink "$destination")" = "$target"; then
+                continue
+              fi
+              if test -e "$destination" || test -L "$destination"; then
+                if ! test -L "$destination" && test -d "$destination" && ${lib.getExe pkgs.gnugrep} -Fxq "$cask" <<< "$installedCasks"; then
+                  continue
+                fi
+                echo "Refusing to replace unmanaged application before migration: $destination" >&2
+                exit 1
+              fi
+            done
+          ''
+        );
+
+        # Remove only known replacements, without --zap or a global Brew cleanup.
+        # nix-darwin copies real bundles into /Applications/Nix Apps before cleanup.
+        postActivation.text = lib.mkIf config.workstation.removeReplacedHomebrewPackages (
+          lib.mkAfter ''
+            /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- ${lib.getExe cleanup}
+            # The native updater ignores SKIP_HOST_UPDATE. Its pinned manifest keeps
+            # Finder launches on Nixpkgs' host/module versions without altering signatures.
+            /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- ${lib.getExe discordUpdateSettings}
+            # Upstream helpers use these fixed paths. Keep just one actual app bundle.
+            for app in 'Google Drive' RustDesk; do
+              destination="/Applications/$app.app"
+              target="/Applications/Nix Apps/$app.app"
+              if test -L "$destination" && test "$(readlink "$destination")" = "$target"; then
+                continue
+              fi
+              if test -e "$destination" || test -L "$destination"; then
+                echo "Refusing to replace unmanaged application: $destination" >&2
+                exit 1
+              fi
+              ln -s "$target" "$destination"
+            done
+            # Match the vendor installer's mount-helper permissions, outside the store.
+            chown root:wheel '/Applications/Nix Apps/Google Drive.app/Contents/MacOS/mount_helper'
+            chmod 4755 '/Applications/Nix Apps/Google Drive.app/Contents/MacOS/mount_helper'
+            # Merge only Drive's update policy; retain policies for other Google apps.
+            (
+              set -eu
+              policy=$(mktemp)
+              trap 'rm -f "$policy" "$policy.json"' EXIT
+              domain=/Library/Preferences/com.google.Keystone
+              if test -f "$domain.plist"; then
+                /usr/bin/defaults export "$domain" - | /usr/bin/plutil -convert json -o "$policy.json" -
+              else
+                echo '{}' > "$policy.json"
+              fi
+              ${lib.getExe pkgs.jq} '.updatePolicies["com.google.drivefs"].UpdateDefault = 3' "$policy.json" > "$policy"
+              /usr/bin/plutil -convert xml1 "$policy"
+              /usr/bin/defaults import "$domain" "$policy"
+            )
+          ''
+        );
+
+      };
+
+      defaults = lib.mkIf config.workstation.removeReplacedHomebrewPackages {
+        CustomUserPreferences = lib.genAttrs [ "io.tailscale.ipn.macsys" "ch.protonmail.drive" ] (_: {
+          SUEnableAutomaticChecks = false;
+          SUAutomaticallyUpdate = false;
+        });
+      };
+    };
   };
 }

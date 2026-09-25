@@ -110,8 +110,23 @@ updates all three rolling agent packages. Nix system packages take effect after 
 Failures stop the command and are reported; a failed update does not switch the
 system. Close and reopen desktop applications to use updated versions.
 
-After Nix packages are installed, activation uninstalls only the named
-Brew apps, fonts and CLI tools replaced by Nix, including the old T3Code cask.
+The module disables Homebrew removal by default. Proserpina's host configuration
+now enables it for the authorized final handover. For a new migration, first
+disable `workstation.removeReplacedHomebrewPackages`, then build and validate the Nix
+configuration while keeping the existing Brew installations. Once the migration
+is verified, set `workstation.removeReplacedHomebrewPackages = true;` in
+`hosts/proserpina/configuration.nix` and rebuild. That activation uninstalls only
+the named Brew apps, fonts and CLI tools replaced by Nix, including the old T3Code cask.
+Run this handover from Apple's Terminal: Brew's Zentty uninstall quits Zentty,
+which would interrupt a rebuild running there. Grant Terminal Full Disk Access
+in System Settings > Privacy & Security, then quit and reopen Terminal before
+activation. Writing Proton Drive's sandboxed updater preferences requires this
+access; sudo alone does not grant it. The permission is needed for subsequent
+rebuilds that write these preferences too, or must be granted again for them.
+Save work and wait for cloud sync
+to finish, then quit the replaced desktop apps before activation. Reopen their
+Nix copies afterward; Google Drive, RustDesk and Tailscale may need macOS prompts
+answered locally. Verify Finder access, synchronization, VPN and remote access.
 Agent cleanup waits until the rolling Nix profile contains each replacement.
 Formulae required by other installed Brew packages remain. Cleanup never uses
 `--zap`, `--force`, autoremove or global Brew cleanup: application data and
@@ -121,16 +136,35 @@ remove an application's login items. Launch the Nix copies from
 which is skipped on clean machines without Brew. Unrelated legacy Brew packages
 are neither removed nor updated by this configuration.
 
-nix-darwin installs real app bundles. Google Drive and RustDesk also have
+During staging, quit each existing app before opening its Nix copy. Proton Drive
+can launch the Nix File Provider while its old app is still running, producing
+“FileProvider has launched from outside the current Drive app.” Quit Proton Drive
+and open `/Applications/Nix Apps/Proton Drive.app`, then check an existing file in
+Finder. Both the app and its extension must run from that bundle. Retaining both
+copies can cause this mismatch again; restarting is a staging workaround, not
+a completed app handover. Do not delete File Provider data or sign out to fix
+an installation-path mismatch.
+
+nix-darwin installs real app bundles. With Homebrew removal enabled, Google Drive and RustDesk also have
 compatibility links at their vendor's expected top-level `/Applications` paths;
 activation refuses unrelated files at those paths. Google Drive's installed
 mount helper receives its vendor-required root ownership and setuid permission.
 Tailscale/Proton Drive automatic Sparkle updates and Google Drive's vendor updates
-are disabled so these applications follow `nup`/`nups`.
+are disabled so these applications follow `nup`/`nups`. Until then, existing
+vendor paths and updater preferences are left in place, including Discord's
+settings. Google Drive and RustDesk need the final handover to validate their
+Nix copies at the vendor paths; keeping both copies is only a staging step.
+Unmanaged vendor-path conflicts are checked before activation changes files or
+removes packages, and checked again immediately before creating the links.
 
 T3Code's server and desktop are built from the same official nightly release and
 staged together in `~/.local/state/nix/profiles/t3code`. A matching bootstrap pair
 is included in the system closure, so startup does not wait for an online update.
+Quit the existing T3Code desktop and its embedded server before the first
+activation. A listener on port 3773 blocks activation unless the nix-darwin
+T3Code service is already registered. Preserve the existing
+`local.t3code.bitbucket-env` launch agent; it supplies the Mac's Bitbucket
+environment without putting credentials in this repository.
 Launchd starts the server
 at login, restarts it on failure, checks for updates every three hours, and
 restarts it daily at 04:00. `nup` activates the new server immediately. Open
@@ -144,6 +178,8 @@ Devenv is the project runtime manager. Declare language versions and project
 tools in each project's `devenv.nix`; the shared Nushell hook and agent wrappers
 enter that environment. Node 24 and Clang remain workstation bootstrap tools,
 as on Othinus. Existing Mise data is preserved but no longer configured.
+Conda and direnv are not configured by the Mac module; direnv is not included
+in its explicit tool list. Existing Zsh initialization remains untouched.
 The login shell and Ghostty use `/nix/var/nix/profiles/system/sw/bin/nu`, which
 remains available before boot activation recreates `/run/current-system`.
 
@@ -176,7 +212,11 @@ Clean installations create XDG directories directly. If both locations already
 exist, activation stops rather than choosing one. Agent settings stored as real
 files are subject to the same conflict checks as other configuration.
 Codex's editable host settings live in `hosts/proserpina/codex.toml`; its theme
-is shared, while project trust paths belong to this Mac.
+is shared, while project trust paths belong to this Mac. Claude's Mac preferences
+live in `hosts/proserpina/claude.json`, preserving its model, permission mode,
+editor and notification settings. Before the first switch, compare the live
+settings with these files, back up both, and retire the conflicting regular
+files only as part of the handover. Never copy credentials into the checkout.
 
 On a fresh installation, `~/.t3` links back to the XDG T3Code directory. macOS
 restores the signed upstream desktop directly at login, potentially before
@@ -193,8 +233,11 @@ in their existing external secret storage or project environment.
 that directory in Raycast’s Script Commands settings instead of `~/.web-apps`.
 An existing Ansible link is left untouched; a link installed by an earlier
 nix-darwin generation is retired automatically. The launchers still use Chromium. The imported Zentty helpers still explicitly open
-Zsh panes; the default login shell and Ghostty use Nushell. The old custom NvChad
-configuration is not imported; the selected editor configuration is LazyVim.
+Zsh panes; the default login shell and Ghostty use Nushell. The legacy
+`~/.config/git/.gitconfig` path remains available, and Try's upstream-generated
+Zsh integration is installed at `~/.config/try-rs/try-rs.zsh` for these panes.
+Both the current Mac and this repository use LazyVim; their plugin pins and
+some plugin settings differ.
 
 macOS still controls application sign-in and privacy permissions. For example,
 Ghostty's global quick-terminal shortcut needs Accessibility permission. These
@@ -216,36 +259,75 @@ agent credentials. Test a clean installation, repeated activation, a simulated
 Ansible home, conflict rejection, Nushell startup, application discovery and the
 launchd agent updater. Do not treat evaluation alone as an end-to-end test.
 
-### Retained testing VM
+### Testing environment retired (2026-09-25)
 
-Keep this environment between testing sessions. Delete the VM, downloaded image
-and testing tools only when Rene explicitly requests cleanup. Stop the VM when
-idle to release CPU and memory; retain its disk and the image cache.
+Rene requested deletion of the testing VM, downloaded images and Tart after
+validation. The `proserpina-test` VM and its dedicated directory,
+`/Users/rafael/Library/Caches/proserpina-vm-testing`, were removed. The older
+`dotforge-tahoe-base` VM and cache in `~/.tart` were also removed with explicit
+approval. Future VM testing requires creating a new disposable environment.
 
-- Host: `rafael@macbookpro.lan`. Use this Mac only to run Tart, never to activate
-  Proserpina's configuration.
-- Host working directory: `/Users/rafael/Library/Caches/proserpina-vm-testing`.
-- Tart executable: `tool/tart.app/Contents/MacOS/tart` under that directory.
-- Set `TART_HOME` to that directory's `tart` subdirectory and
-  `TART_NO_AUTO_PRUNE=1` for every Tart command.
-- VM name: `proserpina-test`; source image:
-  `ghcr.io/cirruslabs/macos-tahoe-base:latest`.
-- Linux SSH configuration:
-  `/home/raf/.local/state/proserpina-vm-testing/ssh_config`.
-  It defines `proserpina-work-mac` and `proserpina-vm`.
-- Start with `tart run proserpina-test --no-graphics --no-audio --no-clipboard
-  --vnc-experimental`. Keep its output private: it contains the temporary VNC
-  password. This virtual console supports macOS's protected permission dialogs.
-- Forward local SSH port `22229` to port `22` at the guest's current
-  `tart ip proserpina-test` address. Forward local VNC port `15929` to the host's
-  temporary VNC port printed by Tart. Both forwards go through the work Mac.
-  Recreate them after restarting the VM; addresses and ports can change.
-  Do not mount the host home or forward agents.
+The test VM used `ghcr.io/cirruslabs/macos-tahoe-base:latest`, macOS 26.6.2,
+two CPU cores, 4 GiB RAM and a 120 GB virtual disk. Its account was renamed to
+`rafael`; it had no host-home mount or forwarded work credentials.
 
-Created on 2026-09-20 with macOS 26.6.2, two CPU cores, 4 GiB RAM and a 120 GB
-virtual disk. The initialized account is renamed to `rafael`; Nix and the
-checkout are installed inside the guest. Reuse `proserpina-test` for the
-remaining migration work rather than cloning the image again.
+### Migration safeguards validated (2026-09-25)
+
+- Built the complete Darwin system with Homebrew cleanup disabled and enabled.
+- Activated the default configuration twice; checked Nushell startup, the
+  legacy Git path, Try's Zsh function with completion initialized, and T3Code HTTP.
+- Rejected an unmanaged Google Drive bundle and an occupied T3Code port before
+  user-link activation. Restored all temporary test fixtures afterward.
+- Activated cleanup mode on the VM without Brew; verified the vendor links
+  and Google Drive's root-owned, setuid mount helper. Earlier tests below cover
+  Homebrew removal itself.
+- Passed Linux evaluation, lint and the Othinus build. Othinus's system
+  derivation remained unchanged.
+
+The work Mac's live configuration was not activated during these tests. VM testing does not cover
+its macOS 27 permissions, account sign-in, cloud synchronization or VPN sessions.
+
+A subsequent clean build on the work Mac exposed a Tailscale wrapper that
+required the installed app during packaging. The wrapper now resolves that path
+at launch. Its package build and generated shell wrapper were checked on the
+Mac; Rene approved native checks for this fix without recreating the deleted VM.
+Viber's overwritten download URL also required refreshing its pin to 28.10.0.
+The new archive's metadata and signature were checked on the work Mac; its
+developer identity matches the installed Viber application.
+
+### First live activation (2026-09-25)
+
+Rene completed the first switch locally with Homebrew removal disabled. SSH
+checks confirmed the active system, Nushell login shell, Git and Neovim binaries,
+managed agent-setting links, and installed Codex, Claude Code and OpenCode
+profiles. Both scheduled updaters exited successfully. The managed T3Code server
+listened on localhost port 3773 and returned HTTP 200.
+
+The retained Proton Drive app received an extension launch from the Nix copy.
+Quitting the old app and opening the Nix copy aligned both running executable
+paths. Rene confirmed the warning disappeared and an existing file opened in Finder;
+upload/download synchronization has not been independently tested.
+
+### Final live handover (2026-09-25)
+
+Rene completed activation with Brew cleanup enabled. The declared Brew app and
+CLI replacements were removed; unrelated MongoDB Compass and other formulae
+remain. A partial JetBrains Mono uninstall required restoring 17 stored font
+files to their missing user-font destinations before normal cleanup could finish.
+The old Graphite formula needed temporary, formula-specific Homebrew trust after
+source review; that trust was revoked after removal.
+
+SSH checks confirmed the Google Drive and RustDesk compatibility links, Google's
+root-owned setuid mount helper, disabled vendor updater settings and Discord's
+pinned update manifest setting. Google Drive and RustDesk signatures passed.
+All four apps started from `/Applications/Nix Apps`; Tailscale reported online
+with no health warnings. Google Drive and Proton Drive each had one registered
+File Provider extension from the Nix copy. Managed T3Code still returned HTTP 200.
+Rene confirmed Google Drive and Proton Drive file access and synchronization,
+Tailscale connectivity, and RustDesk readiness after answering local prompts.
+
+Raycast remains unresolved: its shortcut fails and it shows “Raycast failed to
+restart.” Continue locally using the [Raycast handover](RAYCAST-HANDOVER.md).
 
 ### Nix-only package validation (2026-09-20)
 

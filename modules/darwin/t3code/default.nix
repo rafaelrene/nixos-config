@@ -136,6 +136,15 @@ let
   '';
 in
 {
+  system.activationScripts.preActivation.text = lib.mkBefore ''
+    # An existing desktop may still own the port through its embedded server.
+    if /usr/sbin/lsof -nP -iTCP:3773 -sTCP:LISTEN >/dev/null 2>&1 \
+      && ! /bin/launchctl print "gui/$(/usr/bin/id -u ${lib.escapeShellArg config.system.primaryUser})/org.nixos.t3code" >/dev/null 2>&1; then
+      echo "Port 3773 is already occupied. Quit the existing T3 Code desktop/server before switching." >&2
+      exit 1
+    fi
+  '';
+
   environment.systemPackages = [
     command
     desktop

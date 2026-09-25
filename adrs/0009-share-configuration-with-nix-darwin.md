@@ -37,6 +37,9 @@ not required. Package Google Drive's Apple Silicon payload and Viber's complete
 app directly; `nup` refreshes their otherwise unversioned URLs into a version/hash
 manifest tracked in this repository. The approved migration cleanup only removes
 known Brew replacements and preserves application data and unrelated packages.
+Keep cleanup disabled for the first activation; enable
+`workstation.removeReplacedHomebrewPackages` after validating the replacements.
+Vendor integration and updater preferences change with that final handover.
 Package matching T3Code
 nightly server/client artifacts in an independent Nix profile, with launchd
 managing the server and the desktop acting only as a client. Othinus's boot, disk,

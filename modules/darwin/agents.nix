@@ -94,7 +94,7 @@ in
       // skillLinks
       // {
         ".local/share/codex/themes/workstation.tmTheme" = toString codexTheme;
-        ".local/share/claude/settings.json" = "${source}/claude/settings.json";
+        ".local/share/claude/settings.json" = lib.mkDefault "${source}/claude/settings.json";
         ".local/share/claude/themes/workstation.json" = toString claudeTheme;
         ".config/opencode/opencode.jsonc" = "${source}/opencode/opencode.jsonc";
         ".config/opencode/tui.json" = "${source}/opencode/tui.json";

@@ -10,6 +10,11 @@ let
   home = config.users.users.${config.system.primaryUser}.home;
   theme = import ../../themes { inherit lib pkgs; };
   deltaConfig = pkgs.writeText "delta.gitconfig" (lib.generators.toGitINI { inherit (theme) delta; });
+  tryZsh = pkgs.runCommand "try-rs-init.zsh" { } ''
+    ${
+      inputs.try-rs.packages.${pkgs.stdenv.hostPlatform.system}.default
+    }/bin/try-rs --setup-stdout zsh > "$out"
+  '';
 in
 {
   environment.systemPackages = [
@@ -29,12 +34,15 @@ in
     };
     links = {
       ".config/git/config" = "${checkout}/modules/development/git/config";
+      # Existing Zsh sessions and Zentty panes still use GIT_CONFIG_SYSTEM.
+      ".config/git/.gitconfig" = "${checkout}/modules/development/git/config";
       ".config/git/ignore" = "${checkout}/modules/development/git/ignore";
       ".config/git/themes.gitconfig" = toString deltaConfig;
       ".config/nvim" = "${checkout}/modules/applications/neovim/config";
       ".config/ghostty/config" = "${checkout}/modules/darwin/ghostty.config";
       ".config/tealdeer/config.toml" = toString ../applications/tealdeer/config.toml;
       ".config/graphite/aliases" = "${checkout}/modules/darwin/graphite-aliases";
+      ".config/try-rs/try-rs.zsh" = toString tryZsh;
       ".config/try-rs/config.toml" = toString (
         (pkgs.formats.toml { }).generate "try-rs.toml" {
           tries_path = "${home}/code/.personal/.try";

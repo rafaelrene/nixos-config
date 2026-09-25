@@ -33,7 +33,12 @@ Proserpina uses Nixpkgs, upstream flakes and brew-nix for applications, runs a
 separate T3Code server through launchd, and uses the desktop as its client.
 Its `nup` updates Nix inputs, pinned vendor downloads, and rolling T3Code and
 agent profiles; `nups` also switches the system. Homebrew is no longer a setup
-dependency or package updater. See the [Mac guide](hosts/proserpina/README.md).
+dependency or package updater. Removal of replaced Brew packages is opt-in;
+Proserpina now enables it for the final migration handover. The existing Zsh
+Git/Try paths remain available.
+Quit existing Mac apps before opening their Nix copies during validation;
+duplicate Proton Drive installations can mix app and File Provider paths.
+See the [Mac guide](hosts/proserpina/README.md).
 
 Removing a feature means removing its directory and import, then adjusting
 explicit integrations: Niri shortcuts, Nushell tool settings, default application
