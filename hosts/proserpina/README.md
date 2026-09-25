@@ -32,12 +32,12 @@ The system uses flake inputs rather than imperative `nix-channel` subscriptions:
 | --- | --- |
 | `nixpkgs` / `nixos-26.05` | Othinus, unchanged by Mac package updates. |
 | `nixpkgs-darwin` / `nixpkgs-26.05-darwin` and nix-darwin 26.05 | Stable Mac base, shell and development environment. |
-| `nixpkgs-unstable` | Newer Discord, IINA, Mailspring, OrbStack, Proton Pass, Raycast, Shottr, Slack, Yaak, Devenv, Graphite and Pi. |
-| `brew-nix` and `brew-api` | Native Mac releases for Amethyst, Anytype, Ente Photos/Auth, Gifox, ONLYOFFICE, Proton Drive, RustDesk, Standard Notes, Superwhisper, Tailscale, Telegram, Thaw, Chromium, WhatsApp and Zentty. |
+| `nixpkgs-unstable` | Newer Discord, IINA, Mailspring, OrbStack, Proton Pass, Raycast, Shottr, Yaak, Devenv, Graphite and Pi. |
+| `brew-nix` and `brew-api` | Native Mac releases for Amethyst, Anytype, Ente Photos/Auth, Gifox, Microsoft Teams, ONLYOFFICE, Proton Drive, RustDesk, Signal, Slack, Standard Notes, Superwhisper, Tailscale, Telegram, Thaw, Chromium, WhatsApp and Zentty. |
 | Upstream flakes | Zen, Helium and Try; independent profiles handle T3Code and agent tools. |
 | `vendor-sources.json` | Complete Google Drive and Viber app payloads with explicit versions and hashes. |
 
-FreeTube, Ghostty, Signal and Teams retain their tested stable Nixpkgs
+FreeTube and Ghostty retain their tested stable Nixpkgs
 packages. brew-nix reads cask metadata and produces Nix derivations; it never
 runs Brew. Thaw uses the signed **3.0.0-alpha.7** release for macOS 27, with its
 update channel set to `alpha`. Its archive and checksum are pinned in
@@ -53,6 +53,17 @@ the package uses the signed upstream 2.5.2 archive and checksum. Newer Nixpkgs
 versions take precedence automatically. Compare the running app version before
 replacing self-updated applications; a Brew receipt can report an older version.
 
+Slack, Teams and Signal use cask metadata because their Nixpkgs versions lagged
+behind the vendors: Teams blocked the old client, Slack offered an in-app
+update, and Signal 8.25 could not open the existing schema-1800 database.
+Teams retains Nixpkgs' extraction of only the app payload, excluding the
+bundled Microsoft AutoUpdate application. Their cask versions advance through
+`nup`/`nups`. Activation writes Slack's `AutoUpdate = false` policy to
+`/Library/Managed Preferences/com.tinyspeck.slackmacgap.plist`. Slack requires
+an enforced policy and ignores this key in ordinary user preferences. Quit and
+reopen Slack after activation so it reads the policy. Its app bundle remains
+signed and unmodified.
+
 Google Drive's package extracts only the Apple Silicon app, excluding Google's
 updater and document shortcuts. Viber uses its complete app payload, not the
 small online installer distributed by its cask. Both vendors overwrite their
@@ -67,6 +78,15 @@ generated from Nixpkgs' host/module versions and hashes and enables it without
 replacing other Discord settings. Discord downloads its initial runtime modules
 using that manifest; subsequent version changes follow `nup` and a rebuild.
 Its signed app bundle remains intact, including when opened from Finder.
+
+Zen associates default profiles with the installation path. Moving from
+`/Applications/Zen.app` to `/Applications/Nix Apps/Zen Browser (Beta).app` can
+select a fresh profile even though the original data remains intact. On
+Proserpina, the new installation's default was reassigned to the original
+`exaq0x7r.Default (release)` profile in `profiles.ini` and `installs.ini` while
+Zen was closed. The original profile and registries were backed up under
+`~/.local/state/nix-darwin/backups/zen-2026-09-25`. Future rebuilds retain the
+same installed app path and profile association.
 
 [nixpkgs-multiverse](https://github.com/fzakaria/nixpkgs-multiverse) was considered.
 It indexes existing Nixpkgs revisions for version selection and recovery; it
@@ -185,6 +205,16 @@ preferences. Pair it with the local server using `t3 pair`; the connection is
 saved by the client. The server uses the shared palette and Devenv-aware agent
 wrappers. Logs live in `~/.local/state/nix-darwin/t3code*.log`.
 
+The server package marks node-pty's macOS `spawn-helper` executable during the
+build. Without that permission, every embedded terminal shell fails with
+`posix_spawnp failed`; T3Code's attempted runtime repair cannot modify the Nix
+store. The existing rolling updater's cached package definition was repaired
+too, preserving its current server and desktop versions.
+The repaired profile was activated and the managed server restarted. Native
+verification exercised Nushell startup, command input and output through the
+packaged PTY; the server responds on port 3773. The complete Darwin build,
+formatting and lint passed, and Othinus's unchanged derivation built on Othinus.
+
 Devenv is the project runtime manager. Declare language versions and project
 tools in each project's `devenv.nix`; the shared Nushell hook and agent wrappers
 enter that environment. Node 24 and Clang remain workstation bootstrap tools,
@@ -235,6 +265,9 @@ launchd supplies `T3CODE_HOME`. This compatibility link keeps its saved connecti
 and disabled embedded server intact during restoration.
 
 Existing SSH private keys are neither imported nor decrypted by the Mac module.
+The SSH client config links to a read-only Nix-store copy, since OpenSSH rejects
+a group-writable checkout file even through a symlink. Editing
+`modules/darwin/ssh.config` takes effect after `ns`.
 A fresh VM can test client configuration without work credentials. Existing Zsh
 files, local secrets and shell history are left untouched. Switching shells does
 not translate Zsh-only secret exports into Nushell; project secrets should stay

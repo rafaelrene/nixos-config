@@ -57,7 +57,8 @@ in
           right_panel_width = 25;
         }
       );
-      ".ssh/config" = "${checkout}/modules/darwin/ssh.config";
+      # OpenSSH rejects group-writable checkout files, even behind a symlink.
+      ".ssh/config" = toString ./ssh.config;
       ".local/share/raycast/scripts" = "${checkout}/modules/darwin/web-apps";
     };
     legacyLinks = {

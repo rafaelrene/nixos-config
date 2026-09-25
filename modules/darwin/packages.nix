@@ -22,6 +22,8 @@ let
     "onlyoffice"
     "proton-drive"
     "rustdesk"
+    "signal"
+    "slack"
     "standard-notes"
     "superwhisper"
     "telegram"
@@ -35,7 +37,6 @@ let
       mailspring
       orbstack
       shottr
-      slack
       yaak
       ;
     # Raycast 2.4 cannot open databases already migrated by 2.5.2.
@@ -93,8 +94,11 @@ let
       sourceRoot = "Helium/Helium.app";
       dontFixup = true; # Preserve the signed Mac bundle.
     };
-    microsoft-teams = pkgs.teams.overrideAttrs { dontFixup = true; };
-    signal = pkgs.signal-desktop;
+    # Use current cask metadata with Nixpkgs' Teams-only payload extraction.
+    microsoft-teams = pkgs.teams.overrideAttrs {
+      inherit (casks.microsoft-teams) version src;
+      dontFixup = true;
+    };
     zen = inputs.zen-browser.packages.aarch64-darwin.beta.overrideAttrs (old: {
       # Use nix-darwin's stable app path to keep the browser's install identity.
       installPhase =
@@ -338,6 +342,10 @@ in
       };
 
       defaults = lib.mkIf config.workstation.removeReplacedHomebrewPackages {
+        # Slack checks enforced policy; an ordinary user preference is ignored.
+        # nix-darwin inserts custom domains into shell commands without quoting.
+        CustomSystemPreferences.${lib.escapeShellArg "/Library/Managed Preferences/com.tinyspeck.slackmacgap"}.AutoUpdate =
+          false;
         CustomUserPreferences =
           lib.genAttrs [ "io.tailscale.ipn.macsys" "ch.protonmail.drive" ] (_: {
             SUEnableAutomaticChecks = false;

@@ -19,6 +19,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     runHook preInstall
     mkdir -p "$out/libexec/t3code" "$out/bin"
     cp -r t3 client resource-monitor node_modules "$out/libexec/t3code/"
+    # T3Code's runtime chmod cannot repair this helper in the read-only Nix store.
+    chmod +x "$out/libexec/t3code/node_modules/node-pty/prebuilds/darwin-arm64/spawn-helper"
     ln -s "$out/libexec/t3code/t3" "$out/bin/t3"
     runHook postInstall
   '';
