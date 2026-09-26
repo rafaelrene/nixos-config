@@ -1,4 +1,50 @@
-# Git helpers
+# Shell helpers
+
+## Destination picker
+
+`workstation-open` opens a searchable destination picker in Vicinae on Othinus
+and Raycast on Proserpina. Use **Ctrl+Alt+P** on Linux. On the Mac, assign
+**Control+Option+P** to Raycast's **Open destination** command in
+Settings → Workstation destinations after rebuilding. Nix builds and registers
+the local extension; no store publication or manual JavaScript build is needed.
+
+The list contains Home, Code, Git projects below Code, `~/.config` and its
+immediate application folders, plus SSH aliases `othinus` and `proserpina`.
+Code is `/data/code` on Othinus and `/Users/rafael/code` on Proserpina. Hidden
+grouping folders such as `.personal` are included. Ordinary folders are not
+projects. Dependency/build caches and symlinks below Code are skipped; nested
+repositories are left to `git nav`. Configuration-directory symlinks are included.
+
+Enter focuses an identifiable matching Ghostty terminal, or opens a new window.
+A project matches its directory and descendants; Home, Code and configuration
+entries match only their exact directory. Matching uses canonical paths and
+prefers the most recently focused window. No commands are typed into an existing
+terminal. SSH selections always create a new connection in a new window.
+
+To force a new local window, use **Cmd+Shift+Enter** or **Open New Window** in
+Raycast's action panel. Vicinae provides an **Open new window · …** row for each
+local destination. Esc cancels without opening anything.
+
+Nushell sets prompt titles to `hostname: /full/path`. This distinguishes local
+terminals from remote SSH shells. Start a fresh shell after rebuilding to load
+the hook. macOS reads Ghostty's native terminal directories through AppleScript;
+Linux uses Niri's window titles. Only titles identifying the local host are
+reused. Programs that replace the title, old shell sessions, and other shells
+can cause a new window to open. On Linux only the visible window title is
+available, so hidden tabs and splits cannot be matched independently.
+
+The shared implementation is in [destinations/](destinations/); the Mac picker
+is in [the Raycast extension](../../darwin/destinations/). Both inherit their
+launcher's theme. macOS may request Automation permission to control Ghostty;
+an AppleScript error is shown rather than silently creating another window.
+
+For terminal use and diagnostics:
+
+```sh
+workstation-open list
+workstation-open open 'ssh:othinus'
+workstation-open open 'home:/Users/rafael' --new-window
+```
 
 ## Repository navigation
 

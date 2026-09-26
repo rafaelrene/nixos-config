@@ -29,6 +29,7 @@ let
         "@git-nav@"
         "@checkout@"
         "@hostname@"
+        "@title-hostname@"
         "@rebuild-command@"
         "@update-command@"
       ]
@@ -39,6 +40,7 @@ let
         (toString ./git-nav.nu)
         (builtins.toJSON checkout)
         hostname
+        (lib.toLower hostname)
         rebuildCommand
         updateCommand
       ]

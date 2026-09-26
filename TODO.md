@@ -2,7 +2,6 @@
 
 ## Later
 
-- Improve the script for moving between projects quickly.
 - Revisit Helium as the default browser if work and personal usage changes.
 
 ## Replace DankMaterialShell with our own Quickshell

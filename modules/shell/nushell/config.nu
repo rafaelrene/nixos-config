@@ -22,6 +22,14 @@ source @zoxide-hook@
 source @devenv-hook@
 source @starship-hook@
 
+# Distinguish local directories from SSH shells in the destination picker.
+# Full paths also avoid ambiguous home abbreviations when matching windows.
+$env.config.shell_integration.osc2 = false
+$env.config.hooks.pre_prompt = ($env.config.hooks.pre_prompt | append {
+  let directory = ($env.PWD | str replace -ar '[\x00-\x1f\x7f]' '')
+  print -n $"(ansi title)@title-hostname@: ($directory)(char bel)"
+})
+
 # Nushell may start without the PATH configured by /etc/profile.
 $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local" "bin") | uniq)
 
