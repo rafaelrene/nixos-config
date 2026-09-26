@@ -41,8 +41,9 @@ let
       grid.item.background = colors.surface0;
     };
   };
-  vicinaeTheme = pkgs.writeText "vicinae-theme.json" (
+  vicinaeOverrides = pkgs.writeText "vicinae-overrides.json" (
     builtins.toJSON {
+      providers.applications.preferences.defaultAction = "launch";
       font.normal.family = theme.font.interface;
       theme = {
         light = {
@@ -68,8 +69,8 @@ in
       config.system.path
       pkgs.pulseaudio
     ];
-    # Native overrides apply styling without replacing writable user settings.
-    environment.VICINAE_OVERRIDES = toString vicinaeTheme;
+    # Apply launch defaults and styling without replacing writable user settings.
+    environment.VICINAE_OVERRIDES = toString vicinaeOverrides;
     unitConfig.ConditionUser = "raf";
     serviceConfig = {
       ExecStart = "${pkgs.vicinae}/bin/vicinae server --replace";
