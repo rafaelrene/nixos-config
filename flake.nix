@@ -17,14 +17,18 @@
     };
     brew-nix = {
       url = "github:BatteredBunny/brew-nix";
-      inputs.nixpkgs.follows = "nixpkgs-darwin";
-      inputs.nix-darwin.follows = "nix-darwin";
-      inputs.brew-api.follows = "brew-api";
+      inputs = {
+        nixpkgs.follows = "nixpkgs-darwin";
+        nix-darwin.follows = "nix-darwin";
+        brew-api.follows = "brew-api";
+      };
     };
     try-rs = {
       url = "github:tassiovirginio/try-rs";
-      inputs.nixpkgs.follows = "nixpkgs-darwin";
-      inputs.rust-overlay.follows = "rust-overlay";
+      inputs = {
+        nixpkgs.follows = "nixpkgs-darwin";
+        rust-overlay.follows = "rust-overlay";
+      };
     };
 
     rust-overlay = {
@@ -50,7 +54,7 @@
     in
     {
       packages.${system}.t3code-nightly =
-        nixpkgs.legacyPackages.${system}.callPackage ./modules/services/t3code/package/package.nix
+        nixpkgs.legacyPackages.${system}.callPackage ./modules/applications/t3code/package/package.nix
           { };
       nixosConfigurations.othinus = nixpkgs.lib.nixosSystem {
         inherit system;

@@ -1,7 +1,5 @@
 {
   "configVersion": 5,
-  "currentThemeName": "custom",
-  "customThemeFile": "/home/raf/.config/DankMaterialShell/theme.json",
   "use24HourClock": true,
   "clockDateFormat": "dd.MM.yyyy",
   "lockDateFormat": "dddd, d MMMM yyyy",

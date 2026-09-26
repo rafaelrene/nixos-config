@@ -1,5 +1,6 @@
 { pkgs, ... }: {
   imports = [
+    ./common.nix
     ./boot
     ./networking
     ./nix
@@ -17,12 +18,6 @@
   services.power-profiles-daemon.enable = true;
   environment = {
     localBinInPath = true;
-    variables = {
-      XDG_CONFIG_HOME = "$HOME/.config";
-      XDG_CACHE_HOME = "$HOME/.cache";
-      XDG_DATA_HOME = "$HOME/.local/share";
-      XDG_STATE_HOME = "$HOME/.local/state";
-    };
     systemPackages = with pkgs; [
       bat
       btop

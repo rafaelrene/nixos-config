@@ -9,8 +9,8 @@ let
   base = "${home}/.local/share/t3code";
   profile = "${home}/.local/state/nix/profiles/t3code";
   logs = "${home}/.local/state/nix-darwin";
-  initialServer = pkgs.callPackage ./package/package.nix { };
-  initialDesktop = pkgs.callPackage ./package/desktop.nix { };
+  initialServer = pkgs.callPackage ../../applications/t3code/package/package.nix { };
+  initialDesktop = pkgs.callPackage ../../applications/t3code/package/desktop-darwin.nix { };
   initial =
     assert initialServer.version == initialDesktop.version;
     pkgs.buildEnv {
@@ -21,19 +21,7 @@ let
       ];
     };
   updater = import ./update.nix { inherit lib pkgs home; };
-  themeJSON = import ../../services/t3code/theme.nix { inherit lib pkgs; };
-  theme = pkgs.writeText "t3code-workstation-theme.json" themeJSON;
-  settings = pkgs.writeText "t3code-declared-settings.json" (
-    builtins.toJSON {
-      continueThreadsAfterServerUpdate = true;
-      defaultTheme = "othinus";
-      defaultThemeSetAt = builtins.hashString "sha256" themeJSON;
-      providers = {
-        codex.homePath = "${home}/.local/share/codex";
-        claudeAgent.homePath = "${home}/.local/share/claude";
-      };
-    }
-  );
+  settings = import ../../applications/t3code/settings.nix { inherit lib pkgs home; };
   run = pkgs.writeShellApplication {
     name = "run-t3code";
     runtimeInputs = [
@@ -57,14 +45,14 @@ let
       server="${profile}/bin/t3"
       if ! test -x "$server"; then server="${initial}/bin/t3"; fi
       if ! test -e "${base}/userdata/settings.json"; then
-        cp ${settings} "${base}/userdata/settings.json"
+        cp ${settings.server} "${base}/userdata/settings.json"
       fi
       # $declared belongs to yq, not the shell.
       # shellcheck disable=SC2016
       yq --inplace --output-format=json \
-        'load("${settings}") as $declared | .providers *= $declared.providers | .continueThreadsAfterServerUpdate = $declared.continueThreadsAfterServerUpdate | .defaultTheme = $declared.defaultTheme | .defaultThemeSetAt = $declared.defaultThemeSetAt' \
+        'load("${settings.server}") as $declared | .providers *= $declared.providers | .continueThreadsAfterServerUpdate = $declared.continueThreadsAfterServerUpdate | .defaultTheme = $declared.defaultTheme | .defaultThemeSetAt = $declared.defaultThemeSetAt' \
         "${base}/userdata/settings.json"
-      install -m600 ${theme} "${base}/userdata/themes/othinus.json"
+      install -m600 ${settings.theme} "${base}/userdata/themes/othinus.json"
       exec "$server" serve --base-dir "${base}" \
         --host 127.0.0.1 --port 3773 --no-browser "${home}/code"
     '';

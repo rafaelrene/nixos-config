@@ -1,0 +1,12 @@
+font-feature = +liga
+font-feature = +calt
+font-feature = +dlig
+font-size = 14.5
+background-opacity = 0.8
+window-theme = ghostty
+shell-integration = detect
+
+clipboard-read = allow
+clipboard-write = allow
+copy-on-select = clipboard
+clipboard-trim-trailing-spaces = true

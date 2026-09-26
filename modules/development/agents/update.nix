@@ -2,7 +2,6 @@
   pkgs,
   profile,
   flake ? "github:numtide/llm-agents.nix",
-  upgradeAll ? false,
 }:
 pkgs.writeShellApplication {
   name = "update-llm-agents";
@@ -13,9 +12,7 @@ pkgs.writeShellApplication {
   text = ''
     mkdir -p "$(dirname "${profile}")"
     if test -e "${profile}/manifest.json"; then
-      nix profile upgrade --profile "${profile}" --refresh --no-accept-flake-config ${
-        if upgradeAll then "--all" else "'.*'"
-      }
+      nix profile upgrade --profile "${profile}" --refresh --no-accept-flake-config --all
     else
       nix profile install --profile "${profile}" --no-accept-flake-config \
         "${flake}#codex" \

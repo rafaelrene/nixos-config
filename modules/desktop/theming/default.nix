@@ -28,8 +28,7 @@ let
       ]
       (builtins.readFile source);
   render = name: source: pkgs.writeText name (renderText source);
-  gtk3Settings = render "gtk-3.0-settings.ini" ./gtk-3.0-settings.ini;
-  gtk4Settings = render "gtk-4.0-settings.ini" ./gtk-4.0-settings.ini;
+  gtkSettings = render "gtk-settings.ini" ./gtk-settings.ini;
   # Import by store path so the stylesheet's relative asset URLs remain valid.
   gtk4Css = pkgs.writeText "gtk-4.0.css" ''
     @import url("${theme.gtk.package}/share/themes/${theme.gtk.name}/gtk-4.0/gtk.css");
@@ -173,8 +172,8 @@ in
       theme.icons.package
     ];
     etc = {
-      "xdg/gtk-3.0/settings.ini".source = gtk3Settings;
-      "xdg/gtk-4.0/settings.ini".source = gtk4Settings;
+      "xdg/gtk-3.0/settings.ini".source = gtkSettings;
+      "xdg/gtk-4.0/settings.ini".source = gtkSettings;
       "xdg/gtk-4.0/gtk.css".source = gtk4Css;
       "xdg/Kvantum/kvantum.kvconfig".source = kvantumSettings;
       "xdg/kdeglobals".source = kdeGlobals;
@@ -185,8 +184,8 @@ in
     "d /home/raf/.config/gtk-3.0 0700 raf raf - -"
     "d /home/raf/.config/gtk-4.0 0700 raf raf - -"
     "d /home/raf/.config/Kvantum 0700 raf raf - -"
-    "L+ /home/raf/.config/gtk-3.0/settings.ini - - - - ${gtk3Settings}"
-    "L+ /home/raf/.config/gtk-4.0/settings.ini - - - - ${gtk4Settings}"
+    "L+ /home/raf/.config/gtk-3.0/settings.ini - - - - ${gtkSettings}"
+    "L+ /home/raf/.config/gtk-4.0/settings.ini - - - - ${gtkSettings}"
     "L+ /home/raf/.config/gtk-4.0/gtk.css - - - - ${gtk4Css}"
     "L+ /home/raf/.config/Kvantum/kvantum.kvconfig - - - - ${kvantumSettings}"
     "L+ /home/raf/.config/kdeglobals - - - - ${kdeGlobals}"

@@ -1,10 +1,10 @@
 {
-  description = "Rolling T3 Code server and desktop for Proserpina";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
+  description = "Rolling official T3 Code server and desktop";
+  inputs.nixpkgs.url = "@nixpkgs@";
   outputs = { nixpkgs, ... }: {
-    packages.aarch64-darwin =
+    packages."@system@" =
       let
-        pkgs = nixpkgs.legacyPackages.aarch64-darwin;
+        pkgs = nixpkgs.legacyPackages."@system@";
       in
       rec {
         t3code-nightly = pkgs.callPackage ./package.nix { };

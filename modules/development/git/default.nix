@@ -1,7 +1,6 @@
 { lib, pkgs, ... }:
 let
-  theme = import ../../../themes { inherit lib pkgs; };
-  deltaConfig = pkgs.writeText "delta.gitconfig" (lib.generators.toGitINI { inherit (theme) delta; });
+  deltaConfig = import ./theme.nix { inherit lib pkgs; };
 in
 {
   environment.systemPackages = [

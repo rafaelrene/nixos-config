@@ -3,36 +3,19 @@
 let
   inherit (import ./themes.nix { inherit lib pkgs; }) claudeTheme codexTheme opencodeTheme;
   agentSource = "/data/code/nixos-config/config/agents";
-  skillDirectories = [
-    ".local/share/codex/skills"
-    ".local/share/claude/skills"
-    ".config/opencode/skills"
-  ];
-  skillNames = lib.attrNames (
-    lib.filterAttrs (
-      name: type:
-      type == "directory" && builtins.pathExists (../../../config/agents/skills + "/${name}/SKILL.md")
-    ) (builtins.readDir ../../../config/agents/skills)
-  );
-  agentLinks = {
-    ".local/share/codex/AGENTS.md" = "AGENTS.md";
-    ".local/share/codex/config.toml" = "codex/config.toml";
-    ".local/share/claude/AGENTS.md" = "AGENTS.md";
-    ".local/share/claude/CLAUDE.md" = "CLAUDE.md";
-    ".local/share/claude/settings.json" = "claude/settings.json";
-    ".config/opencode/AGENTS.md" = "AGENTS.md";
-    ".config/opencode/opencode.jsonc" = "opencode/opencode.jsonc";
-    ".config/opencode/tui.json" = "opencode/tui.json";
-  }
-  // lib.listToAttrs (
-    lib.concatMap (
-      directory:
-      map (name: {
-        name = "${directory}/${name}";
-        value = "skills/${name}";
-      }) skillNames
-    ) skillDirectories
-  );
+  inherit (import ./links.nix { inherit lib; })
+    rules
+    settings
+    skillDirectories
+    skillLinks
+    ;
+  agentLinks =
+    rules
+    // settings
+    // skillLinks
+    // {
+      ".local/share/codex/config.toml" = "codex/config.toml";
+    };
   agentManifest = pkgs.writeText "agent-links.json" (
     builtins.toJSON {
       links = agentLinks;
@@ -48,12 +31,9 @@ let
     }
   );
   profile = "/home/raf/.local/state/nix/profiles/llm-agents";
-  flake = "github:numtide/llm-agents.nix";
   mkAgentWrapper = name: import ./wrapper.nix { inherit pkgs profile name; };
   updateAgents = import ./update.nix {
-    inherit pkgs profile flake;
-    # Current Nix selects all profile entries with a flag, not a regex.
-    upgradeAll = true;
+    inherit pkgs profile;
   };
 in
 {

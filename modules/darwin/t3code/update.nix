@@ -6,6 +6,7 @@
 let
   state = "${home}/.local/state/t3code-bundle-updater";
   profile = "${home}/.local/state/nix/profiles/t3code";
+  source = import ../../applications/t3code/package/source.nix { inherit pkgs; };
 in
 pkgs.writeShellApplication {
   name = "update-t3code";
@@ -27,7 +28,7 @@ pkgs.writeShellApplication {
     echo "T3 Code: waiting for any existing update..."
     exec 9>update.lock
     flock 9
-    cp --update=none ${./package}/*.nix .
+    cp --update=none ${source}/*.nix .
     chmod u+w ./*.nix
     if ! test -d .git; then git init -q; fi
     git add flake.nix package.nix desktop.nix
