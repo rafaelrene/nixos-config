@@ -5,6 +5,7 @@
     ./packages.nix
     ./shell.nix
     ./applications.nix
+    ./omniwm
     ./agents.nix
     ./t3code
     ./updates.nix

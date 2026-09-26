@@ -13,7 +13,6 @@ let
   casks = inputs.brew-nix.packages.${pkgs.stdenv.hostPlatform.system};
   vendor = import ./vendor-packages.nix { inherit pkgs; };
   caskNames = [
-    "amethyst"
     "anytype"
     "ente"
     "ente-auth"
@@ -36,6 +35,7 @@ let
       iina
       mailspring
       orbstack
+      omniwm
       shottr
       yaak
       ;

@@ -16,6 +16,7 @@ configuration from it. Othinus retains its existing configuration and services.
 | Git | Shared configuration, Delta theme, ignores, and branch helpers. |
 | Terminal | Ghostty from Nix, shared palette, Mac Option key and quick-terminal settings. |
 | Desktop apps | Nixpkgs, upstream flakes and brew-nix; no Homebrew installation required. |
+| Window management | OmniWM scrolling columns, Caps Lock shortcuts, and nine workspaces; workspace 1 is Work. |
 | Agents | Shared rules, skills and themes; Codex, Claude Code and OpenCode use an independent rolling Nix profile. Pi comes from Nixpkgs. |
 | Mac helpers | Existing Raycast web launchers and Zentty helpers imported unchanged. |
 | SSH | Client configuration only. Existing keys and the macOS SSH agent remain in place. |
@@ -32,8 +33,8 @@ The system uses flake inputs rather than imperative `nix-channel` subscriptions:
 | --- | --- |
 | `nixpkgs` / `nixos-26.05` | Othinus, unchanged by Mac package updates. |
 | `nixpkgs-darwin` / `nixpkgs-26.05-darwin` and nix-darwin 26.05 | Stable Mac base, shell and development environment. |
-| `nixpkgs-unstable` | Newer Discord, IINA, Mailspring, OrbStack, Proton Pass, Raycast, Shottr, Yaak, Devenv, Graphite and Pi. |
-| `brew-nix` and `brew-api` | Native Mac releases for Amethyst, Anytype, Ente Photos/Auth, Gifox, Microsoft Teams, ONLYOFFICE, Proton Drive, RustDesk, Signal, Slack, Standard Notes, Superwhisper, Tailscale, Telegram, Thaw, Chromium, WhatsApp and Zentty. |
+| `nixpkgs-unstable` | Newer Discord, IINA, Mailspring, OmniWM, OrbStack, Proton Pass, Raycast, Shottr, Yaak, Devenv, Graphite and Pi. |
+| `brew-nix` and `brew-api` | Native Mac releases for Anytype, Ente Photos/Auth, Gifox, Microsoft Teams, ONLYOFFICE, Proton Drive, RustDesk, Signal, Slack, Standard Notes, Superwhisper, Tailscale, Telegram, Thaw, Chromium, WhatsApp and Zentty. |
 | Upstream flakes | Zen, Helium and Try; independent profiles handle T3Code and agent tools. |
 | `vendor-sources.json` | Complete Google Drive and Viber app payloads with explicit versions and hashes. |
 
@@ -93,10 +94,97 @@ It indexes existing Nixpkgs revisions for version selection and recovery; it
 does not supply missing Mac packages. A stable base, one unstable input and
 brew-nix cover the current requirements without another resolver.
 
+## Window management
+
+OmniWM replaces Amethyst. Nix installs its signed app, links a generated
+`~/.config/omniwm/settings.toml`, and starts it through a user launchd agent.
+Edit `modules/darwin/omniwm/settings.nix` and rebuild; the GUI cannot save over
+the Nix-store configuration. OmniWM's own update checks are disabled.
+
+All nine workspaces use independent horizontal scrolling columns. Workspace 1
+is labelled **Work**; 2–9 are available for other activities. Switch to Work
+before opening work windows. Apps are not assigned globally because a browser
+or terminal can have both work and personal windows. Move existing columns
+between workspaces with the shortcuts below.
+
+New columns use the full available width. Width cycling follows Othinus:
+⅓, ½, ⅔, full. Focused columns center on overflow; gaps are 2 points and the
+focus border uses the shared theme. OmniWM's menu bar item names the current
+workspace. Hold Caps Lock to show the workspace bar with each workspace's apps;
+it overlays the top of windows so they keep the full height. Holding Control
+for 200 ms shows it too.
+
+Hold **Caps Lock** wherever Othinus uses Super. Nix remaps it to Right Control
+in the keyboard driver, so it never toggles capitals, even on a tap. The
+built-in keyboard has no Right Control, so OmniWM's Right Control shortcuts
+only fire from Caps Lock; the left Control key still reaches apps. Caps Lock
+with a key OmniWM does not use reaches the app as Control plus that key.
+Caps + Control chords are impossible, so moves use Shift instead of Othinus's
+Control. Workspace numbers use Option, which previously switched native
+desktops.
+
+| Shortcut | Action |
+| --- | --- |
+| Caps + left/right | Focus columns |
+| Caps + up/down | Focus windows in the column, then the adjacent workspace |
+| Caps + Shift + left/right | Move the whole column |
+| Caps + Shift + up/down | Move the window within its column, then to the adjacent workspace |
+| Option + 1–9 | Switch workspace; 1 is Work |
+| Option + Shift + 1–9 | Move the focused column to a workspace |
+| Caps + Page Up/Down | Previous/next workspace |
+| Caps + Shift + Page Up/Down | Move the column to the previous/next workspace |
+| Caps + O | Overview across workspaces |
+| Caps + R / Caps + Shift + R | Cycle column width forward/backward |
+| Caps + minus/equal | Decrease/increase column width by 10% |
+| Caps + F | Toggle full-width column |
+| Caps + Shift + F | Toggle managed fullscreen without entering a native Space |
+| Caps + V | Toggle floating |
+| Caps + Q | Close the focused window |
+| Caps + [ / ] | Consume a window into the column / expel it |
+
+On the built-in keyboard, Fn+up/down supplies Page Up/Down. Three-finger
+horizontal swipes scroll columns; three-finger vertical swipes change
+workspaces. Four-finger up/down opens/closes overview. Nix disables the
+conflicting macOS trackpad gestures. Option + Command + mouse drag moves tiled
+windows; Option + Command + right-drag resizes them. Mouse modifiers cannot be
+side-specific, and Control-click is right-click.
+
+Nix owns macOS's keyboard shortcut list (`com.apple.symbolichotkeys`). It
+disables Mission Control's Control+arrow shortcuts, desktop switching, and
+earlier choices such as Spotlight's Command+Space for Raycast. Shortcuts not
+listed in `modules/darwin/omniwm/default.nix` revert to macOS defaults. macOS
+applies changes at the next login.
+
+OmniWM workspaces replace native Spaces for this workflow. Keep one native
+macOS desktop and use the nine OmniWM workspaces. OmniWM only manages windows
+on the current native desktop, so a window on another desktop is unreachable.
+Do not assign apps to desktops through the Dock's Options menu. These are
+configured workspaces, not Niri's automatically added/removed empty workspaces.
+OmniWM accepts one binding per action, so this configuration uses Othinus's
+arrows rather than also duplicating H/J/K/L. Workspace reordering and Niri's
+modifier+wheel workspace switching are not mapped. Launch Ghostty through
+Raycast or its existing Mac shortcuts; Caps+Enter does not launch applications.
+
+For the first authorized switch, quit Amethyst and disable its login item if
+one remains. Nix removes the old managed app. The declared “Displays have
+separate Spaces” setting requires a logout/login on this Mac. Launchd then
+starts `/Applications/Nix Apps/OmniWM.app`. Grant it Accessibility and Input
+Monitoring in the macOS permission dialog, plus Screen Recording for overview
+thumbnails. Return to OmniWM's permission window to continue. These macOS
+permissions cannot be pre-granted by Nix. Leave OmniWM's separate “Start at
+Login” option off because launchd already owns startup.
+
+The complete schema snapshot in `modules/darwin/omniwm/defaults.json` comes
+from [OmniWM v0.7.1's canonical settings model](https://github.com/OmniNull/OmniWM/blob/v0.7.1/Sources/OmniWM/Core/Config/CanonicalTOMLConfig.swift).
+Upstream requires every hotkey
+action, even unassigned ones. A version assertion stops upgrades until that
+snapshot and the generated configuration have been checked against the new
+release; otherwise a rejected file can silently start with upstream defaults.
+
 ## Prerequisites and activation
 
-Validate in a disposable macOS VM before applying to the work Mac. Creating a
-VM on the work Mac does not authorize switching the host's configuration.
+Validate through Nix evaluation, builds, and focused native checks before an
+authorized live switch. A macOS VM is no longer required; see ADR 0009.
 
 The target needs an existing `rafael` account, the checkout at the declared
 path, Xcode Command Line Tools, and a multi-user Nix installation.
@@ -111,8 +199,8 @@ Build without activation:
 nix --extra-experimental-features 'nix-command flakes' build --no-link 'path:/Users/rafael/code/.personal/nixos-config#darwinConfigurations.Proserpina.system'
 ```
 
-The following commands change the target system. During migration testing,
-run them only inside the disposable VM. First activation:
+The following commands change the target system and require Rene's explicit
+instruction. First activation:
 
 ```sh
 sudo nix --extra-experimental-features 'nix-command flakes' run github:nix-darwin/nix-darwin/nix-darwin-26.05#darwin-rebuild -- switch --flake 'path:/Users/rafael/code/.personal/nixos-config#Proserpina'
@@ -147,11 +235,15 @@ is verified, set `workstation.removeReplacedHomebrewPackages = true;` in
 `hosts/proserpina/configuration.nix` and rebuild. That activation uninstalls only
 the named Brew apps, fonts and CLI tools replaced by Nix, including the old T3Code cask.
 Run this handover from Apple's Terminal: Brew's Zentty uninstall quits Zentty,
-which would interrupt a rebuild running there. Grant Terminal Full Disk Access
-in System Settings > Privacy & Security, then quit and reopen Terminal before
-activation. Writing Proton Drive's sandboxed updater preferences requires this
-access; sudo alone does not grant it. The permission is needed for subsequent
-rebuilds that write these preferences too, or must be granted again for them.
+which would interrupt a rebuild running there. Writing Proton Drive's sandboxed
+updater preferences requires Full Disk Access; sudo alone does not grant it.
+On macOS 27, the privacy log attributes nix-darwin's `launchctl asuser` write to
+the Nix-store `bash` running activation. Enable that **bash** entry under System
+Settings > Privacy & Security > Full Disk Access. Terminal's permission alone
+is insufficient for this process chain. If `bash` is absent, add the exact Nix
+Bash binary named by the activation script's shebang. A Bash package update can
+change that path and require granting access again. Keep this access available
+for subsequent rebuilds that write the same preferences.
 Save work and wait for cloud sync
 to finish, then quit the replaced desktop apps before activation. Reopen their
 Nix copies afterward; Google Drive, RustDesk and Tailscale may need macOS prompts
@@ -297,11 +389,47 @@ nix eval --raw 'path:.#darwinConfigurations.Proserpina.system.drvPath'
 nix build --no-link 'path:.#nixosConfigurations.othinus.config.system.build.toplevel'
 ```
 
-Building and activating the Darwin closure requires macOS. Use an isolated
-[Tart VM](https://tart.run/quick-start/) with no host-home mount or forwarded
-agent credentials. Test a clean installation, repeated activation, a simulated
-Ansible home, conflict rejection, Nushell startup, application discovery and the
-launchd agent updater. Do not treat evaluation alone as an end-to-end test.
+Building the Darwin closure requires macOS. Build the system and run focused
+native checks for the change, such as app signature verification, configuration
+decoding, and launchd plist validation. Activation and interactive checks follow
+an explicitly authorized live switch; report any checks still pending. Evaluation
+and builds do not authorize changing running services. A VM is not required.
+
+### OmniWM configuration validation (2026-09-26)
+
+- Passed Nix formatting, Statix, Deadnix, all-system flake evaluation, and the
+  complete Darwin system build. The built app set contains OmniWM and omits Amethyst.
+- Decoded the rendered TOML as JSON through the upstream v0.7.1 Swift settings
+  model in a temporary native checker: 9 workspaces, all 188 required actions,
+  and 41 assigned shortcuts without conflicts. Gesture validation also passed.
+- Checked numbered workspace navigation and column transfers, Caps Lock's
+  modifier composition, Work's label, and the Niri width presets. Verified the
+  app signature and generated launchd plist. Temporary checks were removed.
+- Othinus's system derivation remained unchanged and built successfully on Othinus.
+
+The authorized live switch succeeded after granting the Nix-store Bash Full Disk
+Access for Proton Drive's preference write. Launchd started OmniWM, its IPC ping
+responded, and workspace queries showed Work plus eight other Niri workspaces.
+The previous writable settings file was preserved under
+`~/.local/state/nix-darwin/backups/omniwm-2026-09-26.bWXKhA/`.
+
+OmniWM reported Accessibility granted, but its input services had not started:
+“Displays have separate Spaces” still requires logout/login to take effect.
+Caps Lock interception, gestures, overview rendering, and management of actual
+work windows remain unverified until then. An IPC response alone does not prove
+that these services are running. The temporary diagnostic capture was removed.
+
+After logging back in, Rene confirmed that windows, workspaces, and the bar
+worked. Helium was unreachable because its window was on a leftover native
+desktop. Rene deleted the extra desktops; the Dock's app-to-desktop assignments
+were cleared with `defaults delete com.apple.spaces app-bindings`.
+
+The Caps Lock remap switch succeeded. `hidutil` reported Caps Lock mapped to
+Right Control, no symbolic hotkey remained enabled, and `activateSettings -u`
+reloaded them. A trace capture showed 23 side-specific shortcuts, no
+registration failures, and OmniWM's own Caps Lock remap inactive. The capture
+was removed. Rene then confirmed the shortcuts and the bar reveal from the
+keyboard.
 
 ### Testing environment retired (2026-09-25)
 
@@ -309,7 +437,8 @@ Rene requested deletion of the testing VM, downloaded images and Tart after
 validation. The `proserpina-test` VM and its dedicated directory,
 `/Users/rafael/Library/Caches/proserpina-vm-testing`, were removed. The older
 `dotforge-tahoe-base` VM and cache in `~/.tart` were also removed with explicit
-approval. Future VM testing requires creating a new disposable environment.
+approval. ADR 0009 now uses native validation; do not recreate this environment
+for routine Darwin changes.
 
 The test VM used `ghcr.io/cirruslabs/macos-tahoe-base:latest`, macOS 26.6.2,
 two CPU cores, 4 GiB RAM and a 120 GB virtual disk. Its account was renamed to

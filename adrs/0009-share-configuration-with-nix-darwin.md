@@ -2,6 +2,7 @@
 
 - Status: accepted
 - Date: 2026-09-20
+- Amended: 2026-09-26
 
 ## Context
 
@@ -61,5 +62,8 @@ Cask metadata is pinned in `flake.lock`; vendor exceptions are pinned in
 Google Drive's mount helper gets the vendor-required permissions only in the
 installed copy. Othinus’s update behavior remains unchanged.
 
-Test macOS activation inside a disposable VM before deployment. Building or
-running that VM does not authorize applying the configuration to its host.
+Validate Darwin changes through Nix evaluation, full system builds, and focused
+native checks on Proserpina. The migration VM has been retired; recreating it or
+testing activation in a VM is no longer required. Report any activation or
+interactive behavior that remains untested. Switching the live workstation or
+replacing running services still requires Rene's explicit instruction.
