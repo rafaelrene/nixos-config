@@ -42,7 +42,12 @@ helpers, not permission to add them.
 Read and consider the ADRs in [adrs/](adrs/) for every decision. Explain any
 conflict and ask before departing from an ADR.
 
-Update README.md when behavior, setup commands, or required manual steps change.
+Keep README.md a high-level overview of the project's purpose, philosophy,
+features, and basic workflow. Update it when those change. Put necessary setup,
+operational, and troubleshooting details beside the relevant host or feature;
+do not add per-setting explanations or validation logs to the root README.
+Keep deferred work in TODO.md and durable decisions in adrs/.
+See [ADR 0010](adrs/0010-keep-documentation-focused.md).
 
 ## What not to do
 
