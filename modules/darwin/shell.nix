@@ -22,6 +22,9 @@ in
     # The persistent profile is available before launchd recreates /run at boot.
     shells = [ "/nix/var/nix/profiles/system/sw/bin/nu" ];
     variables = {
+      LANG = "en_US.UTF-8";
+      # macOS locale identifiers inherited from GUI apps are not POSIX locales.
+      LC_ALL = "en_US.UTF-8";
       STARSHIP_CONFIG = "${home}/.config/starship/starship.toml";
       FZF_DEFAULT_OPTS = import ../shell/fzf.nix { inherit lib pkgs; };
     };

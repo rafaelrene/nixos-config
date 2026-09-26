@@ -12,22 +12,34 @@ let
     hostname = "proserpina";
   };
   extension = import ./package.nix { inherit pkgs; };
+  extensionLink = "${home}/.config/raycast/extensions/workstation-destinations";
 in
 {
   environment.systemPackages = [ launcher ];
   workstation.links.".config/raycast/extensions/workstation-destinations" = toString extension;
-  # `start` registers new local extensions too; `build-refresh` only updates them.
+  # Capture the target before workstation.links updates it during activation.
+  system.activationScripts.preActivation.text = lib.mkAfter ''
+    previousRaycastExtension="$(readlink ${lib.escapeShellArg extensionLink} || true)"
+  '';
+  # `start` opens Raycast; only use it to register the initial installation.
   system.activationScripts.extraActivation.text = lib.mkAfter ''
-    ${lib.escapeShellArgs [
-      "/usr/bin/sudo"
-      "-H"
-      "-u"
-      config.system.primaryUser
-      "/usr/bin/open"
-      "-g"
-      "-a"
-      "/Applications/Nix Apps/Raycast.app"
-      "raycast://cli/workstation-destinations/start?cwd=${extension}"
-    ]}
+    if [[ "$previousRaycastExtension" != ${lib.escapeShellArg (toString extension)} ]]; then
+      raycastAction=build-refresh
+      if [[ -z "$previousRaycastExtension" ]]; then
+        raycastAction=start
+      fi
+      ${
+        lib.escapeShellArgs [
+          "/usr/bin/sudo"
+          "-H"
+          "-u"
+          config.system.primaryUser
+          "/usr/bin/open"
+          "-g"
+          "-a"
+          "/Applications/Nix Apps/Raycast.app"
+        ]
+      } "raycast://cli/workstation-destinations/$raycastAction?cwd=${extension}"
+    fi
   '';
 }

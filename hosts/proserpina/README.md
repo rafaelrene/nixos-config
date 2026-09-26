@@ -203,7 +203,10 @@ sudo darwin-rebuild switch --flake 'path:/Users/rafael/code/.personal/nixos-conf
 ```
 
 Nushell provides `ns` for switching, `nup` for updating all package sources,
-and `nups` for updating then switching. `nup` refreshes stable Darwin and unstable
+and `nups` for updating then switching. Shells use `en_US.UTF-8` for `LANG` and
+`LC_ALL` so inherited macOS locale identifiers do not cause POSIX command warnings.
+Open a new shell after switching to load changed environment settings.
+`nup` refreshes stable Darwin and unstable
 Nixpkgs, nix-darwin, shared Rust/browser inputs, brew-nix/cask metadata and Try.
 It refreshes the Google Drive/Viber manifest, updates and restarts T3Code, and
 updates all three rolling agent packages. Nix system packages take effect after `ns` or
@@ -315,7 +318,9 @@ that directory in Raycast’s Script Commands settings.
 
 The Nix-built **Workstation destinations** Raycast extension provides
 **Open destination** for projects, Home, configuration folders, and SSH hosts.
-Activation registers it through Raycast's native CLI URL. Assign
+Activation registers it through Raycast's native CLI URL on initial installation,
+which opens Raycast. Later switches refresh changed extension builds in the
+background and leave Raycast alone when the build is unchanged. Assign
 **Control+Option+P** to the command in Raycast Settings → Workstation destinations.
 Enter focuses a matching Ghostty terminal; **Cmd+Shift+Enter** forces a new
 window. See the [shared guide](../../modules/shell/scripts/README.md#destination-picker)
