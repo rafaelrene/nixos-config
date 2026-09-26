@@ -30,6 +30,11 @@ This does not detect environments running in other terminals.
 The default comes from the locally recorded `origin/HEAD`, falling
 back to `main`, `master`, then the main worktree's branch.
 
+`DIRTY` takes precedence over merge status when a worktree has staged, unstaged,
+or untracked changes. Ignored files do not count. `UNKNOWN` means the worktree
+could not be inspected. Commit comparison applies only to committed changes;
+an unchanged branch at the default commit counts as `merged`.
+
 `merged` means the branch is reachable from that default reference, its patches
 were rebased/cherry-picked into it, its combined diff matches an upstream
 squash commit, or it has no net changes since the common ancestor.

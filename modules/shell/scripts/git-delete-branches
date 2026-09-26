@@ -77,12 +77,17 @@ paths=()
 heads=()
 rows=()
 add_candidate() {
-	local branch=$1 path=$2 head=$3 label status=merged index=${#rows[@]}
+	local branch=$1 path=$2 head=$3 label worktree_status='' status=merged index=${#rows[@]}
 	if [[ -n $path && ($devenv_root == "$path" || $devenv_root == "$path/"*) ]]; then
 		printf 'Keeping active devenv worktree: %q (exit devenv before deleting it).\n' "$path" >&2
 		return
 	fi
-	if ! is_merged "$head"; then
+	# Commit ancestry says nothing about edits that have not been committed yet.
+	if [[ -n $path ]] && ! worktree_status=$(git -C "$path" status --porcelain --untracked-files=normal --ignore-submodules=none); then
+		status=UNKNOWN
+	elif [[ -n $worktree_status ]]; then
+		status=DIRTY
+	elif ! is_merged "$head"; then
 		status=UNMERGED
 	fi
 	if [[ -n $branch ]]; then
@@ -138,7 +143,7 @@ if selection=$(printf '%s\n' "${rows[@]}" |
 		--prompt='Delete> ' \
 		--header="Tab/Shift-Tab toggle | Ctrl-A select all | Ctrl-D clear all | Enter review | Esc cancel
 Search keeps hidden selections. Branch rows also remove their worktree.
-UNMERGED is relative to $merge_base." \
+DIRTY = uncommitted changes. UNMERGED compares commits with $merge_base." \
 		--bind='start:select-all+unbind(result),result:select-all+unbind(result)' \
 		--bind='tab:toggle+down,btab:toggle+up,ctrl-d:clear-selection,esc:abort' \
 		--bind='ctrl-a:transform:if [ -n "$FZF_QUERY" ]; then echo "rebind(result)+clear-query"; else echo select-all; fi' \
