@@ -1,5 +1,30 @@
 # Shell helpers
 
+## Project scripts
+
+Run `prun` to fuzzy-search `package.json` scripts in the current directory and
+its parents, stopping at the Git repository root. Rows show the script name,
+package path relative to that root, and command. The nearest package appears
+first; sibling packages are not scanned. Outside Git, only the current
+directory is checked.
+
+Enter runs the selected script in its package directory, in the current
+terminal. Esc cancels. The calling shell keeps its directory. Interactive
+input, Ctrl+C, output and the script's exit status pass through normally.
+
+The runner checks `packageManager`, then lockfiles, starting at the selected
+package and walking toward the repository root. It supports npm, pnpm, Yarn
+and Bun, with npm as the fallback. The command uses the current environment
+and PATH, so enter the project's development environment first. It does not
+install package managers or dependencies. Malformed manifests are reported.
+
+Both machines install `prun` through the system rebuild. To try it from a
+checkout before rebuilding, run this from a project directory:
+
+```sh
+nu --no-config-file /path/to/nixos-config/modules/shell/scripts/prun.nu
+```
+
 ## Destination picker
 
 `workstation-open` opens a searchable destination picker in Vicinae on Othinus

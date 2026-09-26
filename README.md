@@ -25,7 +25,8 @@ The [architecture decisions](adrs/) record the reasoning and accepted tradeoffs.
   annotation, and power-aware display and idle settings.
 - **Mac desktop:** Nix-managed applications and OmniWM window management.
 - **Development environment:** Nushell, Ghostty, Neovim, Git, and Devenv,
-  with shared settings where supported.
+  with shared settings where supported and a
+  [project script picker](modules/shell/scripts/README.md#project-scripts) (`prun`).
 - **Coding agents:** T3Code, Codex, Claude Code, and OpenCode, with shared
   instructions, skills, themes, and rolling updates.
 - **Consistent appearance:** A central Catppuccin palette for supported
