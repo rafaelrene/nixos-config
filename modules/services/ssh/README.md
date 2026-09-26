@@ -83,9 +83,9 @@ preserved alongside it as `config.before-nixos-<unique suffix>`. Existing privat
 keys with different contents are similarly backed up before replacement. All
 backups stay inside the private SSH directory; delete them when no longer needed.
 
-When rotating the Proserpina key, rebuild the Mac with the matching public key
-and replace its initial entry in `rafael`'s `~/.ssh/authorized_keys` too. That
-entry bootstraps access before the declarative configuration is activated.
+When rotating the Proserpina key, rebuild the Mac with the matching public key.
+nix-darwin supplies it through `/etc/ssh/nix_authorized_keys.d/rafael`; no duplicate
+entry in `~/.ssh/authorized_keys` is needed.
 Changing the archive passphrase cannot revoke old ciphertext in Git history;
 rotate the SSH keys themselves if the old passphrase is compromised.
 
