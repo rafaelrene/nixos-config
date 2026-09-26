@@ -9,7 +9,7 @@ let
       exec runuser -u raf -- ${pkgs.python3}/bin/python3 ${./ssh-keys.py} \
         --repo /data/code/nixos-config/modules/services/ssh \
         --home /home/raf \
-        --source /data/code/ansible/roles/ssh/files \
+        --source /home/raf/.ssh \
         --age ${pkgs.age}/bin/age \
         --script ${pkgs.util-linux}/bin/script \
         --ssh-keygen ${pkgs.openssh}/bin/ssh-keygen
