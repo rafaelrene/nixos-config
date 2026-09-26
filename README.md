@@ -45,6 +45,10 @@ Both configured shells provide `ns` to rebuild and switch, `nup` to update
 package sources and rolling tools, and `nups` to update and switch. Rolling
 tool updates can take effect independently of a system switch.
 
+Pass a checkout path to use a worktree: `ns .` rebuilds the current directory,
+`nup .` updates it, and `nups .` updates it then rebuilds. Without a path, these
+commands use the configured checkout.
+
 See the [Proserpina guide](hosts/proserpina/README.md) for Mac setup and migration,
 and the [SSH guide](modules/services/ssh/README.md) for key provisioning and recovery.
 Contributor constraints and validation commands live in [AGENTS.md](AGENTS.md).

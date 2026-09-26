@@ -13,7 +13,8 @@ let
       pkgs.systemd
     ];
     text = ''
-      nix flake update --flake path:/data/code/nixos-config
+      checkout="''${1:-/data/code/nixos-config}"
+      nix flake update --flake "path:$checkout"
       /run/current-system/sw/bin/t3-update-now
       /run/current-system/sw/bin/update-llm-agents
     '';
