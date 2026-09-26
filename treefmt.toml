@@ -22,5 +22,3 @@ includes = ["*.lua"]
 command = "ruff"
 options = ["format"]
 includes = ["*.py"]
-# AGENTS.md requires keeping the existing SSH helper unchanged.
-excludes = ["modules/services/ssh/ssh-keys.py"]

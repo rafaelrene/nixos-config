@@ -16,7 +16,7 @@ Apple Silicon, user `rafael`, home `/Users/rafael`, checkout
 | Window management | OmniWM scrolling columns, Caps Lock shortcuts, and nine workspaces; workspace 1 is Work. |
 | Agents | Shared rules, skills and themes; Codex, Claude Code and OpenCode use an independent rolling Nix profile. Pi comes from Nixpkgs. |
 | Mac helpers | Existing Raycast web launchers and Zentty helpers imported unchanged. |
-| SSH | Client configuration only. Existing keys and the macOS SSH agent remain in place. |
+| SSH | Shared client configuration and all four managed keys; Remote Login trusts `proserpina.pub`. Uses the macOS SSH agent. |
 
 The Mac does not import Niri, systemd services, the Linux SSH server, snapshots,
 or Othinus's network exposure rules. A separate launchd service runs T3Code on
@@ -338,7 +338,12 @@ restores the signed upstream desktop directly at login, potentially before
 launchd supplies `T3CODE_HOME`. This compatibility link keeps its saved connection
 and disabled embedded server intact during restoration.
 
-Existing SSH private keys are neither imported nor decrypted by the Mac module.
+An interactive rebuild decrypts the shared SSH bundle when keys need updating,
+installing `personal`, `bitbucket_work`, `othinus`, and `proserpina` in `~/.ssh`.
+Unchanged keys need no prompt; differing existing keys are backed up before
+replacement. Cancelling or entering a wrong archive passphrase aborts activation
+before replacing keys. Builds and `darwin-rebuild check` do not provision keys.
+See the [SSH guide](../../modules/services/ssh/README.md) for recovery and rotation.
 The SSH client config links to a read-only Nix-store copy, since OpenSSH rejects
 a group-writable checkout file even through a symlink. Editing
 `modules/services/ssh/hosts.config` takes effect after `ns` on the Mac and
