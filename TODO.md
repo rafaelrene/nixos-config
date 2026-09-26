@@ -2,6 +2,12 @@
 
 ## Later
 
+- Make Proserpina accessible with `ssh proserpina`.
+- Review whether Proserpina still needs Homebrew.
+- Let `git db` select branches and worktrees to delete.
+- Improve the script for moving between projects quickly.
+- Improve the script for navigating between branches and worktrees.
+- Remove animations when switching windows with `Caps + arrows`.
 - Migrate `zentty-project` and `zentty-subrepo` (alias `zsr`) from
   `/data/code/ansible/roles/scripts/files/` once we have a replacement for their
   Zentty pane/worklane integration. They require Zentty and are not installed here.
