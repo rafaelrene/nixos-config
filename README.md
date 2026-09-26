@@ -2,7 +2,7 @@
 
 Declarative configuration for Othinus (NixOS) and Proserpina (nix-darwin).
 See [Proserpina's migration notes](hosts/proserpina/README.md) for macOS setup,
-Ansible compatibility, and VM validation. The sections below describe Othinus
+Ansible compatibility, and native validation. The sections below describe Othinus
 unless they explicitly mention macOS.
 
 ## Repository structure
@@ -36,6 +36,9 @@ agent profiles; `nups` also switches the system. Homebrew is no longer a setup
 dependency or package updater. Removal of replaced Brew packages is opt-in;
 Proserpina now enables it for the final migration handover. The existing Zsh
 Git/Try paths remain available.
+Proserpina uses OmniWM with Caps Lock as its window-management modifier:
+workspace 1 is Work, and workspaces 2–9 provide independent scrolling layouts.
+See the [Mac window-management bindings](hosts/proserpina/README.md#window-management).
 Quit existing Mac apps before opening their Nix copies during validation;
 duplicate Proton Drive installations can mix app and File Provider paths.
 See the [Mac guide](hosts/proserpina/README.md).

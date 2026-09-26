@@ -54,11 +54,9 @@ Update README.md when behavior, setup commands, or required manual steps change.
   Keep existing package build checks enabled.
 - Do not switch the live workstation without Rene's explicit instruction.
   Evaluation and builds do not require approval.
-- Test Proserpina's migration in a disposable macOS VM. Permission to run Tart
-  on the work Mac does not authorize switching the host's configuration.
-- Retain the testing VM, downloaded image and testing tools between sessions.
-  Reuse the environment documented in `hosts/proserpina/README.md`; do not
-  delete it until Rene explicitly requests cleanup after migration testing.
+- Validate Darwin changes with Nix evaluation, builds, and focused native checks.
+  A macOS VM is not required. Native checks do not authorize switching the live
+  workstation or replacing its running services.
 
 ## Validation
 
@@ -70,6 +68,7 @@ nix build --no-link .#nixosConfigurations.othinus.config.system.build.toplevel
 ```
 
 For Darwin changes, also evaluate `darwinConfigurations.Proserpina.system.drvPath`.
-Build `.#darwinConfigurations.Proserpina.system` and test activation inside the
-macOS VM. Keep Ansible unchanged and verify that shared refactors preserve
+Build `.#darwinConfigurations.Proserpina.system` and run relevant native checks.
+Report activation or interactive checks that still need an authorized live
+switch. Keep Ansible unchanged and verify that shared refactors preserve
 Othinus's configuration.
