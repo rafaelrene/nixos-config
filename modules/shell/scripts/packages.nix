@@ -16,7 +16,7 @@ let
     name = "git-delete-branches";
     runtimeInputs = [
       pkgs.git
-      pkgs.gnused
+      pkgs.fzf
     ];
     bashOptions = [ ];
     text = builtins.readFile ./git-delete-branches;

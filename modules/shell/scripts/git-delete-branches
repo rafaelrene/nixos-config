@@ -1,55 +1,170 @@
 #!/usr/bin/env bash
 # scripts.aliases: git-db
 
-set -uo pipefail
+set -euo pipefail
 
 if [[ $(git rev-parse --is-inside-work-tree 2>/dev/null) != "true" ]]; then
-	echo "Not in a git repo!"
-	exit 0
-fi
-
-repo_root=$(git rev-parse --show-toplevel)
-main_worktree=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
-
-if [[ $repo_root != "$main_worktree" ]]; then
-	echo "git-delete-branches must be run from the main worktree" >&2
+	echo "Not in a git repo!" >&2
 	exit 1
 fi
 
-current_branch=$(git branch --show-current)
-branches_to_delete=()
-worktree_branches=()
+repo_root=$(git rev-parse --show-toplevel)
+current_branch=$(git symbolic-ref --quiet HEAD || true)
+current_branch=${current_branch#refs/heads/}
 worktree_paths=()
+worktree_branches=()
+worktree_heads=()
+path='' branch='' head=''
 
-while IFS=$'\t' read -r branch worktree_path; do
-	if [[ $branch == "$current_branch" ]]; then
-		continue
-	fi
-
-	if [[ -n $worktree_path ]]; then
+# NUL records preserve paths containing tabs, newlines, or Git quoting characters.
+while IFS= read -r -d '' field; do
+	case "$field" in
+	"worktree "*) path=${field#worktree } ;;
+	"branch "*) branch=${field#branch refs/heads/} ;;
+	"HEAD "*) head=${field#HEAD } ;;
+	"")
+		worktree_paths+=("$path")
 		worktree_branches+=("$branch")
-		worktree_paths+=("$worktree_path")
-		continue
-	fi
+		worktree_heads+=("$head")
+		path='' branch='' head=''
+		;;
+	esac
+done < <(git worktree list --porcelain -z)
 
-	branches_to_delete+=("$branch")
-done < <(git branch --format=$'%(refname:short)\t%(worktreepath)')
-
-if [[ ${#branches_to_delete[@]} -gt 0 ]]; then
-	git branch -D -- "${branches_to_delete[@]}"
-elif [[ ${#worktree_branches[@]} -eq 0 ]]; then
-	echo "No local branches to delete!"
+main_worktree=${worktree_paths[0]}
+main_branch=${worktree_branches[0]}
+default_ref=$(git symbolic-ref --quiet refs/remotes/origin/HEAD || true)
+default_branch=${default_ref#refs/remotes/origin/}
+if [[ -z $default_branch ]]; then
+	for branch in main master "$main_branch"; do
+		if [[ -n $branch ]] && git show-ref --verify --quiet "refs/heads/$branch"; then
+			default_branch=$branch
+			default_ref="refs/heads/$branch"
+			break
+		fi
+	done
+fi
+merge_base=${default_ref:-HEAD}
+if ! git rev-parse --verify "$merge_base^{commit}" >/dev/null 2>&1; then
+	echo "Cannot resolve $merge_base to compare branches." >&2
+	exit 1
 fi
 
-for index in "${!worktree_branches[@]}"; do
-	branch=${worktree_branches[$index]}
-	worktree_path=${worktree_paths[$index]}
+branches=()
+paths=()
+heads=()
+rows=()
+add_candidate() {
+	local branch=$1 path=$2 head=$3 label status=merged index=${#rows[@]}
+	if ! git merge-base --is-ancestor "$head" "$merge_base"; then
+		status=UNMERGED
+	fi
+	if [[ -n $branch ]]; then
+		printf -v label '%s [%s]' "$branch" "$status"
+	else
+		printf -v label '(detached %s) [%s]' "${head:0:8}" "$status"
+	fi
+	if [[ -n $path ]]; then
+		printf -v label '%s  worktree: %q' "$label" "$path"
+	fi
+	branches+=("$branch")
+	paths+=("$path")
+	heads+=("$head")
+	rows+=("$index"$'\t'"$label")
+}
 
-	printf '\nBranch %q is checked out at %q:\n' "$branch" "$worktree_path"
-	printf '  Keep worktree: git -C %q switch --detach && git -C %q branch -D -- %q\n' \
-		"$worktree_path" "$worktree_path" "$branch"
-	printf '  Remove worktree: git worktree remove -- %q && git branch -D -- %q\n' \
-		"$worktree_path" "$branch"
-	printf '  Force remove (destructive): git worktree remove --force -- %q && git branch -D -- %q\n' \
-		"$worktree_path" "$branch"
+while IFS=$'\t' read -r branch head; do
+	if [[ $branch == "$current_branch" || $branch == "$default_branch" || $branch == "$main_branch" ]]; then
+		continue
+	fi
+	path=
+	for index in "${!worktree_paths[@]}"; do
+		if [[ ${worktree_branches[$index]} == "$branch" ]]; then
+			path=${worktree_paths[$index]}
+			break
+		fi
+	done
+	if [[ $path == "$repo_root" || $path == "$main_worktree" ]]; then
+		continue
+	fi
+	add_candidate "$branch" "$path" "$head"
+done < <(git for-each-ref --format='%(refname:strip=2)%09%(objectname)' refs/heads/)
+
+for index in "${!worktree_paths[@]}"; do
+	path=${worktree_paths[$index]}
+	if [[ -z ${worktree_branches[$index]} && $path != "$main_worktree" && $path != "$repo_root" ]]; then
+		add_candidate "" "$path" "${worktree_heads[$index]}"
+	fi
 done
+
+if [[ ${#rows[@]} -eq 0 ]]; then
+	echo "No branches or worktrees to delete."
+	exit 0
+fi
+
+# Ignore user bindings that could auto-accept or change the returned row format.
+# Wait for input before selecting all. Enter must not accept an unselected row.
+# Fzf expands its own environment variables when handling the key bindings.
+# shellcheck disable=SC2016
+if selection=$(printf '%s\n' "${rows[@]}" |
+	FZF_DEFAULT_OPTS='' FZF_DEFAULT_OPTS_FILE='' fzf --multi --sync --layout=reverse \
+		--delimiter=$'\t' --with-nth=2.. --with-shell="$BASH -c" \
+		--prompt='Delete> ' \
+		--header="Tab/Shift-Tab toggle | Ctrl-A select all | Ctrl-D clear all | Enter review | Esc cancel
+Search keeps hidden selections. Branch rows also remove their worktree.
+UNMERGED is relative to $merge_base." \
+		--bind='start:select-all+unbind(result),result:select-all+unbind(result)' \
+		--bind='tab:toggle+down,btab:toggle+up,ctrl-d:clear-selection,esc:abort' \
+		--bind='ctrl-a:transform:if [ -n "$FZF_QUERY" ]; then echo "rebind(result)+clear-query"; else echo select-all; fi' \
+		--bind='enter:transform:if [ "$FZF_SELECT_COUNT" -gt 0 ]; then echo accept; else echo abort; fi'); then
+	:
+else
+	status=$?
+	if [[ $status == 1 || $status == 130 ]]; then
+		exit 0
+	fi
+	exit "$status"
+fi
+[[ -n $selection ]] || exit 0
+
+selected=()
+printf '\nDelete these branches and worktrees (including unmerged commits):\n'
+while IFS=$'\t' read -r index _; do
+	selected+=("$index")
+	printf '  %s\n' "${rows[$index]#*$'\t'}"
+done <<<"$selection"
+printf '\nDelete %s selected entries? [y/N] ' "${#selected[@]}"
+if ! IFS= read -r answer || [[ $answer != y && $answer != Y ]]; then
+	echo "Cancelled."
+	exit 0
+fi
+
+status=0
+for index in "${selected[@]}"; do
+	branch=${branches[$index]}
+	path=${paths[$index]}
+	# A checkout or commit may have changed while the picker was open.
+	if [[ -n $branch ]] && [[ $(git rev-parse --verify "refs/heads/$branch" 2>/dev/null || true) != "${heads[$index]}" ]]; then
+		printf 'Skipped changed branch: %s\n' "$branch" >&2
+		status=1
+		continue
+	fi
+	if [[ -n $path ]]; then
+		expected_ref=${branch:+refs/heads/$branch}
+		if [[ $(git -C "$path" rev-parse --verify HEAD 2>/dev/null || true) != "${heads[$index]}" ||
+		$(git -C "$path" symbolic-ref --quiet HEAD || true) != "$expected_ref" ]]; then
+			printf 'Skipped changed worktree: %q\n' "$path" >&2
+			status=1
+			continue
+		fi
+		# Never force removal: Git refuses dirty, locked, and main worktrees.
+		if ! git worktree remove -- "$path"; then
+			status=1
+			continue
+		fi
+	fi
+	if [[ -n $branch ]] && ! git branch -D -- "$branch"; then
+		status=1
+	fi
+done
+exit "$status"

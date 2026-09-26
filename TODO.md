@@ -2,7 +2,6 @@
 
 ## Later
 
-- Let `git db` select branches and worktrees to delete.
 - Improve the script for moving between projects quickly.
 - Improve the script for navigating between branches and worktrees.
 - Revisit Helium as the default browser if work and personal usage changes.
