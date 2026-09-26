@@ -48,6 +48,7 @@ tool updates can take effect independently of a system switch.
 See the [Proserpina guide](hosts/proserpina/README.md) for Mac setup and migration,
 and the [SSH guide](modules/services/ssh/README.md) for key provisioning and recovery.
 Contributor constraints and validation commands live in [AGENTS.md](AGENTS.md).
+Use `devenv shell` for repository development; see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Future work
 
