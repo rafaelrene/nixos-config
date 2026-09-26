@@ -32,8 +32,10 @@ def nav-worktrees [directory: string] {
   }
 }
 
-# Navigate branches, worktrees, and submodules in the current shell.
-export def --env "git nav" [] {
+# Navigate branches, worktrees, and submodules in this shell or a new window.
+export def --env "git nav" [
+  --new-window (-w) # Open the destination in a new Ghostty window.
+] {
   let root = (nav-git $env.PWD rev-parse --show-toplevel | str trim --right --char "\n" | path expand)
   let worktrees = (nav-worktrees $root)
   let main = $worktrees.0.path
@@ -94,8 +96,8 @@ export def --env "git nav" [] {
   let selection = (
     $rows | ^fzf --read0 --print0 --delimiter "\t" --with-nth 2.. --nth 1,2
       --layout reverse --wrap --tiebreak begin,index --no-multi --no-select-1 --no-exit-0
-      --expect ctrl-n --prompt "Repository > "
-      --header $"($root | path basename) · ($head)\nEnter: go   Ctrl+N: create branch   Esc: cancel"
+      --expect ctrl-n,ctrl-o --prompt "Repository > "
+      --header $"($root | path basename) · ($head)\nEnter: (if $new_window { 'new window' } else { 'go' })   Ctrl+O: new window   Ctrl+N: create branch   Esc: cancel"
     | complete
   )
   if $selection.exit_code == 130 { return }
@@ -112,7 +114,7 @@ export def --env "git nav" [] {
     $destinations | get $index
   }
 
-  if $destination.kind == "create" {
+  let target = if $destination.kind == "create" {
     let starting_commit = $current.head
     if $starting_commit =~ '^0+$' {
       error make {msg: "Commit before creating another branch with git nav."}
@@ -132,15 +134,15 @@ export def --env "git nav" [] {
       nav-git $root rev-parse --verify --end-of-options $"($start)^{commit}" | str trim
     }
     nav-git $main switch -c $name $commit | ignore
-    cd $main
+    $main
   } else if $destination.kind in [branch worktree] {
     # Refresh ownership: another terminal may have checked out this branch.
     let owners = (nav-worktrees $root | where branch == $destination.name)
     if ($owners | is-empty) {
       nav-git $main switch --no-guess $destination.name | ignore
-      cd $main
+      $main
     } else {
-      cd $owners.0.path
+      $owners.0.path
     }
   } else {
     # An uninitialized submodule directory still belongs to the parent repo.
@@ -148,6 +150,19 @@ export def --env "git nav" [] {
     if $target != ($destination.path | path expand) {
       error make {msg: $"($destination.name) is not an initialized checkout. Initialize the submodule before navigating to it."}
     }
+    $target
+  }
+
+  if $new_window or $selected.0 == "ctrl-o" {
+    let launched = if $nu.os-info.name == "macos" {
+      ^/usr/bin/open -na Ghostty --args $"--working-directory=($target)" --window-save-state=never | complete
+    } else {
+      ^ghostty +new-window $"--working-directory=($target)" | complete
+    }
+    if $launched.exit_code != 0 {
+      error make {msg: ($launched.stderr | str trim)}
+    }
+  } else {
     cd $target
   }
 }

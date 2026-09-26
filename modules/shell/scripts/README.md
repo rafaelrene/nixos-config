@@ -23,14 +23,23 @@ name. Inside a submodule, branch operations use that submodule's main checkout.
 From a submodule's linked worktree, Parent leads to the repository containing
 its main checkout. Nested submodules can be traversed one level at a time.
 
-Enter selects a destination; Esc cancels. Ctrl+N opens branch creation even when
-the search has no matches. An empty branch name cancels; Ctrl+C cancels either
+Enter selects a destination in the current shell; Ctrl+O opens it in a new
+Ghostty window and keeps the calling shell's directory. Run `git nav --new-window`
+(or `git nav -w`) to make Enter and Ctrl+N open new windows too. On macOS, new
+windows launch a separate Ghostty instance without restoring saved windows;
+Linux uses Ghostty's new-window action.
+
+Esc cancels. Ctrl+N opens branch creation even when the search has no matches.
+An empty branch name cancels; Ctrl+C cancels either
 creation prompt. The starting point defaults to the invoking checkout's commit
 when the picker opened, or accepts a branch, tag, or commit. Every new branch
-opens in the main checkout, including when invoked from a linked worktree.
+uses the main checkout, including when invoked from a linked worktree.
 
 Git's normal switch checks preserve local changes. A failed switch or creation
-leaves the shell in its original directory. The navigator does not fetch,
+leaves the shell in its original directory. Opening a new window still switches
+or creates branches in the selected checkout; it does not isolate those changes.
+If window launch fails, completed Git operations remain in effect.
+The navigator does not fetch,
 initialize submodules, create worktrees, or support bare repositories.
 Repositories need an initial commit before creating another branch here.
 
