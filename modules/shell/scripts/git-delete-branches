@@ -9,6 +9,11 @@ if [[ $(git rev-parse --is-inside-work-tree 2>/dev/null) != "true" ]]; then
 fi
 
 repo_root=$(git rev-parse --show-toplevel)
+# The shell can cd elsewhere while devenv still watches its original worktree.
+devenv_root=${DEVENV_ROOT:-}
+if [[ -n $devenv_root ]]; then
+	devenv_root=$(cd -- "$devenv_root" 2>/dev/null && pwd -P) || devenv_root=$DEVENV_ROOT
+fi
 current_branch=$(git symbolic-ref --quiet HEAD || true)
 current_branch=${current_branch#refs/heads/}
 worktree_paths=()
@@ -50,13 +55,34 @@ if ! git rev-parse --verify "$merge_base^{commit}" >/dev/null 2>&1; then
 	exit 1
 fi
 
+is_merged() {
+	local head=$1 fork cherry branch_patch merged_patches
+	git merge-base --is-ancestor "$head" "$merge_base" && return 0
+	fork=$(git merge-base "$merge_base" "$head") || return 1
+	# Rebase/cherry-pick changes commit IDs. Do not ignore merge-only changes.
+	if [[ -z $(git rev-list --merges "$merge_base..$head") ]]; then
+		cherry=$(git cherry "$merge_base" "$head") || return 1
+		[[ $cherry != *'+'* ]] && return 0
+	fi
+	# A squash represents the branch's combined diff as one upstream patch.
+	branch_patch=$(git diff --no-ext-diff --no-textconv --binary "$fork" "$head" | git patch-id --stable) || return 1
+	branch_patch=${branch_patch%% *}
+	[[ -z $branch_patch ]] && return 0
+	merged_patches=$(git log --no-ext-diff --no-textconv --no-merges --pretty=format:%H -p --binary "$fork..$merge_base" | git patch-id --stable) || return 1
+	[[ $merged_patches == *"$branch_patch "* ]]
+}
+
 branches=()
 paths=()
 heads=()
 rows=()
 add_candidate() {
 	local branch=$1 path=$2 head=$3 label status=merged index=${#rows[@]}
-	if ! git merge-base --is-ancestor "$head" "$merge_base"; then
+	if [[ -n $path && ($devenv_root == "$path" || $devenv_root == "$path/"*) ]]; then
+		printf 'Keeping active devenv worktree: %q (exit devenv before deleting it).\n' "$path" >&2
+		return
+	fi
+	if ! is_merged "$head"; then
 		status=UNMERGED
 	fi
 	if [[ -n $branch ]]; then
