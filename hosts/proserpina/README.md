@@ -313,6 +313,15 @@ Keep project secrets in external secret storage or the project environment.
 `~/.local/share/raycast/scripts` contains the Chromium web launchers. Select
 that directory in Raycast’s Script Commands settings.
 
+The Nix-built **Workstation destinations** Raycast extension provides
+**Open destination** for projects, Home, configuration folders, and SSH hosts.
+Activation registers it through Raycast's native CLI URL. Assign
+**Control+Option+P** to the command in Raycast Settings → Workstation destinations.
+Enter focuses a matching Ghostty terminal; **Cmd+Shift+Enter** forces a new
+window. See the [shared guide](../../modules/shell/scripts/README.md#destination-picker)
+for discovery rules and window-matching limits. Allow Automation access to
+Ghostty if macOS requests it.
+
 macOS controls application sign-in and privacy permissions. For example,
 Ghostty's global quick-terminal shortcut needs Accessibility permission. These
 prompts are not bypassed by activation.
@@ -338,3 +347,10 @@ decode the generated settings against the matching upstream schema, check the
 app signature and launchd plist, and verify shortcuts and window management
 after an authorized switch. An IPC response alone does not prove input services
 are running.
+
+For destination-picker changes, build the local extension (its Nix package runs
+TypeScript and ESLint checks), compile `ghostty.applescript` with `osacompile`,
+and validate the generated Nushell configuration. After an authorized switch,
+test the global shortcut from another application, search and cancellation,
+project opening and reuse, forced new windows, and SSH. Repeat the workflow in
+Vicinae on Othinus, including the fallback when a window title is unrecognized.

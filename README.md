@@ -65,6 +65,12 @@ On Proserpina, Raycast uses its normal application-opening behavior, which can
 focus an existing window. Its documented settings do not provide a global
 always-open-a-new-window default.
 
+For project folders and SSH connections, use the shared
+[destination picker](modules/shell/scripts/README.md#destination-picker).
+It explicitly opens a Ghostty window or focuses a matching terminal. The
+shortcut is Ctrl+Alt+P on Othinus; assign Control+Option+P to **Open destination**
+in Raycast on Proserpina.
+
 ## Future work
 
 Deferred work lives in [TODO.md](TODO.md), including replacing DankMaterialShell

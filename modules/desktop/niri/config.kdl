@@ -76,6 +76,7 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+Return { spawn "ghostty"; }
     Mod+Space { spawn "vicinae" "toggle"; }
+    Ctrl+Alt+P { spawn "workstation-open" "pick"; }
     Super+Alt+L { spawn "dms" "ipc" "call" "lock" "lock"; }
 
     Mod+O repeat=false { toggle-overview; }

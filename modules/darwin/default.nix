@@ -5,6 +5,7 @@
     ./files.nix
     ./packages.nix
     ./shell.nix
+    ./destinations
     ./ssh.nix
     ./applications.nix
     ./omniwm

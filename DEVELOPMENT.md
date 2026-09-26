@@ -42,6 +42,12 @@ TOML edits. Nushell and Lua are available for focused configuration checks.
 Existing files may have formatting or lint issues; keep unrelated cleanup
 separate from feature changes.
 
+The local Raycast destination extension is built and checked by its Nix package.
+For an editing loop in `modules/darwin/destinations/raycast`, run `npm ci`, then
+`npm run build`, `npm run typecheck` and `npm run lint`. The build writes `dist/`
+without installing into the running Raycast. Format its TypeScript and JSON
+with Prettier. No `ray develop` process is needed for system installation.
+
 ## System validation
 
 ```sh

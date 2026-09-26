@@ -1,0 +1,36 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "workstation-destinations",
+  "title": "Workstation destinations",
+  "description": "Find a project, configuration folder, or SSH connection and open it in Ghostty.",
+  "icon": "icon.svg",
+  "author": "rene",
+  "license": "MIT",
+  "categories": [
+    "Developer Tools"
+  ],
+  "commands": [
+    {
+      "name": "destinations",
+      "title": "Open destination",
+      "description": "Focus a matching Ghostty terminal or open a new window.",
+      "mode": "view"
+    }
+  ],
+  "scripts": {
+    "build": "ray build -e dist -o dist",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@raycast/api": "2.5.2",
+    "react": "19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.17",
+    "@types/react": "19.0.10",
+    "eslint": "9.39.4",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.57.1"
+  }
+}
