@@ -28,6 +28,10 @@ departing from a decision.
 
 ## Validation
 
+Enter `devenv shell` for the repository's development tools. Run checks explicitly;
+the environment does not install Git hooks or format files on entry. See
+[DEVELOPMENT.md](DEVELOPMENT.md) for commands and platform prerequisites.
+
 For configuration changes, run formatting, lint, and relevant checks, including:
 
 ```sh

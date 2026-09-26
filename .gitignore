@@ -7,3 +7,10 @@
 !/modules/services/ssh/ssh-keys.age
 !/modules/services/ssh/README.md
 __pycache__/
+
+# Local development state; devenv.lock is versioned.
+/.devenv/
+/.direnv/
+/devenv.local.nix
+/devenv.local.yaml
+.ruff_cache/

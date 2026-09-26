@@ -1,0 +1,26 @@
+tree-root-file = "devenv.nix"
+
+[formatter.nix]
+command = "nixfmt"
+includes = ["*.nix"]
+
+[formatter.shell]
+command = "shfmt"
+options = ["-w"]
+includes = [
+  "*.sh",
+  "modules/shell/scripts/git-*",
+  "modules/darwin/scripts/zentty-*",
+]
+
+[formatter.lua]
+command = "stylua"
+options = ["--search-parent-directories"]
+includes = ["*.lua"]
+
+[formatter.python]
+command = "ruff"
+options = ["format"]
+includes = ["*.py"]
+# AGENTS.md requires keeping the existing SSH helper unchanged.
+excludes = ["modules/services/ssh/ssh-keys.py"]
