@@ -16,6 +16,10 @@ Keep the root README high level: project purpose, philosophy, main features,
 basic rebuild workflow, and links to further documentation and deferred work.
 Update it when that overview changes.
 
+Keep AGENTS.md a small operational guide: a one-line project overview, working
+principles, agent-specific boundaries, and essential validation commands. Link to
+the README and relevant ADRs instead of repeating their explanations or policies.
+
 Put necessary setup, operational, and troubleshooting instructions beside the
 relevant host or feature. Explain implementation details in configuration or
 nearby comments when needed. Do not document every setting or copy validation
