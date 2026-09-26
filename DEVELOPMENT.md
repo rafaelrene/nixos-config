@@ -20,8 +20,7 @@ deadnix --fail --exclude .devenv
 python3 -m unittest discover -s tests -v
 ```
 
-`treefmt` formats Nix, Bash, Lua and Python files, excluding the protected SSH
-helper. Use `treefmt path/to/file`
+`treefmt` formats Nix, Bash, Lua and Python files. Use `treefmt path/to/file`
 to format only edited files, or `treefmt` for the whole repository. Lua uses
 the existing Neovim StyLua configuration. `--fail-on-change` still writes
 formatting changes, then exits unsuccessfully if any were needed. To check

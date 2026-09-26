@@ -1,4 +1,4 @@
-"""Runtime-only SSH key provisioning, called by the NixOS pre-switch hook."""
+"""Runtime-only SSH key provisioning for NixOS and nix-darwin rebuilds."""
 
 import argparse
 import base64
@@ -56,22 +56,23 @@ def age_interactive(args, arguments):
         raise RuntimeError(
             "SSH keys need a passphrase. Run this command in an interactive terminal (ssh -t for remote commands)."
         )
+    command = [args.age, *map(str, arguments)]
     # nixos-rebuild-ng passes terminal FDs through systemd-run --pipe, but the
     # service has no controlling terminal. script gives age its own PTY while
     # forwarding the inherited terminal. Never log terminal input or output.
-    result = subprocess.run(
-        [
+    # Darwin activation retains its controlling terminal and calls age directly.
+    if args.script:
+        command = [
             args.script,
             "--quiet",
             "--return",
             "--echo",
             "never",
             "--command",
-            shlex.join([args.age, *map(str, arguments)]),
+            shlex.join(command),
             "/dev/null",
-        ],
-        check=False,
-    )
+        ]
+    result = subprocess.run(command, check=False)
     if result.returncode:
         raise RuntimeError(
             "SSH key encryption/decryption failed; installed keys were not changed."
@@ -151,8 +152,8 @@ def provision(args):
 
 
 def provision_locked(args, repo, ssh, state_dir):
-    target = repo / "config"
-    if not target.is_file():
+    target = None if args.skip_config else repo / "config"
+    if target is not None and not target.is_file():
         raise RuntimeError(f"Missing SSH config: {target}")
     public = {name: (repo / f"{name}.pub").read_bytes() for name in KEYS}
     bundle_path = repo / "ssh-keys.age"
@@ -172,12 +173,16 @@ def provision_locked(args, repo, ssh, state_dir):
         for name in KEYS:
             (ssh / name).chmod(0o600)
             (ssh / f"{name}.pub").chmod(0o644)
-        link_config(ssh, target)
+        if target is not None:
+            link_config(ssh, target)
         print("Managed SSH keys are current; no passphrase needed.")
         return
 
-    # Never place a plaintext archive in the checkout, Nix store or disk /tmp.
-    with tempfile.TemporaryDirectory(prefix="nixos-ssh-", dir="/dev/shm") as directory:
+    # Linux uses tmpfs; Darwin uses a private directory beside the installed keys.
+    # Never place plaintext in the checkout or Nix store.
+    with tempfile.TemporaryDirectory(
+        prefix="nixos-ssh-", dir=args.temporary_directory
+    ) as directory:
         temporary = Path(directory)
         payload = temporary / "keys.json"
         if bundle is None or args.repack:
@@ -240,7 +245,8 @@ def provision_locked(args, repo, ssh, state_dir):
             if path.is_symlink() or (path.exists() and path.read_bytes() != value):
                 backup(path)
             atomic_write(path, value, 0o644 if name.endswith(".pub") else 0o600)
-        link_config(ssh, target)
+        if target is not None:
+            link_config(ssh, target)
         atomic_write(
             state_path,
             json.dumps(
@@ -250,15 +256,26 @@ def provision_locked(args, repo, ssh, state_dir):
                 }
             ).encode(),
         )
-        print(
-            f"Installed all {len(KEYS)} SSH identities and linked the editable SSH config."
-        )
+        print(f"Installed all {len(KEYS)} SSH identities.")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("repo", "home", "source", "age", "script", "ssh-keygen"):
+    for name in ("repo", "home", "source", "age", "ssh-keygen"):
         parser.add_argument(f"--{name}", required=True)
+    parser.add_argument(
+        "--script", help="util-linux script executable for NixOS's detached terminal"
+    )
+    parser.add_argument(
+        "--temporary-directory",
+        default="/dev/shm",
+        help="parent for private temporary files; use ~/.ssh on Darwin",
+    )
+    parser.add_argument(
+        "--skip-config",
+        action="store_true",
+        help="leave SSH config management to nix-darwin",
+    )
     parser.add_argument(
         "--repack",
         action="store_true",

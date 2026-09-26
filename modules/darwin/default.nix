@@ -5,6 +5,7 @@
     ./files.nix
     ./packages.nix
     ./shell.nix
+    ./ssh.nix
     ./applications.nix
     ./omniwm
     ./agents.nix

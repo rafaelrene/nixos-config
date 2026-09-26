@@ -9,11 +9,13 @@ The managed identities are `personal`, `bitbucket_work`, `othinus`, and
 `proserpina`. `ssh-keys.age` stores their private keys together using age's
 passphrase mode. There is no separate age identity file. Matching public keys
 are stored beside the bundle; the provisioner rejects missing, extra, or
-mismatched keys before installing anything.
+mismatched keys before installing anything. Both machines install all four
+identities.
 
-An interactive `sudo nixos-rebuild switch --flake .#othinus` decrypts the bundle
-when the installed keys need updating. If the bundle is missing, the hook can
-create it from all four identities already installed in `/home/raf/.ssh`.
+An interactive `sudo nixos-rebuild switch --flake .#othinus` or
+`sudo darwin-rebuild switch --flake .#Proserpina` decrypts the bundle when the
+installed keys need updating. If the bundle is missing, the hook can create it
+from all four identities already installed in the target user's `~/.ssh`.
 On a new machine, restore the encrypted bundle from Git first.
 
 To add or replace a key, update its installed private key and the matching
@@ -36,27 +38,37 @@ remote one-shot command, use `ssh -t` to allocate a terminal for the prompt.
 
 The switch checks the bundle digest and installed file digests. Unchanged keys
 need no prompt. A changed bundle or missing/modified installed key triggers
-decryption. Decrypted keys live in `/home/raf/.ssh` with mode 0600, outside the
-Nix store. Intermediate plaintext is restricted to a private temporary directory
-in `/dev/shm` and removed on exit. This machine's disks are unencrypted, as
-specified in ADR 0004; installed keys have no additional disk encryption.
+decryption. Decrypted keys live in `/home/raf/.ssh` on Othinus and
+`/Users/rafael/.ssh` on Proserpina with mode 0600, outside the Nix store.
+Intermediate plaintext is restricted to a mode-0700 temporary directory and
+removed on normal exit or failure. Othinus uses `/dev/shm` (RAM); Proserpina uses
+`~/.ssh` on disk because macOS has no `/dev/shm`. An uncatchable termination can
+leave temporary files there. Othinus's disks are unencrypted, as specified in
+ADR 0004; its installed keys have no additional disk encryption.
 
 Existing SSH-key passphrases are preserved. In particular, the personal key has
 its own passphrase, independent of the archive passphrase. The SSH agent caches
 unlocked identities for the login session.
 
-The SSH config selects `/run/user/1000/ssh-agent` explicitly, so existing
+On Othinus, the SSH config selects `/run/user/1000/ssh-agent` explicitly, so existing
 applications also use the NixOS agent. To unlock the personal key for T3Code,
 run `env SSH_AUTH_SOCK=/run/user/1000/ssh-agent ssh-add ~/.ssh/personal` locally.
 No T3Code restart is needed. GitHub's verified host key is declared in NixOS
 so background pushes can verify the server without an interactive trust prompt.
 
-The hook runs for `switch` and `test`, not boot or build. It requires the `raf`
+The NixOS hook runs for `switch` and `test`, not boot or build. It requires the `raf`
 account to exist (as on this machine). A terminal is required only when keys
 need encryption/decryption. Cancelling or entering a wrong passphrase fails the
 pre-switch check before replacing installed keys. Do not bypass that check with
 `NIXOS_NO_CHECK=1`. For remote deployment, run the rebuild in an interactive SSH
 terminal on the target.
+
+The Darwin hook runs during activation, after existing preflight checks and
+before files or services are changed. It runs as `rafael`, uses the native
+terminal for age's passphrase prompt, and leaves the SSH config link to
+nix-darwin. Builds and `darwin-rebuild check` do not provision keys. The existing
+`rafael` account must be present. A failed prompt aborts activation before keys
+are replaced; nix-darwin may already have selected the new system profile.
 
 SSH configuration is an editable symlink to
 `/data/code/nixos-config/modules/services/ssh/config`. Host and identity settings

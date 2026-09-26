@@ -8,10 +8,14 @@ departing from a decision.
 
 ## Working principles
 
+- Unless explicitly instructed otherwise, all changes apply to every machine
+  managed by this repository.
 - Convenience first: declare workstation changes here and apply them through
   the system rebuild, without extra manual setup.
-- Prefer native Nix options. Reuse existing modules and portable configuration;
-  keep platform differences explicit.
+- Prefer native Nix options and application-native configuration. Use scripts
+  and other implementation languages only when native configuration cannot
+  provide the required behavior. Reuse existing modules and helpers; keep
+  platform differences explicit.
 - Simplify within the task's scope. Propose unrelated rewrites separately.
 - Keep existing checkout paths. Put necessary documentation beside the feature,
   and deferred work in [TODO.md](TODO.md).
@@ -21,7 +25,6 @@ departing from a decision.
 - Get explicit approval before switching the live system or replacing running services.
 - Get approval for new scripts, substantial script rewrites (including embedded
   shell), or new implementation languages. Application-native configuration is fine.
-- Do not add Python helpers or modify the existing SSH Python helper.
 - Keep plaintext secrets out of this public repository and the Nix store.
 - Use temporary tests and remove them afterward; do not add a permanent suite.
   Keep existing package build checks enabled.
