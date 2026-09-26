@@ -54,7 +54,7 @@ in
   };
 
   # Caps Lock becomes Right Control in the HID layer: it never toggles capitals,
-  # drives settings.nix's side-specific chords, and reveals the workspace bar.
+  # and drives settings.nix's side-specific chords.
   # nix-darwin reapplies the mapping at every boot.
   system.keyboard = {
     enableKeyMapping = true;
