@@ -2,19 +2,18 @@
 
 - Status: accepted
 - Date: 2026-09-05
+- Amended: 2026-09-26
 
 ## Context
 
-Only Rene has physical access to Othinus. Retrofitting encryption would add a
-boot-time secret, migration risk, and recovery complexity without addressing a
-threat in the accepted model.
+Othinus's filesystems are unencrypted. Retrofitting encryption would require a
+storage migration and an unlock and recovery strategy.
 
 ## Decision
 
-Leave the system and data filesystems unencrypted. Do not revisit encryption
-unless the physical-access model or the sensitivity of stored data changes.
+Leave Othinus's filesystems unencrypted. Reconsider if physical-access risks or
+the sensitivity of stored data change. This decision does not cover Proserpina.
 
 ## Consequences
 
-Someone who obtains the disks can read them offline. This risk is explicitly
-accepted. Snapshots do not provide confidentiality.
+Anyone who obtains the disks can read their contents. This risk is accepted.
