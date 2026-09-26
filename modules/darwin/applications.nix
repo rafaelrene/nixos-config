@@ -53,7 +53,7 @@ in
       );
       # OpenSSH rejects group-writable checkout files, even behind a symlink.
       ".ssh/config" = toString ../services/ssh/hosts.config;
-      ".local/share/raycast/scripts" = "${checkout}/modules/darwin/web-apps";
-    };
+    }
+    // (import ./web-apps { inherit lib pkgs; });
   };
 }

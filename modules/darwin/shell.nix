@@ -17,7 +17,11 @@ let
 in
 {
   environment = {
-    systemPackages = [ prun ];
+    systemPackages = [
+      branches
+      deleteBranches
+      prun
+    ];
     systemPath = lib.mkBefore [ "$HOME/.local/bin" ];
     # The persistent profile is available before launchd recreates /run at boot.
     shells = [ "/nix/var/nix/profiles/system/sw/bin/nu" ];
@@ -47,9 +51,6 @@ in
       ".config/starship/starship.toml" = toString (
         import ../shell/starship/config.nix { inherit lib pkgs; }
       );
-      ".local/bin/git-branches" = "${branches}/bin/git-branches";
-      ".local/bin/git-delete-branches" = "${deleteBranches}/bin/git-delete-branches";
-      ".local/bin/git-db" = "${deleteBranches}/bin/git-delete-branches";
     };
   };
 }

@@ -129,8 +129,9 @@ git nav
 
 Both workstations also provide `git branches` to switch branches in the current
 checkout and `git db` (also `git delete-branches`) to delete selected local
-branches and worktrees. These helpers are linked into `$HOME/.local/bin`, which
-both machines include in the shell's PATH. Devenv inherits that PATH.
+branches and worktrees. Both machines install these Nushell helpers as system
+packages; they also work when invoked from other shells. `git branches` includes
+remote branches and accepts a branch name to skip its picker.
 
 Run `git db` from any worktree. Each branch has one row, including its worktree
 path when checked out. Deleting that row removes both. Detached worktrees have

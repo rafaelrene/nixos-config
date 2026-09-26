@@ -20,14 +20,6 @@ let
     builtins.toJSON {
       links = agentLinks;
       inherit skillDirectories;
-      # Only these original settings may be backed up and replaced on first
-      # activation. Newer edits or unrelated destination files cause an error.
-      previousSettings = {
-        ".local/share/codex/config.toml" =
-          "c5716d9c416be824025fe723650d7c9d00957b57b98e3029e85409e494bcc7fb";
-        ".local/share/claude/settings.json" =
-          "27dafb2742d0da69a49cc8d206fc9cc429feff09cc3738addcf590d9c4358f97";
-      };
     }
   );
   profile = "/home/raf/.local/state/nix/profiles/llm-agents";
@@ -67,11 +59,6 @@ in
       "L+ /home/raf/.local/share/codex/themes/workstation.tmTheme - - - - ${codexTheme}"
       "d /home/raf/.config/opencode/themes 0700 raf raf - -"
       "L+ /home/raf/.config/opencode/themes/workstation.json - - - - ${opencodeTheme}"
-      "r /home/raf/.local/bin/agent-notify - - - - -"
-      "r /home/raf/.local/share/codex/hooks.json - - - - -"
-      "r /home/raf/.local/share/codex/hooks/notification.sh - - - - -"
-      "r /home/raf/.local/share/claude/hooks/notification.sh - - - - -"
-      "r /home/raf/.config/opencode/plugins/notification.ts - - - - -"
     ]
     ++ map (directory: "d /home/raf/${directory} 0700 raf raf - -") (
       [

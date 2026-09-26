@@ -10,12 +10,15 @@ let
 in
 {
   environment.systemPackages = [
+    branches
+    deleteBranches
     destinations
     prun
   ];
+  # Remove the previously managed links so they cannot shadow system packages.
   systemd.tmpfiles.rules = [
-    "L+ /home/raf/.local/bin/git-branches - - - - ${branches}/bin/git-branches"
-    "L+ /home/raf/.local/bin/git-delete-branches - - - - ${deleteBranches}/bin/git-delete-branches"
-    "L+ /home/raf/.local/bin/git-db - - - - ${deleteBranches}/bin/git-delete-branches"
+    "r /home/raf/.local/bin/git-branches - - - -"
+    "r /home/raf/.local/bin/git-delete-branches - - - -"
+    "r /home/raf/.local/bin/git-db - - - -"
   ];
 }

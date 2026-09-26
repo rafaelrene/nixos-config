@@ -11,99 +11,11 @@ let
     inherit lib pkgs;
     home = "/home/raf";
   };
-  # A fresh source directory migrates the old server-only updater on rebuild.
-  updaterDir = "/home/raf/.local/state/t3code-bundle-updater";
   profile = "/home/raf/.local/state/nix/profiles/t3code";
-
-  updaterSource = import ../../applications/t3code/package/source.nix { inherit pkgs; };
-
-  updateT3Code = pkgs.writeShellApplication {
-    name = "update-t3code";
-    runtimeInputs = with pkgs; [
-      coreutils
-      curl
-      git
-      gnused
-      jq
-      nix
-      nix-update
-      util-linux
-    ];
-    text = ''
-      export NIX_CONFIG="experimental-features = nix-command flakes
-      accept-flake-config = false"
-
-      # User services restart before system tmpfiles during a NixOS switch.
-      install -d -m 0700 ${lib.escapeShellArg updaterDir}
-      cd ${lib.escapeShellArg updaterDir}
-      echo "T3 Code: waiting for any existing update to finish..."
-      exec 9>update.lock
-      flock 9
-
-      # Preserve staged versions and make old tmpfiles copies writable too.
-      cp --update=none ${updaterSource}/*.nix .
-      chmod u+w flake.nix package.nix desktop.nix
-
-      if ! test -d .git; then
-        git init -q
-      fi
-
-      # Nix only sees files tracked by a Git-backed flake. Stage the copied
-      # sources before creating or evaluating its lock file.
-      git add flake.nix package.nix desktop.nix
-      if ! test -e flake.lock; then
-        nix flake lock --no-accept-flake-config
-      fi
-      git add flake.lock
-
-      current=$(sed -n 's/^  version = "\([^"]*\)";/\1/p' package.nix)
-      desktopCurrent=$(sed -n 's/^  version = "\([^"]*\)";/\1/p' desktop.nix)
-      echo "T3 Code: checking the nightly channel (packaged version: $current)..."
-      latest=$(curl --fail --silent --show-error --retry 3 \
-        https://registry.npmjs.org/t3 \
-        | jq -er '."dist-tags".nightly') || {
-          echo "Could not check the nightly channel; using packaged version $current." >&2
-          latest="$current"
-        }
-
-      if test "$latest" != "$current" || test "$latest" != "$desktopCurrent"; then
-        echo "Updating T3 Code $current -> $latest"
-        if ! nix-update --flake --version "$latest" t3code-nightly \
-          || ! nix-update --flake --version "$latest" t3code-desktop; then
-          echo "Nightly metadata is not buildable yet; retaining $current" >&2
-          git restore package.nix desktop.nix flake.lock
-        fi
-      else
-        echo "T3 Code: no newer nightly found."
-      fi
-
-      echo "T3 Code: building server and desktop (downloads and build logs follow)..."
-      if new=$(nix build --print-build-logs --no-link --print-out-paths --no-accept-flake-config .#default); then
-        previous=$(readlink -f ${lib.escapeShellArg profile} || true)
-        if test "$new" != "$previous"; then
-          mkdir -p "$(dirname ${lib.escapeShellArg profile})"
-          nix-env --profile ${lib.escapeShellArg profile} --set "$new"
-          echo "Staged server and desktop: $("$new/bin/t3" --version)"
-        else
-          echo "T3 Code: server and desktop are already staged."
-        fi
-        git add package.nix desktop.nix flake.lock
-      elif test -x ${lib.escapeShellArg profile}/bin/t3; then
-        echo "Nightly build failed; retaining $("${profile}/bin/t3" --version)" >&2
-        git restore package.nix desktop.nix flake.lock
-      else
-        git restore package.nix desktop.nix flake.lock
-        echo "T3 Code has no usable generation" >&2
-        exit 1
-      fi
-
-      if ! test -e ${lib.escapeShellArg baseDir}/.nixos-config-registered; then
-        "${profile}/bin/t3" project add /data/code/nixos-config \
-          --base-dir ${lib.escapeShellArg baseDir}
-        touch ${lib.escapeShellArg baseDir}/.nixos-config-registered
-      fi
-      echo "T3 Code: update check complete. Reopen the desktop to use the staged client."
-    '';
+  updateT3Code = import ../../applications/t3code/update.nix {
+    inherit lib pkgs;
+    home = "/home/raf";
+    project = "/data/code/nixos-config";
   };
 
   updateNow = pkgs.writeShellApplication {
@@ -241,7 +153,7 @@ in
               (lib.getExe pkgs.yq-go)
               "--inplace"
               "--output-format=json"
-              "load(\"${settings.server}\") as $declared | .providers *= $declared.providers | .defaultTheme = $declared.defaultTheme | .defaultThemeSetAt = $declared.defaultThemeSetAt"
+              settings.merge
               "${baseDir}/userdata/settings.json"
             ])
           ];

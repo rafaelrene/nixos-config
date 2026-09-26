@@ -26,7 +26,7 @@ deadnix --fail --exclude .devenv
 python3 -m unittest discover -s tests -v
 ```
 
-`treefmt` formats Nix, Bash, Lua and Python files. Use `treefmt path/to/file`
+`treefmt` formats Nix, Bash, Nushell, Lua and Python files. Use `treefmt path/to/file`
 to format only edited files, or `treefmt` for the whole repository. Lua uses
 the existing Neovim StyLua configuration. `--fail-on-change` still writes
 formatting changes, then exits unsuccessfully if any were needed. To check
@@ -38,9 +38,18 @@ ruff check path/to/file.py
 ```
 
 Prettier and Taplo are available for documentation, JSON/JSONC, YAML, HTML and
-TOML edits. Nushell and Lua are available for focused configuration checks.
+TOML edits. Check a Nushell script without running it with
+`nu --no-config-file --commands 'nu-check path/to/script.nu'`; validate generated
+configuration after Nix substitutes its template values. Lua is also available
+for focused configuration checks.
 Existing files may have formatting or lint issues; keep unrelated cleanup
 separate from feature changes.
+
+Keep runtime logic in `.nu` files beside its feature. Package commands with
+`writeShellApplication`, explicit `runtimeInputs`, and a thin
+`exec nu --no-config-file ... "$@"` launcher. Keep native Nix build phases and
+small process wrappers in Bash when Nushell would add no value. Share portable
+logic beside the feature, with service integration in the platform modules.
 
 The local Raycast destination extension is built and checked by its Nix package.
 For an editing loop in `modules/darwin/destinations/raycast`, run `npm ci`, then
