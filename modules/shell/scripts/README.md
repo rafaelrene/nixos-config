@@ -24,11 +24,19 @@ hidden rows. The picker shows these shortcuts:
 Confirmation defaults to Yes; enter `n` to cancel.
 An empty selection or declining confirmation deletes nothing. The current branch
 and worktree, the main worktree and its branch, and the default branch are
-excluded. The default comes from the locally recorded `origin/HEAD`, falling
+excluded. The worktree containing this shell's `DEVENV_ROOT` is also excluded,
+even after changing directories: exit that devenv shell before deleting it.
+This does not detect environments running in other terminals.
+The default comes from the locally recorded `origin/HEAD`, falling
 back to `main`, `master`, then the main worktree's branch.
 
-`UNMERGED` marks commits not reachable from that default reference, or the current
-`HEAD` if none is known. These rows also start selected, and their branches are
+`merged` means the branch is reachable from that default reference, its patches
+were rebased/cherry-picked into it, its combined diff matches an upstream
+squash commit, or it has no net changes since the common ancestor.
+Comparison uses local refs without fetching; fetch first if the
+remote has newer merges. If no default is known, comparison uses current `HEAD`.
+Conflict resolutions that change patches can still show `UNMERGED`.
+These rows also start selected, and their branches are
 force-deleted after confirmation. Dirty or locked worktrees are refused and their
 branches kept. Failed deletions produce a nonzero exit status; other selected
 entries are still attempted. Entries changed while the picker was open are

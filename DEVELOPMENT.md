@@ -5,6 +5,12 @@ Run `devenv shell` from this checkout, or prefix an individual command with
 workstation configurations provide them. The configured Nushell hook also
 supports automatic entry after `devenv allow` in this checkout.
 
+A running devenv shell keeps watching the checkout where it started, even if
+you change directories. Exit it before removing that checkout or worktree;
+`git db` protects the worktree containing the calling shell's `DEVENV_ROOT`.
+If the checkout was already deleted and reload fails, run `exit`, change to a
+surviving checkout, and run `devenv shell` there.
+
 `devenv.nix` supplies the repository's tools on Linux and macOS. `devenv.lock`
 pins them independently of the system's `flake.lock`; use `devenv update` to
 update development tools. Nix builds supply their own declared build dependencies.
