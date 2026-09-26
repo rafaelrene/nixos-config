@@ -1,13 +1,38 @@
 # SSH key bundle
 
-`ssh-keys.age` contains the three SSH private keys encrypted together using
-age's passphrase mode. There is no separate age identity file.
+Use `ssh proserpina` to connect to Proserpina's `rafael` account on the local
+network using `~/.ssh/proserpina`. The alias resolves `proserpina.local`, so it
+follows the Mac's LAN address without a fixed IP. Proserpina declares Remote
+Login and trusts `proserpina.pub` through nix-darwin.
 
-The first interactive `sudo nixos-rebuild switch --flake .#othinus` creates the
-bundle from `/data/code/ansible/roles/ssh/files` if it is missing. Age prompts
-for a new passphrase and confirmation in your terminal. Commit the resulting
-`modules/services/ssh/ssh-keys.age`; the plaintext source is never copied into this checkout.
-On another machine, the same rebuild prompts to decrypt the committed bundle.
+The managed identities are `personal`, `bitbucket_work`, `othinus`, and
+`proserpina`. `ssh-keys.age` stores their private keys together using age's
+passphrase mode. There is no separate age identity file. Matching public keys
+are stored beside the bundle; the provisioner rejects missing, extra, or
+mismatched keys before installing anything.
+
+An interactive `sudo nixos-rebuild switch --flake .#othinus` decrypts the bundle
+when the installed keys need updating. If the bundle is missing, the hook can
+create it from all four identities already installed in `/home/raf/.ssh`.
+On a new machine, restore the encrypted bundle from Git first.
+
+To add or replace a key, update its installed private key and the matching
+public key in this repository, then repack the archive. From the checkout root
+on Othinus, run:
+
+```sh
+devenv shell -- python3 modules/services/ssh/ssh-keys.py --repack --repo modules/services/ssh --home /home/raf --source /home/raf/.ssh --age /run/current-system/sw/bin/age --script /run/current-system/sw/bin/script --ssh-keygen /run/current-system/sw/bin/ssh-keygen
+```
+
+This validates all four installed keys and prompts for the archive passphrase
+and confirmation. It does not require the old archive passphrase. The existing
+bundle is replaced only after encryption succeeds; cancellation preserves it.
+Installed keys, the live SSH config, and the installed-bundle state are left
+unchanged. Commit the resulting ciphertext with the matching public keys and
+provisioner changes. The next system switch decrypts and installs the new bundle.
+
+The command also works through an interactive `ssh othinus` session. For a
+remote one-shot command, use `ssh -t` to allocate a terminal for the prompt.
 
 The switch checks the bundle digest and installed file digests. Unchanged keys
 need no prompt. A changed bundle or missing/modified installed key triggers
@@ -46,9 +71,9 @@ preserved alongside it as `config.before-nixos-<unique suffix>`. Existing privat
 keys with different contents are similarly backed up before replacement. All
 backups stay inside the private SSH directory; delete them when no longer needed.
 
-To replace the bundle, first move the current ciphertext to a safe location
-outside the checkout, update the Ansible source keys and the matching public
-keys in `modules/services/ssh`, then rebuild and commit the new ciphertext and public keys.
+When rotating the Proserpina key, rebuild the Mac with the matching public key
+and replace its initial entry in `rafael`'s `~/.ssh/authorized_keys` too. That
+entry bootstraps access before the declarative configuration is activated.
 Changing the archive passphrase cannot revoke old ciphertext in Git history;
 rotate the SSH keys themselves if the old passphrase is compromised.
 

@@ -6,14 +6,13 @@ import fcntl
 import hashlib
 import json
 import os
-from pathlib import Path
 import shlex
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
-
-KEYS = ("personal", "bitbucket_work", "othinus")
+KEYS = ("personal", "bitbucket_work", "othinus", "proserpina")
 
 
 def digest(data):
@@ -44,7 +43,9 @@ def atomic_write(path, data, mode=0o600):
 
 def backup(path):
     if path.exists() or path.is_symlink():
-        fd, name = tempfile.mkstemp(prefix=f"{path.name}.before-nixos-", dir=path.parent)
+        fd, name = tempfile.mkstemp(
+            prefix=f"{path.name}.before-nixos-", dir=path.parent
+        )
         os.close(fd)
         os.replace(path, name)
         print(f"Preserved existing {path.name} as {Path(name).name}.", flush=True)
@@ -52,23 +53,36 @@ def backup(path):
 
 def age_interactive(args, arguments):
     if not os.isatty(0):
-        raise RuntimeError("SSH keys need a passphrase. Run nixos-rebuild switch in an interactive terminal.")
+        raise RuntimeError(
+            "SSH keys need a passphrase. Run this command in an interactive terminal (ssh -t for remote commands)."
+        )
     # nixos-rebuild-ng passes terminal FDs through systemd-run --pipe, but the
     # service has no controlling terminal. script gives age its own PTY while
     # forwarding the inherited terminal. Never log terminal input or output.
     result = subprocess.run(
-        [args.script, "--quiet", "--return", "--echo", "never", "--command",
-         shlex.join([args.age, *map(str, arguments)]), "/dev/null"],
+        [
+            args.script,
+            "--quiet",
+            "--return",
+            "--echo",
+            "never",
+            "--command",
+            shlex.join([args.age, *map(str, arguments)]),
+            "/dev/null",
+        ],
         check=False,
     )
     if result.returncode:
-        raise RuntimeError("SSH key encryption/decryption failed; installed keys were not changed.")
+        raise RuntimeError(
+            "SSH key encryption/decryption failed; installed keys were not changed."
+        )
 
 
 def fingerprint(args, path):
     result = subprocess.run(
         [args.ssh_keygen, "-l", "-E", "sha256", "-f", str(path)],
-        capture_output=True, check=False,
+        capture_output=True,
+        check=False,
     )
     if result.returncode or len(result.stdout.splitlines()) != 1:
         raise RuntimeError(f"Invalid SSH key: {path.name}")
@@ -77,7 +91,7 @@ def fingerprint(args, path):
 
 def validate_keys(args, keys, public, temporary):
     if set(keys) != set(KEYS):
-        raise RuntimeError("The bundle must contain exactly the three configured SSH keys.")
+        raise RuntimeError("The bundle must contain exactly the configured SSH keys.")
     for name in KEYS:
         # Fingerprint the private file without a neighboring .pub file, so
         # ssh-keygen cannot accidentally validate the sidecar instead.
@@ -87,7 +101,9 @@ def validate_keys(args, keys, public, temporary):
         pub = temporary / f"expected-{name}.pub"
         pub.write_bytes(public[name])
         if fingerprint(args, private) != fingerprint(args, pub):
-            raise RuntimeError(f"Private key does not match the configured public key: {name}")
+            raise RuntimeError(
+                f"Private key does not match the configured public key: {name}"
+            )
 
 
 def installed_matches(state, bundle, public, ssh):
@@ -148,7 +164,11 @@ def provision_locked(args, repo, ssh, state_dir):
     if not isinstance(state, dict):
         state = {}
     bundle = bundle_path.read_bytes() if bundle_path.is_file() else None
-    if bundle is not None and installed_matches(state, bundle, public, ssh):
+    if (
+        not args.repack
+        and bundle is not None
+        and installed_matches(state, bundle, public, ssh)
+    ):
         for name in KEYS:
             (ssh / name).chmod(0o600)
             (ssh / f"{name}.pub").chmod(0o644)
@@ -160,20 +180,39 @@ def provision_locked(args, repo, ssh, state_dir):
     with tempfile.TemporaryDirectory(prefix="nixos-ssh-", dir="/dev/shm") as directory:
         temporary = Path(directory)
         payload = temporary / "keys.json"
-        if bundle is None:
+        if bundle is None or args.repack:
             source = Path(args.source)
             if not all((source / name).is_file() for name in KEYS):
-                raise RuntimeError(f"No encrypted SSH bundle or Ansible source keys found. Restore {bundle_path} from Git.")
+                raise RuntimeError(
+                    f"Missing configured SSH source keys in {source}. Restore {bundle_path} from Git or supply a complete --source directory."
+                )
             keys = {name: (source / name).read_bytes() for name in KEYS}
             validate_keys(args, keys, public, temporary)
-            payload.write_text(json.dumps({name: base64.b64encode(value).decode("ascii") for name, value in keys.items()}))
+            payload.write_text(
+                json.dumps(
+                    {
+                        name: base64.b64encode(value).decode("ascii")
+                        for name, value in keys.items()
+                    }
+                )
+            )
             encrypted = temporary / "keys.age"
-            print("Creating the encrypted SSH bundle. Choose its archive passphrase at the age prompt.", flush=True)
+            print(
+                "Creating the encrypted SSH bundle. Choose its archive passphrase at the age prompt.",
+                flush=True,
+            )
             age_interactive(args, ["--passphrase", "--output", encrypted, payload])
             bundle = encrypted.read_bytes()
             bundle_path.parent.mkdir(exist_ok=True)
             atomic_write(bundle_path, bundle)
-            print(f"Encrypted bundle created. Commit {bundle_path} after the rebuild.", flush=True)
+            print(
+                f"Encrypted bundle created. Commit {bundle_path} with the matching public keys.",
+                flush=True,
+            )
+            if args.repack:
+                # Updating the archive must not relink the live config or mark
+                # the new bundle as installed before the next system switch.
+                return
         else:
             # Decrypt the exact bytes whose digest will be recorded, even if
             # the checkout changes while the user is entering the passphrase.
@@ -182,9 +221,14 @@ def provision_locked(args, repo, ssh, state_dir):
             print("Unlocking managed SSH keys.", flush=True)
             age_interactive(args, ["--decrypt", "--output", payload, encrypted])
             encoded = json.loads(payload.read_text())
-            if not isinstance(encoded, dict) or any(not isinstance(value, str) for value in encoded.values()):
+            if not isinstance(encoded, dict) or any(
+                not isinstance(value, str) for value in encoded.values()
+            ):
                 raise RuntimeError("Invalid SSH bundle structure.")
-            keys = {name: base64.b64decode(value, validate=True) for name, value in encoded.items()}
+            keys = {
+                name: base64.b64decode(value, validate=True)
+                for name, value in encoded.items()
+            }
             validate_keys(args, keys, public, temporary)
 
         files = {}
@@ -197,17 +241,29 @@ def provision_locked(args, repo, ssh, state_dir):
                 backup(path)
             atomic_write(path, value, 0o644 if name.endswith(".pub") else 0o600)
         link_config(ssh, target)
-        atomic_write(state_path, json.dumps({
-            "bundle": digest(bundle),
-            "files": {name: digest(value) for name, value in files.items()},
-        }).encode())
-        print("Installed all three SSH identities and linked the editable SSH config.")
+        atomic_write(
+            state_path,
+            json.dumps(
+                {
+                    "bundle": digest(bundle),
+                    "files": {name: digest(value) for name, value in files.items()},
+                }
+            ).encode(),
+        )
+        print(
+            f"Installed all {len(KEYS)} SSH identities and linked the editable SSH config."
+        )
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("repo", "home", "source", "age", "script", "ssh-keygen"):
         parser.add_argument(f"--{name}", required=True)
+    parser.add_argument(
+        "--repack",
+        action="store_true",
+        help="replace the encrypted bundle from --source without installing keys or relinking SSH config",
+    )
     args = parser.parse_args()
     os.umask(0o077)
     try:
