@@ -1,7 +1,9 @@
 {
   lib,
   pkgs,
-  rebuildCommand ? ''sudo nixos-rebuild switch --flake "path:/data/code/nixos-config#othinus"'',
+  checkout ? "/data/code/nixos-config",
+  hostname ? "othinus",
+  rebuildCommand ? "sudo nixos-rebuild switch",
   updateCommand ? "nix-update-packages",
 }:
 
@@ -24,6 +26,8 @@ let
         "@zoxide-hook@"
         "@devenv-hook@"
         "@starship-hook@"
+        "@checkout@"
+        "@hostname@"
         "@rebuild-command@"
         "@update-command@"
       ]
@@ -31,6 +35,8 @@ let
         (toString zoxideNuHook)
         (toString devenvNuHook)
         (toString starshipNuHook)
+        (builtins.toJSON checkout)
+        hostname
         rebuildCommand
         updateCommand
       ]

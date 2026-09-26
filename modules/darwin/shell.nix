@@ -8,8 +8,9 @@ let
   home = config.users.users.${config.system.primaryUser}.home;
   checkout = config.workstation.checkout;
   nuConfig = import ../shell/nushell/config.nix {
-    inherit lib pkgs;
-    rebuildCommand = ''sudo darwin-rebuild switch --flake "path:${checkout}#${config.networking.hostName}"'';
+    inherit lib pkgs checkout;
+    hostname = config.networking.hostName;
+    rebuildCommand = "sudo darwin-rebuild switch";
     updateCommand = "nix-update-packages";
   };
   inherit (import ../shell/scripts/packages.nix { inherit pkgs; }) branches deleteBranches;

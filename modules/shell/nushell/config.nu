@@ -32,11 +32,19 @@ alias gll = git log --color=auto --date=format:'%Y-%m-%d %H:%M' --pretty=tformat
 alias vim = nvim
 alias v = nvim
 alias pn = pnpm
-alias ns = @rebuild-command@
-alias nup = @update-command@
+
+# Use the configured checkout unless a worktree path is supplied.
+def ns [path: path = @checkout@] {
+  let checkout = ($path | path expand)
+  @rebuild-command@ --flake $"path:($checkout)#@hostname@"
+}
+
+def nup [path: path = @checkout@] {
+  @update-command@ ($path | path expand)
+}
 
 # Update packages, then switch only after a successful update.
-def nups [] {
-  nup
-  ns
+def nups [path: path = @checkout@] {
+  nup $path
+  ns $path
 }
