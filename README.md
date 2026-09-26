@@ -57,5 +57,4 @@ Use `devenv shell` for repository development; see [DEVELOPMENT.md](DEVELOPMENT.
 ## Future work
 
 Deferred work lives in [TODO.md](TODO.md), including replacing DankMaterialShell
-with a custom Quickshell desktop and migrating the remaining Zentty helpers
-on Othinus.
+with a custom Quickshell desktop.

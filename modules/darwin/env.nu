@@ -6,7 +6,7 @@ $env.TRY_CONFIG_DIR = ($env.XDG_CONFIG_HOME | path join "try-rs")
 $env.TRY_PATH = ($env.HOME | path join "code/.personal/.try")
 $env.LANG = "en_US.UTF-8"
 $env.GIT_CONFIG_GLOBAL = ($env.XDG_CONFIG_HOME | path join "git/config")
-# Zentty's Zsh panes export this path; Nushell already loads it as the global config.
+# Legacy Zsh sessions exported this path; Nushell loads it as the global config.
 if ($env.GIT_CONFIG_SYSTEM? | default "") == ($env.XDG_CONFIG_HOME | path join "git/.gitconfig") {
   hide-env GIT_CONFIG_SYSTEM
 }

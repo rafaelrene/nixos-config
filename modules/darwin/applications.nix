@@ -28,7 +28,7 @@ in
   workstation = {
     links = {
       ".config/git/config" = "${checkout}/modules/development/git/config";
-      # Existing Zsh sessions and Zentty panes still use GIT_CONFIG_SYSTEM.
+      # Preserve the legacy global config path for existing sessions.
       ".config/git/.gitconfig" = "${checkout}/modules/development/git/config";
       ".config/git/ignore" = "${checkout}/modules/development/git/ignore";
       ".config/git/themes.gitconfig" = toString deltaConfig;

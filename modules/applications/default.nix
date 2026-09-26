@@ -22,6 +22,7 @@ in
       kdePackages.kdegraphics-thumbnailers
       kdePackages.kio-extras
       kdePackages.okular
+      mongodb-compass
       mpv
     ];
     etc = {

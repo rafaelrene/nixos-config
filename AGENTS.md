@@ -20,6 +20,17 @@ departing from a decision.
 - Keep existing checkout paths. Put necessary documentation beside the feature,
   and deferred work in [TODO.md](TODO.md).
 
+## Documentation
+
+- Keep README.md, DEVELOPMENT.md, feature guides and all other Markdown files
+  accurate in the same change as the code or configuration they describe.
+- Describe the current repository: what exists, how it works, how to use it,
+  and constraints that still apply. Replace or delete obsolete text.
+- Do not accumulate migration stories, previous configurations, completed-task
+  logs or before-and-after narratives. History belongs in Git, not these
+  documents. Keep TODO.md for outstanding work and ADRs for decisions and
+  rationale that still govern the current design.
+
 ## Boundaries
 
 - Get explicit approval before switching the live system or replacing running services.

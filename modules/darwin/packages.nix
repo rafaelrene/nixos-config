@@ -18,6 +18,7 @@ let
     "ente-auth"
     "filen"
     "gifox"
+    "mongodb-compass"
     "onlyoffice"
     "proton-drive"
     "rustdesk"
@@ -106,6 +107,7 @@ let
     });
   };
   tools = {
+    bitbucket-cli = pkgs.callPackage ../development/git/bitbucket.nix { };
     graphite = unstable.graphite-cli;
     try-rs = inputs.try-rs.packages.${pkgs.stdenv.hostPlatform.system}.default;
     inherit (unstable) pi-coding-agent;
