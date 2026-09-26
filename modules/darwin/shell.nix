@@ -17,6 +17,7 @@ let
 in
 {
   environment = {
+    systemPath = lib.mkBefore [ "$HOME/.local/bin" ];
     # The persistent profile is available before launchd recreates /run at boot.
     shells = [ "/nix/var/nix/profiles/system/sw/bin/nu" ];
     variables = {
