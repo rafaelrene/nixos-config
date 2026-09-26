@@ -26,6 +26,7 @@ let
         "@zoxide-hook@"
         "@devenv-hook@"
         "@starship-hook@"
+        "@git-nav@"
         "@checkout@"
         "@hostname@"
         "@rebuild-command@"
@@ -35,6 +36,7 @@ let
         (toString zoxideNuHook)
         (toString devenvNuHook)
         (toString starshipNuHook)
+        (toString ./git-nav.nu)
         (builtins.toJSON checkout)
         hostname
         rebuildCommand

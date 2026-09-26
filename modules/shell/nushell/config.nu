@@ -16,6 +16,8 @@ def --env cdb [path: path = "."] {
   cd ($path | path expand)
 }
 
+# Bind navigation to the built-in cd before zoxide replaces it.
+use @git-nav@ *
 source @zoxide-hook@
 source @devenv-hook@
 source @starship-hook@

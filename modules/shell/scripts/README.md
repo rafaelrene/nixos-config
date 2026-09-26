@@ -1,10 +1,54 @@
 # Git helpers
 
-Both workstations provide `git branches` to switch branches and `git db`
-(also `git delete-branches`) to delete selected local branches and worktrees.
-The helpers are linked into `$HOME/.local/bin`, which both machines include in
-the shell's PATH. Devenv inherits that PATH. Start a fresh shell after rebuilding
-to load PATH changes.
+## Repository navigation
+
+Run `git nav` in Nushell from any directory inside a checkout. Both workstations
+provide the same searchable picker for local branches, worktrees, submodules,
+the parent repository, and branch creation. Search matches destination names
+and kinds; rows also show destination paths. Paths inside the current checkout
+are relative to its root; other destinations show full paths. `●` marks the
+current checkout.
+
+| Selection                        | Result                                                                          |
+| -------------------------------- | ------------------------------------------------------------------------------- |
+| Branch checked out in a worktree | Enter that worktree.                                                            |
+| Other local branch               | Switch branches in the main checkout, then enter it.                            |
+| Detached worktree                | Enter its directory without switching branches.                                 |
+| Submodule                        | Enter its checkout. Uninitialized submodules must be initialized first.         |
+| Parent                           | Enter the containing repository's root.                                         |
+| Create branch…                   | Ask for a name and starting point, then create and switch in the main checkout. |
+
+The main checkout is the original working directory, regardless of its branch
+name. Inside a submodule, branch operations use that submodule's main checkout.
+From a submodule's linked worktree, Parent leads to the repository containing
+its main checkout. Nested submodules can be traversed one level at a time.
+
+Enter selects a destination; Esc cancels. Ctrl+N opens branch creation even when
+the search has no matches. An empty branch name cancels; Ctrl+C cancels either
+creation prompt. The starting point defaults to the invoking checkout's commit
+when the picker opened, or accepts a branch, tag, or commit. Every new branch
+opens in the main checkout, including when invoked from a linked worktree.
+
+Git's normal switch checks preserve local changes. A failed switch or creation
+leaves the shell in its original directory. The navigator does not fetch,
+initialize submodules, create worktrees, or support bare repositories.
+Repositories need an initial commit before creating another branch here.
+
+`git nav` is a Nushell command, so directory changes persist in the calling
+shell. Other Git subcommands run normally. Rebuild the system and start a fresh
+Nushell to load it. To try the module from this checkout without rebuilding:
+
+```nu
+use ./modules/shell/nushell/git-nav.nu *
+git nav
+```
+
+## Branch helpers
+
+Both workstations also provide `git branches` to switch branches in the current
+checkout and `git db` (also `git delete-branches`) to delete selected local
+branches and worktrees. These helpers are linked into `$HOME/.local/bin`, which
+both machines include in the shell's PATH. Devenv inherits that PATH.
 
 Run `git db` from any worktree. Each branch has one row, including its worktree
 path when checked out. Deleting that row removes both. Detached worktrees have
