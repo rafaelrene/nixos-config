@@ -8,6 +8,10 @@
     primaryUser = "rafael";
   };
   users.users.rafael.home = "/Users/rafael";
+  users.users.rafael.openssh.authorizedKeys.keyFiles = [
+    ../../modules/services/ssh/proserpina.pub
+  ];
+  services.openssh.enable = true;
   networking = {
     hostName = "Proserpina";
     localHostName = "Proserpina";

@@ -1,5 +1,16 @@
 # SSH key bundle
 
+Use `ssh proserpina` to connect to Proserpina's `rafael` account on the local
+network using `~/.ssh/proserpina`. The alias resolves `proserpina.local`, so it
+follows the Mac's LAN address without a fixed IP. Proserpina declares Remote
+Login and trusts `proserpina.pub` through nix-darwin.
+
+The dedicated Ed25519 private key lives only on Othinus, outside the three-key
+bundle below. Back it up separately. If it is lost, generate a replacement,
+update `proserpina.pub`, and rebuild Proserpina locally to authorize it. Replace
+the old public key in `rafael`'s `~/.ssh/authorized_keys` too; that initial entry
+bootstraps access before the declarative configuration is activated.
+
 `ssh-keys.age` contains the three SSH private keys encrypted together using
 age's passphrase mode. There is no separate age identity file.
 

@@ -2,7 +2,6 @@
 
 ## Later
 
-- Make Proserpina accessible with `ssh proserpina`.
 - Review whether Proserpina still needs Homebrew.
 - Let `git db` select branches and worktrees to delete.
 - Improve the script for moving between projects quickly.
@@ -12,22 +11,20 @@
   `/data/code/ansible/roles/scripts/files/` once we have a replacement for their
   Zentty pane/worklane integration. They require Zentty and are not installed here.
 - Revisit Helium as the default browser if work and personal usage changes.
-- Finish Bitbucket OAuth setup after rebuilding: log into the desktop, run
-  `bkt auth login https://bitbucket.org --kind cloud --web`, then verify PR access
-  from T3Code. The CLI and desktop keyring are declared; live authentication and
-  automatic refresh still need verification.
 
 ## Done
 
+- [x] Add `ssh proserpina` with a dedicated key and verify login to the Mac.
+- [x] Finish Bitbucket OAuth setup and verify PR access from T3Code.
 - [x] Keep Catppuccin Mocha Mauve and connect supported application themes to
-  the central palette, including T3Code and Dolphin. Native T3Code uses an
-  imported custom theme; manual reimport after palette changes is accepted.
+      the central palette, including T3Code and Dolphin. Native T3Code uses an
+      imported custom theme; manual reimport after palette changes is accepted.
 - [x] Review dedicated coding workspace rules in Niri; no additional rules needed
-  for now.
+      for now.
 - [x] Lower the internal display to 60 Hz on battery and restore 165 Hz on AC.
 - [x] Remove `nh`; use `ns`, `nup`, and `nups` for rebuilds and updates.
 - [x] Settle the rebuild and update workflow with `ns`, `nup`, and `nups`;
-  retain the canonical `/data/code/nixos-config` checkout path.
+      retain the canonical `/data/code/nixos-config` checkout path.
 - [x] Fix Neovim startup errors.
 - [x] Fix T3 server configuration and T3 Connect access.
 
