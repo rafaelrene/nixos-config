@@ -13,7 +13,7 @@ Apple Silicon, user `rafael`, home `/Users/rafael`, checkout
 | Git                | Shared configuration, Delta theme, ignores, and branch helpers.                                                                 |
 | Terminal           | Ghostty from Nix, shared palette, Mac Option key and quick-terminal settings.                                                   |
 | Desktop apps       | Nixpkgs, upstream flakes and brew-nix; no Homebrew installation required.                                                       |
-| Window management  | OmniWM scrolling columns, Caps Lock shortcuts, and nine workspaces; workspace 1 is Work.                                        |
+| Window management  | OmniWM scrolling columns, Option and Caps Lock shortcuts, and nine workspaces; workspace 1 is Work.                             |
 | Agents             | Shared rules, skills and themes; Codex, Claude Code and OpenCode use an independent rolling Nix profile. Pi comes from Nixpkgs. |
 | Mac helpers        | Chromium web launchers for Raycast.                                                                                             |
 | SSH                | Shared client configuration and all four managed keys; Remote Login trusts `proserpina.pub`. Uses the macOS SSH agent.          |
@@ -102,24 +102,28 @@ between workspaces with the shortcuts below.
 New columns use the full available width. Width cycling follows Othinus:
 ⅓, ½, ⅔, full. Focused columns center on overflow; gaps are 2 points and the
 focus border uses the shared theme. Animations are disabled. OmniWM's menu bar
-item names the current workspace. Hold Caps Lock to show the workspace bar
+item names the current workspace. Hold Option for 200 ms to show the workspace bar
 with each workspace's apps; it overlays the top of windows so they keep the
-full height. Holding Control for 200 ms shows it too.
+full height. It also stays visible while holding Option + Shift to move windows.
 
-Hold **Caps Lock** wherever Othinus uses Super. Nix remaps it to Right Control
+Arrow navigation and workspace numbers use **Option**; add **Shift** to move
+columns or windows. Vertical arrows are reversed: Down acts upward and Up acts
+downward, including when moving with Shift. These shortcuts take precedence
+over applications' Option + arrow text navigation and selection.
+
+Other window shortcuts use **Caps Lock**. Nix remaps it to Right Control
 in the keyboard driver, so it never toggles capitals, even on a tap. The
 built-in keyboard has no Right Control, so OmniWM's Right Control shortcuts
 only fire from Caps Lock; the left Control key still reaches apps. Caps Lock
 with a key OmniWM does not use reaches the app as Control plus that key.
-Caps + Control chords are impossible, so moves use Shift instead of Othinus's
-Control. Workspace numbers use Option.
+Caps + Control chords are impossible, so Caps-based moves use Shift.
 
 | Shortcut                    | Action                                                            |
 | --------------------------- | ----------------------------------------------------------------- |
-| Caps + left/right           | Focus columns                                                     |
-| Caps + up/down              | Focus windows in the column, then the adjacent workspace          |
-| Caps + Shift + left/right   | Move the whole column                                             |
-| Caps + Shift + up/down      | Move the window within its column, then to the adjacent workspace |
+| Option + left/right         | Focus columns                                                     |
+| Option + down/up            | Focus windows upward/downward, then the adjacent workspace        |
+| Option + Shift + left/right | Move the whole column                                             |
+| Option + Shift + down/up    | Move the window upward/downward, then to the adjacent workspace   |
 | Option + 1–9                | Switch workspace; 1 is Work                                       |
 | Option + Shift + 1–9        | Move the focused column to a workspace                            |
 | Caps + Page Up/Down         | Previous/next workspace                                           |

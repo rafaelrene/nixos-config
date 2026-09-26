@@ -14,16 +14,17 @@ let
   # Right Control, so these side-specific chords only fire from Caps Lock.
   caps = "Right Control";
   bindings = {
-    "focus.left" = "${caps}+Left Arrow";
-    "focus.right" = "${caps}+Right Arrow";
+    "focus.left" = "Option+Left Arrow";
+    "focus.right" = "Option+Right Arrow";
     # Niri's focus-window-or-workspace: move within the column, then continue
-    # to the adjacent workspace at its edge.
-    "focusWindowOrWorkspaceUp" = "${caps}+Up Arrow";
-    "focusWindowOrWorkspaceDown" = "${caps}+Down Arrow";
-    "moveColumn.left" = "${caps}+Shift+Left Arrow";
-    "moveColumn.right" = "${caps}+Shift+Right Arrow";
-    "moveWindowUpOrToWorkspaceUp" = "${caps}+Shift+Up Arrow";
-    "moveWindowDownOrToWorkspaceDown" = "${caps}+Shift+Down Arrow";
+    # to the adjacent workspace at its edge. Vertical arrows are reversed
+    # for both focus and movement: Down acts upward, Up acts downward.
+    "focusWindowOrWorkspaceUp" = "Option+Down Arrow";
+    "focusWindowOrWorkspaceDown" = "Option+Up Arrow";
+    "moveColumn.left" = "Option+Shift+Left Arrow";
+    "moveColumn.right" = "Option+Shift+Right Arrow";
+    "moveWindowUpOrToWorkspaceUp" = "Option+Shift+Down Arrow";
+    "moveWindowDownOrToWorkspaceDown" = "Option+Shift+Up Arrow";
     "switchWorkspace.previous" = "${caps}+PageUp";
     "switchWorkspace.next" = "${caps}+PageDown";
     "moveColumnToWorkspaceUp" = "${caps}+Shift+PageUp";
@@ -91,12 +92,12 @@ lib.recursiveUpdate defaults {
   };
   overview.backdrop = color theme.colors.base;
   # The menu bar item names the current workspace. The full bar stays hidden
-  # and overlays window tops only while Caps Lock (or Control) is held, so
+  # and overlays window tops only while Option is held, so
   # windows keep the full height.
   statusBar.showWorkspaceName = true;
   workspaceBar = {
     position = "belowMenuBar";
-    revealModifier = "control";
+    revealModifier = "option";
     accentColor = color theme.accentColor;
     textColor = color theme.colors.text;
   };
