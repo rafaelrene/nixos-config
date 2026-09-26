@@ -10,49 +10,22 @@ let
   profile = "${home}/.local/state/nix/profiles/llm-agents";
   updater = import ../development/agents/update.nix {
     inherit pkgs profile;
-    # Current Nix requires an explicit flag to select every profile entry.
-    upgradeAll = true;
   };
   inherit (import ../development/agents/themes.nix { inherit lib pkgs; })
     claudeTheme
     codexTheme
     opencodeTheme
     ;
-  skills = lib.attrNames (
-    lib.filterAttrs (
-      name: type:
-      type == "directory" && builtins.pathExists (../../config/agents/skills + "/${name}/SKILL.md")
-    ) (builtins.readDir ../../config/agents/skills)
-  );
-  skillDirectories = [
-    ".local/share/codex/skills"
-    ".local/share/claude/skills"
-    ".local/share/pi/agent/skills"
-    ".config/opencode/skills"
-  ];
-  rules = {
-    ".local/share/codex/AGENTS.md" = "AGENTS.md";
-    ".local/share/claude/AGENTS.md" = "AGENTS.md";
-    ".local/share/claude/CLAUDE.md" = "CLAUDE.md";
-    ".local/share/pi/agent/AGENTS.md" = "AGENTS.md";
-    ".config/opencode/AGENTS.md" = "AGENTS.md";
+  sharedLinks = import ../development/agents/links.nix {
+    inherit lib;
+    skillSource = "${source}/skills";
+    extraSkillDirectories = [ ".local/share/pi/agent/skills" ];
+    extraSkills.create-web-app = "${config.workstation.checkout}/modules/darwin/skills/create-web-app";
   };
-  skillLinks = lib.listToAttrs (
-    lib.concatMap (
-      directory:
-      lib.mapAttrsToList
-        (name: target: {
-          name = "${directory}/${name}";
-          value = target;
-        })
-        (
-          (lib.genAttrs skills (name: "${source}/skills/${name}"))
-          // {
-            create-web-app = "${config.workstation.checkout}/modules/darwin/skills/create-web-app";
-          }
-        )
-    ) skillDirectories
-  );
+  inherit (sharedLinks) skillLinks;
+  rules = sharedLinks.rules // {
+    ".local/share/pi/agent/AGENTS.md" = "AGENTS.md";
+  };
 in
 {
   environment = {
@@ -91,13 +64,12 @@ in
     };
     links =
       lib.mapAttrs (_: path: "${source}/${path}") rules
+      // lib.mapAttrs (_: path: "${source}/${path}") sharedLinks.settings
       // skillLinks
       // {
         ".local/share/codex/themes/workstation.tmTheme" = toString codexTheme;
         ".local/share/claude/settings.json" = lib.mkDefault "${source}/claude/settings.json";
         ".local/share/claude/themes/workstation.json" = toString claudeTheme;
-        ".config/opencode/opencode.jsonc" = "${source}/opencode/opencode.jsonc";
-        ".config/opencode/tui.json" = "${source}/opencode/tui.json";
         ".config/opencode/themes/workstation.json" = toString opencodeTheme;
       };
     legacyLinks =

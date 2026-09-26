@@ -7,28 +7,15 @@
 
 let
   baseDir = "/home/raf/.local/share/t3code";
-  themeJSON = import ./theme.nix { inherit lib pkgs; };
-  publishedTheme = pkgs.writeText "t3code-workstation-theme.json" themeJSON;
-  serverSettings = pkgs.writeText "t3code-declared-settings.json" (
-    builtins.toJSON (
-      (builtins.fromJSON (builtins.readFile ./settings.json))
-      // {
-        defaultTheme = "othinus";
-        # Reapply the selection when the declared palette changes, not every restart.
-        defaultThemeSetAt = builtins.hashString "sha256" themeJSON;
-      }
-    )
-  );
+  settings = import ../../applications/t3code/settings.nix {
+    inherit lib pkgs;
+    home = "/home/raf";
+  };
   # A fresh source directory migrates the old server-only updater on rebuild.
   updaterDir = "/home/raf/.local/state/t3code-bundle-updater";
   profile = "/home/raf/.local/state/nix/profiles/t3code";
 
-  updaterSource = pkgs.runCommand "t3code-updater-source" { } ''
-    mkdir -p "$out"
-    cp ${./package/flake.nix} "$out/flake.nix"
-    cp ${./package/package.nix} "$out/package.nix"
-    cp ${./package/desktop.nix} "$out/desktop.nix"
-  '';
+  updaterSource = import ../../applications/t3code/package/source.nix { inherit pkgs; };
 
   updateT3Code = pkgs.writeShellApplication {
     name = "update-t3code";
@@ -247,14 +234,14 @@ in
             (utils.escapeSystemdExecArgs [
               "${pkgs.coreutils}/bin/install"
               "-Dm600"
-              publishedTheme
+              settings.theme
               "${baseDir}/userdata/themes/othinus.json"
             ])
             (utils.escapeSystemdExecArgs [
               (lib.getExe pkgs.yq-go)
               "--inplace"
               "--output-format=json"
-              "load(\"${serverSettings}\") as $declared | .providers *= $declared.providers | .defaultTheme = $declared.defaultTheme | .defaultThemeSetAt = $declared.defaultThemeSetAt"
+              "load(\"${settings.server}\") as $declared | .providers *= $declared.providers | .defaultTheme = $declared.defaultTheme | .defaultThemeSetAt = $declared.defaultThemeSetAt"
               "${baseDir}/userdata/settings.json"
             ])
           ];
@@ -302,7 +289,7 @@ in
       "d ${baseDir} 0700 raf raf - -"
       "d ${baseDir}/userdata 0700 raf raf - -"
       "d /home/raf/.local/state/nix/profiles 0700 raf raf - -"
-      "C ${baseDir}/userdata/settings.json 0600 raf raf - ${./settings.json}"
+      "C ${baseDir}/userdata/settings.json 0600 raf raf - ${settings.server}"
     ];
   };
 }

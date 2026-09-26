@@ -19,10 +19,6 @@ in
   environment = {
     # The persistent profile is available before launchd recreates /run at boot.
     shells = [ "/nix/var/nix/profiles/system/sw/bin/nu" ];
-    systemPackages = [
-      pkgs.nushell
-      pkgs.starship
-    ];
     variables = {
       STARSHIP_CONFIG = "${home}/.config/starship/starship.toml";
       FZF_DEFAULT_OPTS = import ../shell/fzf.nix { inherit lib pkgs; };

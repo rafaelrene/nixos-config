@@ -3,6 +3,7 @@
 !/modules/services/ssh/default.nix
 !/modules/services/ssh/ssh-keys.py
 !/modules/services/ssh/config
+!/modules/services/ssh/hosts.config
 !/modules/services/ssh/*.pub
 !/modules/services/ssh/ssh-keys.age
 !/modules/services/ssh/README.md

@@ -34,7 +34,10 @@ pre-switch check before replacing installed keys. Do not bypass that check with
 terminal on the target.
 
 SSH configuration is an editable symlink to
-`/data/code/nixos-config/modules/services/ssh/config`. An existing different config is
+`/data/code/nixos-config/modules/services/ssh/config`. Host and identity settings
+live in the included `hosts.config`, also installed as Proserpina's SSH config.
+The Linux config selects the NixOS agent; macOS uses its native agent.
+An existing different config is
 preserved alongside it as `config.before-nixos-<unique suffix>`. Existing private
 keys with different contents are similarly backed up before replacement. All
 backups stay inside the private SSH directory; delete them when no longer needed.

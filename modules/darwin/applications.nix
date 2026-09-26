@@ -9,7 +9,7 @@ let
   checkout = config.workstation.checkout;
   home = config.users.users.${config.system.primaryUser}.home;
   theme = import ../../themes { inherit lib pkgs; };
-  deltaConfig = pkgs.writeText "delta.gitconfig" (lib.generators.toGitINI { inherit (theme) delta; });
+  deltaConfig = import ../development/git/theme.nix { inherit lib pkgs; };
   tryZsh = pkgs.runCommand "try-rs-init.zsh" { } ''
     ${
       inputs.try-rs.packages.${pkgs.stdenv.hostPlatform.system}.default
@@ -23,6 +23,7 @@ in
   environment.etc = {
     "xdg/nvim-theme.json".text = builtins.toJSON theme.neovim;
     "xdg/ghostty/theme".text = import ../applications/ghostty/theme.nix { inherit lib pkgs; };
+    "xdg/ghostty/common".source = ../applications/ghostty/config-common;
   };
   workstation = {
     legacyDirectories = {
@@ -58,7 +59,7 @@ in
         }
       );
       # OpenSSH rejects group-writable checkout files, even behind a symlink.
-      ".ssh/config" = toString ./ssh.config;
+      ".ssh/config" = toString ../services/ssh/hosts.config;
       ".local/share/raycast/scripts" = "${checkout}/modules/darwin/web-apps";
     };
     legacyLinks = {
