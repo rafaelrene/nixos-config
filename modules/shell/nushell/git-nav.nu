@@ -90,14 +90,15 @@ export def --env "git nav" [
     }
     let path = ($location | to json --raw)
     let name = ($row.item.name | fill --alignment left --width $name_width)
-    let kind = ($row.item.kind | fill --alignment left --width 11)
+    let label = if $row.item.path == $main and $row.item.kind in [worktree detached] { "main" } else { $row.item.kind }
+    let kind = ($label | fill --alignment left --width 11)
     $"($row.index)\t($mark) ($name)\t($kind)\t($path)"
   } | str join "\u{0}")
   let selection = (
     $rows | ^fzf --read0 --print0 --delimiter "\t" --with-nth 2.. --nth 1,2
       --layout reverse --wrap --tiebreak begin,index --no-multi --no-select-1 --no-exit-0
-      --expect ctrl-n,ctrl-o --prompt "Repository > "
-      --header $"($root | path basename) · ($head)\nEnter: (if $new_window { 'new window' } else { 'go' })   Ctrl+O: new window   Ctrl+N: create branch   Esc: cancel"
+      --expect ctrl-n,ctrl-t --prompt "Repository > "
+      --header $"($root | path basename) · ($head)\nEnter: (if $new_window { 'new window' } else { 'go' })   Ctrl+T: new window   Ctrl+N: create branch   Esc: cancel"
     | complete
   )
   if $selection.exit_code == 130 { return }
@@ -126,14 +127,7 @@ export def --env "git nav" [
     if $checked_name != $name {
       error make {msg: "Enter a literal branch name."}
     }
-    let start = (try { input $"Starting point [($starting_commit | str substring 0..7)]: " | str trim } catch { null })
-    if $start == null { return }
-    let commit = if $start == "" {
-      $starting_commit
-    } else {
-      nav-git $root rev-parse --verify --end-of-options $"($start)^{commit}" | str trim
-    }
-    nav-git $main switch -c $name $commit | ignore
+    nav-git $main switch -c $name $starting_commit | ignore
     $main
   } else if $destination.kind in [branch worktree] {
     # Refresh ownership: another terminal may have checked out this branch.
@@ -153,7 +147,7 @@ export def --env "git nav" [
     $target
   }
 
-  if $new_window or $selected.0 == "ctrl-o" {
+  if $new_window or $selected.0 == "ctrl-t" {
     let launched = if $nu.os-info.name == "macos" {
       ^/usr/bin/open -na Ghostty --args $"--working-directory=($target)" --window-save-state=never | complete
     } else {

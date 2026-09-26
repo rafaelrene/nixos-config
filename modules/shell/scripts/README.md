@@ -7,32 +7,34 @@ provide the same searchable picker for local branches, worktrees, submodules,
 the parent repository, and branch creation. Search matches destination names
 and kinds; rows also show destination paths. Paths inside the current checkout
 are relative to its root; other destinations show full paths. `●` marks the
-current checkout.
+current checkout. The original checkout is labelled `main`; linked checkouts
+are labelled `worktree` (or `detached` when no branch is checked out).
 
-| Selection                        | Result                                                                          |
-| -------------------------------- | ------------------------------------------------------------------------------- |
-| Branch checked out in a worktree | Enter that worktree.                                                            |
-| Other local branch               | Switch branches in the main checkout, then enter it.                            |
-| Detached worktree                | Enter its directory without switching branches.                                 |
-| Submodule                        | Enter its checkout. Uninitialized submodules must be initialized first.         |
-| Parent                           | Enter the containing repository's root.                                         |
-| Create branch…                   | Ask for a name and starting point, then create and switch in the main checkout. |
+| Selection                               | Result                                                                   |
+| --------------------------------------- | ------------------------------------------------------------------------ |
+| Main checkout                           | Enter the original checkout.                                             |
+| Branch checked out in a linked worktree | Enter that worktree.                                                     |
+| Other local branch                      | Switch branches in the main checkout, then enter it.                     |
+| Detached worktree                       | Enter its directory without switching branches.                          |
+| Submodule                               | Enter its checkout. Uninitialized submodules must be initialized first.  |
+| Parent                                  | Enter the containing repository's root.                                  |
+| Create branch…                          | Ask for a name, then immediately create and switch in the main checkout. |
 
 The main checkout is the original working directory, regardless of its branch
 name. Inside a submodule, branch operations use that submodule's main checkout.
 From a submodule's linked worktree, Parent leads to the repository containing
 its main checkout. Nested submodules can be traversed one level at a time.
 
-Enter selects a destination in the current shell; Ctrl+O opens it in a new
+Enter selects a destination in the current shell; Ctrl+T opens it in a new
 Ghostty window and keeps the calling shell's directory. Run `git nav --new-window`
 (or `git nav -w`) to make Enter and Ctrl+N open new windows too. On macOS, new
 windows launch a separate Ghostty instance without restoring saved windows;
 Linux uses Ghostty's new-window action.
 
 Esc cancels. Ctrl+N opens branch creation even when the search has no matches.
-An empty branch name cancels; Ctrl+C cancels either
-creation prompt. The starting point defaults to the invoking checkout's commit
-when the picker opened, or accepts a branch, tag, or commit. Every new branch
+An empty branch name or Ctrl+C cancels the prompt. Entering a name immediately
+creates the branch from the invoking checkout's commit when the picker opened.
+There is no starting-point prompt. Every new branch
 uses the main checkout, including when invoked from a linked worktree.
 
 Git's normal switch checks preserve local changes. A failed switch or creation
