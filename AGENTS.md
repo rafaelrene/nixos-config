@@ -57,3 +57,11 @@ For Darwin changes, also evaluate and build the Darwin system and run focused
 native checks using the [Proserpina guide](hosts/proserpina/README.md#validation).
 Verify shared refactors preserve Othinus. Report checks that remain untested;
 evaluation and builds do not require approval.
+
+After implementation and automated verification, manually test the changed
+behavior on every affected machine. Exercise the actual user workflow on each
+machine. If anything fails, fix it, rerun relevant checks, and repeat manual
+testing until it works on every affected machine. Obtain the approval required
+above before switching a live system or replacing running services for testing.
+If access or approval blocks testing, report what remains untested and why;
+do not claim the work is complete. Report the manual test results per machine.
