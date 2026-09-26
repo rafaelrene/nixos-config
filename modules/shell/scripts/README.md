@@ -13,14 +13,15 @@ separate rows. Remote branches are never deleted.
 Every eligible row starts selected. Type to search; filtering does not deselect
 hidden rows. The picker shows these shortcuts:
 
-| Shortcut        | Action                                           |
-| --------------- | ------------------------------------------------ |
-| Tab / Shift+Tab | Toggle the current row and move down / up        |
-| Ctrl+A          | Clear the search and select every row            |
-| Ctrl+D          | Clear every selection, including hidden rows     |
-| Enter           | Review selected deletions, then confirm with `y` |
-| Esc             | Cancel                                           |
+| Shortcut        | Action                                                    |
+| --------------- | --------------------------------------------------------- |
+| Tab / Shift+Tab | Toggle the current row and move down / up                 |
+| Ctrl+A          | Clear the search and select every row                     |
+| Ctrl+D          | Clear every selection, including hidden rows              |
+| Enter           | Review selected deletions, then confirm with Enter or `y` |
+| Esc             | Cancel                                                    |
 
+Confirmation defaults to Yes; enter `n` to cancel.
 An empty selection or declining confirmation deletes nothing. The current branch
 and worktree, the main worktree and its branch, and the default branch are
 excluded. The default comes from the locally recorded `origin/HEAD`, falling

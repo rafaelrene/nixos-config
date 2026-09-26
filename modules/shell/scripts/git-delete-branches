@@ -133,8 +133,8 @@ while IFS=$'\t' read -r index _; do
 	selected+=("$index")
 	printf '  %s\n' "${rows[$index]#*$'\t'}"
 done <<<"$selection"
-printf '\nDelete %s selected entries? [y/N] ' "${#selected[@]}"
-if ! IFS= read -r answer || [[ $answer != y && $answer != Y ]]; then
+printf '\nDelete %s selected entries? [Y/n] ' "${#selected[@]}"
+if ! IFS= read -r answer || [[ -n $answer && $answer != y && $answer != Y ]]; then
 	echo "Cancelled."
 	exit 0
 fi
