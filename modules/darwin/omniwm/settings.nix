@@ -60,6 +60,7 @@ assert lib.assertMsg (builtins.all (id: builtins.elem id (map (entry: entry.id) 
 lib.recursiveUpdate defaults {
   # OmniWM's own Caps Lock trigger stays off; default.nix remaps the key.
   general = {
+    animationsEnabled = false;
     updateChecksEnabled = false;
     ipcEnabled = true;
   };

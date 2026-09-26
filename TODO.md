@@ -6,7 +6,6 @@
 - Let `git db` select branches and worktrees to delete.
 - Improve the script for moving between projects quickly.
 - Improve the script for navigating between branches and worktrees.
-- Remove animations when switching windows with `Caps + arrows`.
 - Migrate `zentty-project` and `zentty-subrepo` (alias `zsr`) from
   `/data/code/ansible/roles/scripts/files/` once we have a replacement for their
   Zentty pane/worklane integration. They require Zentty and are not installed here.
@@ -14,6 +13,7 @@
 
 ## Done
 
+- [x] Disable OmniWM animations, including window switching with `Caps + arrows`.
 - [x] Add `ssh proserpina` with a dedicated key and verify login to the Mac.
 - [x] Finish Bitbucket OAuth setup and verify PR access from T3Code.
 - [x] Keep Catppuccin Mocha Mauve and connect supported application themes to
