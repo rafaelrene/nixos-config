@@ -28,7 +28,7 @@ in
       lib.mapAttrs (_: value: lib.replaceStrings [ "$HOME" ] [ home ] value) config.environment.variables
     );
   };
-  # Keep Zsh available for existing tools such as the imported Zentty helpers.
+  # Keep nix-darwin's standard Zsh integration; interactive terminals use Nushell.
   programs.zsh.enable = true;
 
   workstation = {
@@ -45,10 +45,6 @@ in
       ".local/bin/git-branches" = "${branches}/bin/git-branches";
       ".local/bin/git-delete-branches" = "${deleteBranches}/bin/git-delete-branches";
       ".local/bin/git-db" = "${deleteBranches}/bin/git-delete-branches";
-      ".local/bin/zentty-project" = "${checkout}/modules/darwin/scripts/zentty-project";
-      ".local/bin/zp" = "${checkout}/modules/darwin/scripts/zentty-project";
-      ".local/bin/zentty-subrepo" = "${checkout}/modules/darwin/scripts/zentty-subrepo";
-      ".local/bin/zsr" = "${checkout}/modules/darwin/scripts/zentty-subrepo";
     };
   };
 }
