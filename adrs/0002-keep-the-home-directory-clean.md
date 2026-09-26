@@ -2,27 +2,20 @@
 
 - Status: accepted
 - Date: 2026-09-05
+- Amended: 2026-09-26
 
 ## Context
 
-Applications often create top-level dotfiles and state directories by default.
-They make the home directory harder to understand and back up selectively.
+Scattered application files make the home directory harder to navigate and
+maintain.
 
 ## Decision
 
-Use XDG locations wherever the application permits it:
-
-- Configuration: `/home/raf/.config`
-- Data: `/home/raf/.local/share`
-- State: `/home/raf/.local/state`
-- Cache: `/home/raf/.cache`
-- User executables: `/home/raf/.local/bin`
-
-Do not add files or directories directly under `/home/raf` unless an
-application cannot be redirected or the directory is user content such as
-`Pictures`.
+Prefer XDG locations for tools that support them. Use paths relative to the
+user's home. Accept platform-native locations and compatibility paths when
+relocation would add complexity or disrupt existing data.
 
 ## Consequences
 
-T3Code, Codex, Claude, profiles, and related state use explicit XDG paths.
-Exceptions must be documented when introduced.
+Home stays reasonably tidy without requiring every application to follow one
+layout. Document necessary exceptions beside the relevant feature.

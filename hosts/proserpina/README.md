@@ -184,7 +184,7 @@ release; otherwise a rejected file can silently start with upstream defaults.
 ## Prerequisites and activation
 
 Validate through Nix evaluation, builds, and focused native checks before an
-authorized live switch. A macOS VM is no longer required; see ADR 0009.
+authorized live switch. A macOS VM is no longer required; see [validation](#validation).
 
 The target needs an existing `rafael` account, the checkout at the declared
 path, Xcode Command Line Tools, and a multi-user Nix installation.
@@ -437,7 +437,7 @@ Rene requested deletion of the testing VM, downloaded images and Tart after
 validation. The `proserpina-test` VM and its dedicated directory,
 `/Users/rafael/Library/Caches/proserpina-vm-testing`, were removed. The older
 `dotforge-tahoe-base` VM and cache in `~/.tart` were also removed with explicit
-approval. ADR 0009 now uses native validation; do not recreate this environment
+approval. Use native validation; do not recreate this environment
 for routine Darwin changes.
 
 The test VM used `ghcr.io/cirruslabs/macos-tahoe-base:latest`, macOS 26.6.2,

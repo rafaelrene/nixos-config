@@ -2,21 +2,19 @@
 
 - Status: accepted
 - Date: 2026-09-05
+- Amended: 2026-09-26
 
 ## Context
 
-Most user configuration is small and belongs with this single-machine NixOS
-configuration. A second module system and another activation lifecycle would
-add more concepts than they remove.
+Both workstations manage system and user configuration from this repository.
+They already share application settings and use platform-specific activation.
 
 ## Decision
 
-Manage packages, services, environment variables, and user accounts with
-NixOS. Keep editable configuration files in this repository and install them
-with systemd-tmpfiles links or Nix-rendered files.
+Continue using native NixOS and nix-darwin modules without Home Manager.
+Reuse portable configuration across hosts.
 
 ## Consequences
 
-There is one system rebuild workflow. Per-user configuration that needs complex
-merging may require a small NixOS module or an explicit activation step later.
-Reconsider Home Manager only when that concrete need exists.
+We maintain user-file linking and conflict handling ourselves. Reconsider this
+decision if maintaining that code becomes more work than adopting Home Manager.
