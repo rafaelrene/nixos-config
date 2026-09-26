@@ -49,5 +49,8 @@ in
   systemd.tmpfiles.rules = [
     "d /home/raf/.ssh 0700 raf raf - -"
     "L /home/raf/.ssh/config - - - - /data/code/nixos-config/modules/services/ssh/config"
+    # Checkout ACLs can make both the linked config and its include group-writable.
+    "z /data/code/nixos-config/modules/services/ssh/config 0644 - - - -"
+    "z /data/code/nixos-config/modules/services/ssh/hosts.config 0644 - - - -"
   ];
 }

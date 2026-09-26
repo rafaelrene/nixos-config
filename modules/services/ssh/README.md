@@ -37,6 +37,10 @@ SSH configuration is an editable symlink to
 `/data/code/nixos-config/modules/services/ssh/config`. Host and identity settings
 live in the included `hosts.config`, also installed as Proserpina's SSH config.
 The Linux config selects the NixOS agent; macOS uses its native agent.
+On Othinus, tmpfiles enforces mode 0644 on both files during switch and boot.
+The checkout's inherited ACLs can make files group-writable again when Git or an
+editor replaces them. If SSH reports `Bad owner or permissions` before the next
+switch, run `chmod 0644 ~/.ssh/config /data/code/nixos-config/modules/services/ssh/hosts.config`.
 An existing different config is
 preserved alongside it as `config.before-nixos-<unique suffix>`. Existing private
 keys with different contents are similarly backed up before replacement. All
