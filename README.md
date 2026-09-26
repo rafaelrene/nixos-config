@@ -54,6 +54,17 @@ and the [SSH guide](modules/services/ssh/README.md) for key provisioning and rec
 Contributor constraints and validation commands live in [AGENTS.md](AGENTS.md).
 Use `devenv shell` for repository development; see [DEVELOPMENT.md](DEVELOPMENT.md).
 
+## Application launching
+
+On Othinus, Vicinae defaults to **Launch app** when pressing Enter, including
+when the app already has a window. Ghostty and Helium open another window;
+other apps decide how to handle repeated launches. Per-app preferences in Vicinae can
+override this default.
+
+On Proserpina, Raycast uses its normal application-opening behavior, which can
+focus an existing window. Its documented settings do not provide a global
+always-open-a-new-window default.
+
 ## Future work
 
 Deferred work lives in [TODO.md](TODO.md), including replacing DankMaterialShell
