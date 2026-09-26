@@ -49,7 +49,7 @@ Pass a checkout path to use a worktree: `ns .` rebuilds the current directory,
 `nup .` updates it, and `nups .` updates it then rebuilds. Without a path, these
 commands use the configured checkout.
 
-See the [Proserpina guide](hosts/proserpina/README.md) for Mac setup and migration,
+See the [Proserpina guide](hosts/proserpina/README.md) for Mac setup and operation,
 and the [SSH guide](modules/services/ssh/README.md) for key provisioning and recovery.
 Contributor constraints and validation commands live in [AGENTS.md](AGENTS.md).
 Use `devenv shell` for repository development; see [DEVELOPMENT.md](DEVELOPMENT.md).

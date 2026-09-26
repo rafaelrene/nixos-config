@@ -12,8 +12,6 @@ let
     builtins.toJSON {
       inherit (cfg)
         links
-        legacyLinks
-        legacyDirectories
         stateAliases
         ;
     }
@@ -50,16 +48,6 @@ in
       type = lib.types.attrsOf lib.types.str;
       default = { };
       description = "Home-relative symlinks and their absolute targets.";
-    };
-    legacyLinks = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
-      default = { };
-      description = "Recognized Ansible target suffix for each replaced symlink.";
-    };
-    legacyDirectories = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
-      default = { };
-      description = "Ansible directory links to preserve as backups and replace with real directories.";
     };
     stateAliases = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;

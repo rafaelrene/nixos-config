@@ -54,7 +54,7 @@ in
     systemPath = [ "${profile}/bin" ];
   };
 
-  # When these legacy homes exist, XDG paths alias them. No credentials,
+  # XDG paths alias existing application homes. No credentials,
   # sessions, or local settings are copied, moved, or put in the Nix store.
   workstation = {
     stateAliases = {
@@ -71,13 +71,6 @@ in
         ".local/share/claude/settings.json" = lib.mkDefault "${source}/claude/settings.json";
         ".local/share/claude/themes/workstation.json" = toString claudeTheme;
         ".config/opencode/themes/workstation.json" = toString opencodeTheme;
-      };
-    legacyLinks =
-      lib.mapAttrs (_: path: "/roles/agents/files/${path}") rules
-      // lib.mapAttrs (_: path: "/roles/agents/files/skills/${baseNameOf path}") skillLinks
-      // {
-        ".config/opencode/opencode.jsonc" = "/roles/agents/files/agent_configs/opencode/opencode.jsonc";
-        ".config/opencode/tui.json" = "/roles/agents/files/agent_configs/opencode/tui.json";
       };
 
   };

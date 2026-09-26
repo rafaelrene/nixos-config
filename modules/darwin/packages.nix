@@ -29,7 +29,6 @@ let
     "ungoogled-chromium"
     "whatsapp"
   ];
-  # These names identify only the Homebrew installations replaced by Nix.
   applications = lib.genAttrs caskNames (name: casks.${name}.overrideAttrs { dontFixup = true; }) // {
     inherit (unstable)
       iina
@@ -178,188 +177,113 @@ let
       mv "$temporary" "$settings"
     '';
   };
-  cleanup = pkgs.writeShellApplication {
-    name = "remove-replaced-homebrew-packages";
-    runtimeInputs = [ pkgs.gnugrep ];
-    text = ''
-      if ! test -x /opt/homebrew/bin/brew; then exit 0; fi
-      export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTOREMOVE=1
-      installedCasks=$(/opt/homebrew/bin/brew list --cask)
-      installedFormulae=$(/opt/homebrew/bin/brew list --formula)
-      for cask in ${
-        lib.escapeShellArgs (
-          lib.attrNames applications
-          ++ [
-            "freetube"
-            "t3-code@nightly"
-            "font-hack-nerd-font"
-            "font-jetbrains-mono"
-            "font-jetbrains-mono-nerd-font"
-          ]
-        )
-      }; do
-        if grep -Fxq "$cask" <<< "$installedCasks"; then
-          echo "Removing Homebrew $cask; its Nix replacement is installed."
-          /opt/homebrew/bin/brew uninstall --cask "$cask"
-        fi
-      done
-      # Rolling agents must actually be installed before retiring their old copies.
-      for entry in 'codex:codex' 'claude-code@latest:claude'; do
-        cask=''${entry%:*}
-        command=''${entry#*:}
-        if grep -Fxq "$cask" <<< "$installedCasks" && test -x "$HOME/.local/state/nix/profiles/llm-agents/bin/$command"; then
-          /opt/homebrew/bin/brew uninstall --cask "$cask"
-        fi
-      done
-      for formula in ${
-        lib.escapeShellArgs (
-          lib.attrNames tools
-          ++ [
-            "neovim"
-            "opencode"
-          ]
-        )
-      }; do
-        if grep -Fxq "$formula" <<< "$installedFormulae"; then
-          if test "$formula" = opencode && ! test -x "$HOME/.local/state/nix/profiles/llm-agents/bin/opencode"; then continue; fi
-          dependents=$(/opt/homebrew/bin/brew uses --installed "$formula")
-          if test -n "$dependents"; then
-            echo "Keeping Homebrew $formula for installed dependents: $dependents"
-            continue
-          fi
-          echo "Removing Homebrew $formula; its Nix replacement is installed."
-          /opt/homebrew/bin/brew uninstall --formula "$formula"
-        fi
-      done
-    '';
-  };
+
 in
 {
-  options.workstation.removeReplacedHomebrewPackages = lib.mkEnableOption "remove migrated Homebrew packages and apply vendor app integration after validation";
+  # Keep project shells and the agent wrappers on the same current Devenv.
+  nixpkgs.overlays = [ (_final: _prev: { inherit (unstable) devenv; }) ];
 
-  config = {
-    # Keep project shells and the agent wrappers on the same current Devenv.
-    nixpkgs.overlays = [ (_final: _prev: { inherit (unstable) devenv; }) ];
+  environment.systemPackages =
+    (with pkgs; [
+      bat
+      curl
+      eza
+      freetube
+      gh
+      git
+      gnutar
+      lsof
+      xz
+      yq-go
+      zip
+      unzip
+      zoxide
+    ])
+    ++ lib.attrValues applications
+    ++ lib.attrValues tools;
 
-    environment.systemPackages =
-      (with pkgs; [
-        bat
-        curl
-        eza
-        freetube
-        gh
-        git
-        gnutar
-        lsof
-        xz
-        yq-go
-        zip
-        unzip
-        zoxide
-      ])
-      ++ lib.attrValues applications
-      ++ lib.attrValues tools;
+  fonts.packages = with pkgs; [
+    nerd-fonts.hack
+    nerd-fonts.jetbrains-mono
+    jetbrains-mono
+  ];
 
-    fonts.packages = with pkgs; [
-      nerd-fonts.hack
-      nerd-fonts.jetbrains-mono
-      jetbrains-mono
-    ];
+  homebrew.enable = false;
 
-    homebrew.enable = false;
+  system = {
+    activationScripts = {
+      # Reject unmanaged vendor paths before activation changes applications.
+      preActivation.text = lib.mkBefore ''
+        for app in 'Google Drive' RustDesk; do
+          destination="/Applications/$app.app"
+          target="/Applications/Nix Apps/$app.app"
+          if test -L "$destination" && test "$(readlink "$destination")" = "$target"; then
+            continue
+          fi
+          if test -e "$destination" || test -L "$destination"; then
+            echo "Refusing to replace unmanaged application: $destination" >&2
+            exit 1
+          fi
+        done
+      '';
 
-    system = {
-      activationScripts = {
-        # Check fixed vendor paths before any application copies or Brew removals.
-        preActivation.text = lib.mkIf config.workstation.removeReplacedHomebrewPackages (
-          lib.mkBefore ''
-            installedCasks=""
-            if test -x /opt/homebrew/bin/brew; then
-              installedCasks=$(/usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- \
-                /usr/bin/env HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_ANALYTICS=1 /opt/homebrew/bin/brew list --cask)
-            fi
-            for entry in 'Google Drive:google-drive' 'RustDesk:rustdesk'; do
-              app=''${entry%:*}
-              cask=''${entry#*:}
-              destination="/Applications/$app.app"
-              target="/Applications/Nix Apps/$app.app"
-              if test -L "$destination" && test "$(readlink "$destination")" = "$target"; then
-                continue
-              fi
-              if test -e "$destination" || test -L "$destination"; then
-                if ! test -L "$destination" && test -d "$destination" && ${lib.getExe pkgs.gnugrep} -Fxq "$cask" <<< "$installedCasks"; then
-                  continue
-                fi
-                echo "Refusing to replace unmanaged application before migration: $destination" >&2
-                exit 1
-              fi
-            done
-          ''
-        );
+      postActivation.text = lib.mkAfter ''
+        # The native updater ignores SKIP_HOST_UPDATE. Its pinned manifest keeps
+        # Finder launches on Nixpkgs' host/module versions without altering signatures.
+        /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- ${lib.getExe discordUpdateSettings}
+        # Upstream helpers use these fixed paths. Keep just one actual app bundle.
+        for app in 'Google Drive' RustDesk; do
+          destination="/Applications/$app.app"
+          target="/Applications/Nix Apps/$app.app"
+          if test -L "$destination" && test "$(readlink "$destination")" = "$target"; then
+            continue
+          fi
+          if test -e "$destination" || test -L "$destination"; then
+            echo "Refusing to replace unmanaged application: $destination" >&2
+            exit 1
+          fi
+          ln -s "$target" "$destination"
+        done
+        # Match the vendor installer's mount-helper permissions, outside the store.
+        chown root:wheel '/Applications/Nix Apps/Google Drive.app/Contents/MacOS/mount_helper'
+        chmod 4755 '/Applications/Nix Apps/Google Drive.app/Contents/MacOS/mount_helper'
+        # Merge only Drive's update policy; retain policies for other Google apps.
+        (
+          set -eu
+          policy=$(mktemp)
+          trap 'rm -f "$policy" "$policy.json"' EXIT
+          domain=/Library/Preferences/com.google.Keystone
+          if test -f "$domain.plist"; then
+            /usr/bin/defaults export "$domain" - | /usr/bin/plutil -convert json -o "$policy.json" -
+          else
+            echo '{}' > "$policy.json"
+          fi
+          ${lib.getExe pkgs.jq} '.updatePolicies["com.google.drivefs"].UpdateDefault = 3' "$policy.json" > "$policy"
+          /usr/bin/plutil -convert xml1 "$policy"
+          /usr/bin/defaults import "$domain" "$policy"
+        )
+      '';
 
-        # Remove only known replacements, without --zap or a global Brew cleanup.
-        # nix-darwin copies real bundles into /Applications/Nix Apps before cleanup.
-        postActivation.text = lib.mkIf config.workstation.removeReplacedHomebrewPackages (
-          lib.mkAfter ''
-            /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- ${lib.getExe cleanup}
-            # The native updater ignores SKIP_HOST_UPDATE. Its pinned manifest keeps
-            # Finder launches on Nixpkgs' host/module versions without altering signatures.
-            /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- ${lib.getExe discordUpdateSettings}
-            # Upstream helpers use these fixed paths. Keep just one actual app bundle.
-            for app in 'Google Drive' RustDesk; do
-              destination="/Applications/$app.app"
-              target="/Applications/Nix Apps/$app.app"
-              if test -L "$destination" && test "$(readlink "$destination")" = "$target"; then
-                continue
-              fi
-              if test -e "$destination" || test -L "$destination"; then
-                echo "Refusing to replace unmanaged application: $destination" >&2
-                exit 1
-              fi
-              ln -s "$target" "$destination"
-            done
-            # Match the vendor installer's mount-helper permissions, outside the store.
-            chown root:wheel '/Applications/Nix Apps/Google Drive.app/Contents/MacOS/mount_helper'
-            chmod 4755 '/Applications/Nix Apps/Google Drive.app/Contents/MacOS/mount_helper'
-            # Merge only Drive's update policy; retain policies for other Google apps.
-            (
-              set -eu
-              policy=$(mktemp)
-              trap 'rm -f "$policy" "$policy.json"' EXIT
-              domain=/Library/Preferences/com.google.Keystone
-              if test -f "$domain.plist"; then
-                /usr/bin/defaults export "$domain" - | /usr/bin/plutil -convert json -o "$policy.json" -
-              else
-                echo '{}' > "$policy.json"
-              fi
-              ${lib.getExe pkgs.jq} '.updatePolicies["com.google.drivefs"].UpdateDefault = 3' "$policy.json" > "$policy"
-              /usr/bin/plutil -convert xml1 "$policy"
-              /usr/bin/defaults import "$domain" "$policy"
-            )
-          ''
-        );
+    };
 
-      };
-
-      defaults = lib.mkIf config.workstation.removeReplacedHomebrewPackages {
-        # Slack checks enforced policy; an ordinary user preference is ignored.
-        # nix-darwin inserts custom domains into shell commands without quoting.
-        CustomSystemPreferences.${lib.escapeShellArg "/Library/Managed Preferences/com.tinyspeck.slackmacgap"}.AutoUpdate =
-          false;
-        CustomUserPreferences =
-          lib.genAttrs [ "io.tailscale.ipn.macsys" "ch.protonmail.drive" ] (_: {
+    defaults = {
+      # Slack checks enforced policy; an ordinary user preference is ignored.
+      # nix-darwin inserts custom domains into shell commands without quoting.
+      CustomSystemPreferences.${lib.escapeShellArg "/Library/Managed Preferences/com.tinyspeck.slackmacgap"}.AutoUpdate =
+        false;
+      CustomUserPreferences =
+        lib.genAttrs [ "io.tailscale.ipn.macsys" "ch.protonmail.drive" ] (_: {
+          SUEnableAutomaticChecks = false;
+          SUAutomaticallyUpdate = false;
+        })
+        // {
+          "com.stonerl.Thaw" = {
+            UpdateChannel = "alpha";
+            AllowsBetaUpdates = true;
             SUEnableAutomaticChecks = false;
             SUAutomaticallyUpdate = false;
-          })
-          // {
-            "com.stonerl.Thaw" = {
-              UpdateChannel = "alpha";
-              AllowsBetaUpdates = true;
-              SUEnableAutomaticChecks = false;
-              SUAutomaticallyUpdate = false;
-            };
           };
-      };
+        };
     };
   };
 }

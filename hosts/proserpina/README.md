@@ -6,17 +6,17 @@ Apple Silicon, user `rafael`, home `/Users/rafael`, checkout
 
 ## Scope
 
-| Feature | macOS configuration |
-| --- | --- |
-| Shell and runtimes | Nushell login shell, Starship, zoxide, Devenv and Node 24. Existing Mise installations remain untouched. |
-| Editor | Shared LazyVim configuration, theme, and private Mason installer runtimes. |
-| Git | Shared configuration, Delta theme, ignores, and branch helpers. |
-| Terminal | Ghostty from Nix, shared palette, Mac Option key and quick-terminal settings. |
-| Desktop apps | Nixpkgs, upstream flakes and brew-nix; no Homebrew installation required. |
-| Window management | OmniWM scrolling columns, Caps Lock shortcuts, and nine workspaces; workspace 1 is Work. |
-| Agents | Shared rules, skills and themes; Codex, Claude Code and OpenCode use an independent rolling Nix profile. Pi comes from Nixpkgs. |
-| Mac helpers | Existing Raycast web launchers and Zentty helpers imported unchanged. |
-| SSH | Shared client configuration and all four managed keys; Remote Login trusts `proserpina.pub`. Uses the macOS SSH agent. |
+| Feature            | macOS configuration                                                                                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| Shell and runtimes | Nushell login shell, Starship, zoxide, Devenv and Node 24. Existing Mise installations remain untouched.                        |
+| Editor             | Shared LazyVim configuration, theme, and private Mason installer runtimes.                                                      |
+| Git                | Shared configuration, Delta theme, ignores, and branch helpers.                                                                 |
+| Terminal           | Ghostty from Nix, shared palette, Mac Option key and quick-terminal settings.                                                   |
+| Desktop apps       | Nixpkgs, upstream flakes and brew-nix; no Homebrew installation required.                                                       |
+| Window management  | OmniWM scrolling columns, Caps Lock shortcuts, and nine workspaces; workspace 1 is Work.                                        |
+| Agents             | Shared rules, skills and themes; Codex, Claude Code and OpenCode use an independent rolling Nix profile. Pi comes from Nixpkgs. |
+| Mac helpers        | Existing Raycast web launchers and Zentty helpers imported unchanged.                                                           |
+| SSH                | Shared client configuration and all four managed keys; Remote Login trusts `proserpina.pub`. Uses the macOS SSH agent.          |
 
 The Mac does not import Niri, systemd services, the Linux SSH server, snapshots,
 or Othinus's network exposure rules. A separate launchd service runs T3Code on
@@ -26,14 +26,14 @@ or Othinus's network exposure rules. A separate launchd service runs T3Code on
 
 The system uses flake inputs rather than imperative `nix-channel` subscriptions:
 
-| Source | Purpose |
-| --- | --- |
-| `nixpkgs` / `nixos-26.05` | Othinus, unchanged by Mac package updates. |
-| `nixpkgs-darwin` / `nixpkgs-26.05-darwin` and nix-darwin 26.05 | Stable Mac base, shell and development environment. |
-| `nixpkgs-unstable` | Newer Discord, IINA, Mailspring, OmniWM, OrbStack, Proton Pass, Raycast, Shottr, Yaak, Devenv, Graphite and Pi. |
-| `brew-nix` and `brew-api` | Native Mac releases for Anytype, Ente Photos/Auth, Gifox, Microsoft Teams, ONLYOFFICE, Proton Drive, RustDesk, Signal, Slack, Standard Notes, Superwhisper, Tailscale, Telegram, Thaw, Chromium, WhatsApp and Zentty. |
-| Upstream flakes | Zen, Helium and Try; independent profiles handle T3Code and agent tools. |
-| `vendor-sources.json` | Complete Google Drive and Viber app payloads with explicit versions and hashes. |
+| Source                                                         | Purpose                                                                                                                                                                                                               |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nixpkgs` / `nixos-26.05`                                      | Othinus, unchanged by Mac package updates.                                                                                                                                                                            |
+| `nixpkgs-darwin` / `nixpkgs-26.05-darwin` and nix-darwin 26.05 | Stable Mac base, shell and development environment.                                                                                                                                                                   |
+| `nixpkgs-unstable`                                             | Newer Discord, IINA, Mailspring, OmniWM, OrbStack, Proton Pass, Raycast, Shottr, Yaak, Devenv, Graphite and Pi.                                                                                                       |
+| `brew-nix` and `brew-api`                                      | Native Mac releases for Anytype, Ente Photos/Auth, Gifox, Microsoft Teams, ONLYOFFICE, Proton Drive, RustDesk, Signal, Slack, Standard Notes, Superwhisper, Tailscale, Telegram, Thaw, Chromium, WhatsApp and Zentty. |
+| Upstream flakes                                                | Zen, Helium and Try; independent profiles handle T3Code and agent tools.                                                                                                                                              |
+| `vendor-sources.json`                                          | Complete Google Drive and Viber app payloads with explicit versions and hashes.                                                                                                                                       |
 
 FreeTube and Ghostty retain their tested stable Nixpkgs
 packages. brew-nix reads cask metadata and produces Nix derivations; it never
@@ -45,12 +45,14 @@ client. Filen uses the signed vendor bundle through brew-nix; the Nixpkgs
 launcher uses Electron's generic data directory instead of the vendor's
 application identity.
 
-Raycast has a 2.5.2 minimum: the migrated Mac's databases already use that
+Raycast has a 2.5.2 minimum: the Mac's databases already use that
 release's schema, which 2.4.1 cannot open. Until the unstable input catches up,
 the package uses the signed upstream 2.5.2 archive and checksum. Newer Nixpkgs
 versions take precedence automatically. Compare the running app version before
 replacing self-updated applications; a Brew receipt can report an older version.
-See [Raycast recovery](RAYCAST-HANDOVER.md) for backup and login-item checks.
+Do not downgrade Raycast or reset its databases. After replacing its bundle,
+verify Command-Space and ensure its login item points to
+`/Applications/Nix Apps/Raycast.app`.
 
 Slack, Teams and Signal use cask metadata because their Nixpkgs versions lagged
 behind the vendors: Teams blocked the old client, Slack offered an in-app
@@ -78,14 +80,10 @@ replacing other Discord settings. Discord downloads its initial runtime modules
 using that manifest; subsequent version changes follow `nup` and a rebuild.
 Its signed app bundle remains intact, including when opened from Finder.
 
-Zen associates default profiles with the installation path. Moving from
-`/Applications/Zen.app` to `/Applications/Nix Apps/Zen Browser (Beta).app` can
-select a fresh profile even though the original data remains intact. On
-Proserpina, the new installation's default was reassigned to the original
-`exaq0x7r.Default (release)` profile in `profiles.ini` and `installs.ini` while
-Zen was closed. The original profile and registries were backed up under
-`~/.local/state/nix-darwin/backups/zen-2026-09-25`. Future rebuilds retain the
-same installed app path and profile association.
+Zen associates default profiles with the installation path. Keep its installed
+path at `/Applications/Nix Apps/Zen Browser (Beta).app` so rebuilds retain the
+existing profile association. If a path change selects a fresh profile, quit
+Zen and check `profiles.ini` and `installs.ini` before changing browser data.
 
 ## Window management
 
@@ -116,24 +114,24 @@ Caps + Control chords are impossible, so moves use Shift instead of Othinus's
 Control. Workspace numbers use Option, which previously switched native
 desktops.
 
-| Shortcut | Action |
-| --- | --- |
-| Caps + left/right | Focus columns |
-| Caps + up/down | Focus windows in the column, then the adjacent workspace |
-| Caps + Shift + left/right | Move the whole column |
-| Caps + Shift + up/down | Move the window within its column, then to the adjacent workspace |
-| Option + 1–9 | Switch workspace; 1 is Work |
-| Option + Shift + 1–9 | Move the focused column to a workspace |
-| Caps + Page Up/Down | Previous/next workspace |
-| Caps + Shift + Page Up/Down | Move the column to the previous/next workspace |
-| Caps + O | Overview across workspaces |
-| Caps + R / Caps + Shift + R | Cycle column width forward/backward |
-| Caps + minus/equal | Decrease/increase column width by 10% |
-| Caps + F | Toggle full-width column |
-| Caps + Shift + F | Toggle managed fullscreen without entering a native Space |
-| Caps + V | Toggle floating |
-| Caps + Q | Close the focused window |
-| Caps + [ / ] | Consume a window into the column / expel it |
+| Shortcut                    | Action                                                            |
+| --------------------------- | ----------------------------------------------------------------- |
+| Caps + left/right           | Focus columns                                                     |
+| Caps + up/down              | Focus windows in the column, then the adjacent workspace          |
+| Caps + Shift + left/right   | Move the whole column                                             |
+| Caps + Shift + up/down      | Move the window within its column, then to the adjacent workspace |
+| Option + 1–9                | Switch workspace; 1 is Work                                       |
+| Option + Shift + 1–9        | Move the focused column to a workspace                            |
+| Caps + Page Up/Down         | Previous/next workspace                                           |
+| Caps + Shift + Page Up/Down | Move the column to the previous/next workspace                    |
+| Caps + O                    | Overview across workspaces                                        |
+| Caps + R / Caps + Shift + R | Cycle column width forward/backward                               |
+| Caps + minus/equal          | Decrease/increase column width by 10%                             |
+| Caps + F                    | Toggle full-width column                                          |
+| Caps + Shift + F            | Toggle managed fullscreen without entering a native Space         |
+| Caps + V                    | Toggle floating                                                   |
+| Caps + Q                    | Close the focused window                                          |
+| Caps + [ / ]                | Consume a window into the column / expel it                       |
 
 On the built-in keyboard, Fn+up/down supplies Page Up/Down. Three-finger
 horizontal swipes scroll columns; three-finger vertical swipes change
@@ -176,7 +174,7 @@ release; otherwise a rejected file can silently start with upstream defaults.
 ## Prerequisites and activation
 
 Validate through Nix evaluation, builds, and focused native checks before an
-authorized live switch. A macOS VM is no longer required; see [validation](#validation).
+authorized live switch; see [validation](#validation).
 
 The target needs an existing `rafael` account, the checkout at the declared
 path, Xcode Command Line Tools, and a multi-user Nix installation.
@@ -198,12 +196,6 @@ instruction. First activation:
 sudo nix --extra-experimental-features 'nix-command flakes' run github:nix-darwin/nix-darwin/nix-darwin-26.05#darwin-rebuild -- switch --flake 'path:/Users/rafael/code/.personal/nixos-config#Proserpina'
 ```
 
-The official Nix installer may modify `/etc/bashrc` and `/etc/zshrc` in a way
-that nix-darwin does not recognize. If activation reports these files, inspect
-them against their `.backup-before-nix` copies. After preserving any custom
-settings, rename the reported files with the `.before-nix-darwin` suffix and
-retry. Do not bypass this check or overwrite unrelated system configuration.
-
 Subsequent activation:
 
 ```sh
@@ -219,15 +211,7 @@ updates all three rolling agent packages. Nix system packages take effect after 
 Failures stop the command and are reported; a failed update does not switch the
 system. Close and reopen desktop applications to use updated versions.
 
-The module disables Homebrew removal by default; Proserpina enables it.
-For a new migration, first
-disable `workstation.removeReplacedHomebrewPackages`, then build and validate the Nix
-configuration while keeping the existing Brew installations. Once the migration
-is verified, set `workstation.removeReplacedHomebrewPackages = true;` in
-`hosts/proserpina/configuration.nix` and rebuild. That activation uninstalls only
-the named Brew apps, fonts and CLI tools replaced by Nix, including the old T3Code cask.
-Run this handover from Apple's Terminal: Brew's Zentty uninstall quits Zentty,
-which would interrupt a rebuild running there. Writing Proton Drive's sandboxed
+Writing Proton Drive's sandboxed
 updater preferences requires Full Disk Access; sudo alone does not grant it.
 On macOS 27, the privacy log attributes nix-darwin's `launchctl asuser` write to
 the Nix-store `bash` running activation. Enable that **bash** entry under System
@@ -236,41 +220,22 @@ is insufficient for this process chain. If `bash` is absent, add the exact Nix
 Bash binary named by the activation script's shebang. A Bash package update can
 change that path and require granting access again. Keep this access available
 for subsequent rebuilds that write the same preferences.
-Save work and wait for cloud sync
-to finish, then quit the replaced desktop apps before activation. Reopen their
-Nix copies afterward; Google Drive, RustDesk and Tailscale may need macOS prompts
-answered locally. Verify Finder access, synchronization, VPN and remote access.
-Agent cleanup waits until the rolling Nix profile contains each replacement.
-Formulae required by other installed Brew packages remain. Cleanup never uses
-`--zap`, `--force`, autoremove or global Brew cleanup: application data and
-unrelated Brew packages remain. Homebrew may request Automation permission to
-remove an application's login items. Launch the Nix copies from
-`/Applications/Nix Apps`. Homebrew is consulted only for this migration cleanup,
-which is skipped on clean machines without Brew. Unrelated legacy Brew packages
-are neither removed nor updated by this configuration.
 
-During staging, quit each existing app before opening its Nix copy. Proton Drive
-can launch the Nix File Provider while its old app is still running, producing
-“FileProvider has launched from outside the current Drive app.” Quit Proton Drive
-and open `/Applications/Nix Apps/Proton Drive.app`, then check an existing file in
-Finder. Both the app and its extension must run from that bundle. Retaining both
-copies can cause this mismatch again; restarting is a staging workaround, not
-a completed app handover. Do not delete File Provider data or sign out to fix
-an installation-path mismatch.
+nix-darwin installs real app bundles in `/Applications/Nix Apps`. Google Drive
+and RustDesk also have compatibility links at their vendor's expected top-level
+`/Applications` paths. Activation rejects unmanaged files at those paths before
+changing applications. Google Drive's installed mount helper receives its
+vendor-required root ownership and setuid permission.
 
-nix-darwin installs real app bundles. With Homebrew removal enabled, Google Drive and RustDesk also have
-compatibility links at their vendor's expected top-level `/Applications` paths;
-activation refuses unrelated files at those paths. Google Drive's installed
-mount helper receives its vendor-required root ownership and setuid permission.
-Tailscale/Proton Drive/Thaw automatic Sparkle updates and Google Drive's vendor
-updates are disabled so Nix controls their installed versions. `nup`/`nups`
-refreshes the normal package sources; Thaw's alpha override requires a
-version/hash edit. Before final handover, existing vendor paths and updater
-preferences are left in place, including Discord's
-settings. Google Drive and RustDesk need the final handover to validate their
-Nix copies at the vendor paths; keeping both copies is only a staging step.
-Unmanaged vendor-path conflicts are checked before activation changes files or
-removes packages, and checked again immediately before creating the links.
+Tailscale, Proton Drive and Thaw automatic Sparkle updates and Google Drive's
+vendor updates are disabled so Nix controls their installed versions.
+`nup`/`nups` refreshes the normal package sources; Thaw's alpha override requires
+a version/hash edit. Homebrew packages are not managed or removed by activation.
+
+Proton Drive and its File Provider must run from the same Nix app bundle. If
+macOS reports an installation-path mismatch, quit Proton Drive and reopen
+`/Applications/Nix Apps/Proton Drive.app`. Do not delete File Provider data or
+sign out to fix a path mismatch.
 
 T3Code's server and desktop are built from the same official nightly release and
 staged together in `~/.local/state/nix/profiles/t3code`. A matching bootstrap pair
@@ -302,7 +267,7 @@ The agent updater runs at login and daily at 04:30 through launchd. Failed
 updates retry after at least five minutes, including when Nix is still starting.
 Manual updates are included in `nup`; its scheduled log is
 `~/.local/state/nix-darwin/agents-update.log`. The first update must finish before
-the Nix profile's agent commands are available. The replaced Homebrew Pi package is removed; unrelated packages remain. The shared Nix launchers take precedence in Nushell's PATH and
+the Nix profile's agent commands are available. The shared Nix launchers take precedence in Nushell's PATH and
 enter the project's Devenv environment before starting an agent.
 The Mac trusts Numtide's signed binary cache for these packages and uses Nix's
 explicit `--all` selector when upgrading the profile.
@@ -310,16 +275,13 @@ explicit `--all` selector when upgrading the profile.
 ## Existing files and state
 
 Activation checks all declared user-file destinations before changing any of
-them. It replaces matching Ansible symlinks and its own previously recorded
-links. A real file or unrelated symlink at a destination aborts activation with
-its path. Reconcile that file before retrying; the hook never overwrites it.
+them. It replaces only matching or previously recorded managed links. A real
+file, unrelated symlink, or unmanaged parent-directory symlink aborts activation
+with its path. Reconcile that destination before retrying; activation does not
+adopt Ansible links or create migration backups.
 
-Ansible directory symlinks such as `~/.config/git` are retained as
-`~/.config/git.before-nix-darwin`. Real directories take their place, containing
-individual managed links. The files behind the old link stay untouched in the
-Ansible checkout. The installation manifest lives at
-`~/.local/state/nix-darwin/links.json`; stale links are removed only while they
-still point to their last recorded target.
+The installation manifest lives at `~/.local/state/nix-darwin/links.json`;
+stale links are removed only while they still point to their recorded target.
 
 Existing `~/.codex`, `~/.claude`, `~/.pi/agent`, and `~/.t3` directories remain
 where they are. Their XDG counterparts alias them, preserving credentials and sessions.
@@ -329,9 +291,7 @@ files are subject to the same conflict checks as other configuration.
 Codex's editable host settings live in `hosts/proserpina/codex.toml`; its theme
 is shared, while project trust paths belong to this Mac. Claude's Mac preferences
 live in `hosts/proserpina/claude.json`, preserving its model, permission mode,
-editor and notification settings. Before the first switch, compare the live
-settings with these files, back up both, and retire the conflicting regular
-files only as part of the handover. Never copy credentials into the checkout.
+editor and notification settings. Never copy credentials into the checkout.
 
 On a fresh installation, `~/.t3` links back to the XDG T3Code directory. macOS
 restores the signed upstream desktop directly at login, potentially before
@@ -354,8 +314,7 @@ in their existing external secret storage or project environment.
 
 `~/.local/share/raycast/scripts` contains the unchanged Raycast launchers. Select
 that directory in Raycast’s Script Commands settings instead of `~/.web-apps`.
-An existing Ansible link is left untouched; a link installed by an earlier
-nix-darwin generation is retired automatically. The launchers still use Chromium. The imported Zentty helpers still explicitly open
+The launchers use Chromium. The imported Zentty helpers explicitly open
 Zsh panes; the default login shell and Ghostty use Nushell. The legacy
 `~/.config/git/.gitconfig` path remains available, and Try's upstream-generated
 Zsh integration is installed at `~/.config/try-rs/try-rs.zsh` for these panes.
@@ -382,8 +341,7 @@ decoding, and launchd plist validation. Activation and interactive checks follow
 an explicitly authorized live switch; report any checks still pending. Evaluation
 and builds do not authorize changing running services. A VM is not required.
 
-Use native Mac validation; the previous Tart test environment was retired at
-Rene's request. Do not recreate it for routine changes. For OmniWM updates,
+Use native Mac validation. For OmniWM updates,
 decode the generated settings against the matching upstream schema, check the
 app signature and launchd plist, and verify shortcuts and window management
 after an authorized switch. An IPC response alone does not prove input services

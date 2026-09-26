@@ -19,7 +19,6 @@
   };
   workstation = {
     checkout = "/Users/rafael/code/.personal/nixos-config";
-    removeReplacedHomebrewPackages = true;
     links.".local/share/codex/config.toml" =
       "${config.workstation.checkout}/hosts/proserpina/codex.toml";
     links.".local/share/claude/settings.json" =

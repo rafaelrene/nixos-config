@@ -32,10 +32,6 @@ in
   programs.zsh.enable = true;
 
   workstation = {
-    legacyDirectories = {
-      ".config/nushell" = "/roles/nushell/files";
-      ".config/starship" = "/roles/starship/files";
-    };
     links = {
       ".config/nushell/config.nu" = toString nuConfig;
       ".config/nushell/env.nu" = toString ./env.nu;
@@ -53,15 +49,6 @@ in
       ".local/bin/zp" = "${checkout}/modules/darwin/scripts/zentty-project";
       ".local/bin/zentty-subrepo" = "${checkout}/modules/darwin/scripts/zentty-subrepo";
       ".local/bin/zsr" = "${checkout}/modules/darwin/scripts/zentty-subrepo";
-    };
-    legacyLinks = {
-      ".local/bin/git-branches" = "/roles/scripts/files/git-branches";
-      ".local/bin/git-delete-branches" = "/roles/scripts/files/git-delete-branches";
-      ".local/bin/git-db" = "/roles/scripts/files/git-delete-branches";
-      ".local/bin/zentty-project" = "/roles/scripts/files/zentty-project";
-      ".local/bin/zp" = "/roles/scripts/files/zentty-project";
-      ".local/bin/zentty-subrepo" = "/roles/scripts/files/zentty-subrepo";
-      ".local/bin/zsr" = "/roles/scripts/files/zentty-subrepo";
     };
   };
 }
