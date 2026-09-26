@@ -21,7 +21,18 @@ let
     bashOptions = [ ];
     text = builtins.readFile ./git-delete-branches;
   };
+  prun = pkgs.writeShellApplication {
+    name = "prun";
+    runtimeInputs = [
+      pkgs.nushell
+      pkgs.git
+      pkgs.fzf
+    ];
+    text = ''
+      exec nu --no-config-file ${./prun.nu} "$@"
+    '';
+  };
 in
 {
-  inherit branches deleteBranches;
+  inherit branches deleteBranches prun;
 }
