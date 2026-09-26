@@ -58,9 +58,6 @@ trust_level = "trusted"
 [mcp_servers.openaiDeveloperDocs]
 url = "https://developers.openai.com/mcp"
 
-[tui.model_availability_nux]
-"gpt-5.6-sol" = 2
-
 [hooks.state]
 
 [hooks.state."/Users/rafael/.codex/hooks.json:permission_request:0:0"]
@@ -77,3 +74,13 @@ trust_level = "trusted"
 
 [tui]
 theme = "workstation"
+screen_reader_detection_done = true
+
+[tui.model_availability_nux]
+"gpt-5.6-sol" = 2
+gpt-6-astra = 2
+
+# The Nix build lacks the codex-package.json layout the background
+# app-server daemon requires, so the TUI would refuse to start.
+[features]
+daemon_auto_start = false

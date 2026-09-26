@@ -5,8 +5,13 @@
   "model": "opus[1m]",
   "effortLevel": "xhigh",
   "tui": "fullscreen",
+  "autoMemoryEnabled": false,
   "theme": "custom:workstation",
   "editorMode": "vim",
   "preferredNotifChannel": "ghostty",
-  "autoMemoryEnabled": false
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
+    }
+  }
 }
