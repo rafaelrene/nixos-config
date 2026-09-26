@@ -5,9 +5,6 @@
 }:
 let
   themeJSON = import ./theme.nix { inherit lib pkgs; };
-in
-{
-  theme = pkgs.writeText "t3code-workstation-theme.json" themeJSON;
   server = pkgs.writeText "t3code-declared-settings.json" (
     builtins.toJSON {
       continueThreadsAfterServerUpdate = true;
@@ -20,4 +17,9 @@ in
       };
     }
   );
+in
+{
+  inherit server;
+  theme = pkgs.writeText "t3code-workstation-theme.json" themeJSON;
+  merge = ". *= load(\"${server}\")";
 }

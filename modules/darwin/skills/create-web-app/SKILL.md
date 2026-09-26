@@ -6,7 +6,8 @@ disable-model-invocation: true
 
 # Create a web app
 
-Create a Raycast web-app launcher from the bundled template.
+Add a Chromium launcher to `modules/darwin/web-apps/apps.json` in this
+repository. Nix generates Raycast scripts from this name-to-URL map.
 
 ## Inputs
 
@@ -15,36 +16,31 @@ Require:
 - App name
 - App URL
 
-If either input is missing, ask for it one at a time.
+Ask for missing inputs.
 
 Normalize the app name:
 
 1. Replace newlines with spaces.
 2. Collapse repeated whitespace and trim surrounding whitespace.
 3. Append ` Web App` unless it already has that suffix.
-4. Replace `/` with `-` in the filename only.
+
+The generator replaces `/` with `-` in filenames only. Check that the resulting
+filename does not collide with another entry.
 
 Require a complete URL beginning with `http://` or `https://`. Reject malformed
 URLs and other schemes. Preserve the accepted URL exactly.
 
-## Create the launcher
+## Add the launcher
 
-The destination is always:
+Add the normalized name as a JSON key with the URL as its value. Preserve
+existing entries. If the name already exists with a different URL, confirm
+replacement unless the user already requested it.
 
-`/Users/rafael/code/.personal/nixos-config/modules/darwin/web-apps/`
+Format the JSON, evaluate the Darwin configuration, and build the generated
+launcher from `config.workstation.links`. Check the new script with `sh -n`. Follow the repository's
+remaining validation requirements.
 
-Render `templates/web-app` by replacing:
-
-- `__APP_NAME__` with the normalized display name.
-- `__APP_URL__` with the URL, escaped safely for a single-quoted zsh string.
-
-Show the resolved filename and URL before writing.
-
-If the destination already exists, stop and ask for explicit permission before
-overwriting it.
-
-Make the created file executable. Validate it with `zsh -n`. Report the created
-path and validation result.
-
-This directory is linked to `~/.local/share/raycast/scripts`; new launchers appear without a rebuild.
-Do not commit, push, run Ansible, or activate either workstation.
+Raycast reads `~/.local/share/raycast/scripts`, a real directory containing
+individual Nix-managed launcher links. A rebuild applies additions and changes.
+Report the name, URL, checks, and whether activation remains pending. Activate
+only when the user has authorized switching the live system.

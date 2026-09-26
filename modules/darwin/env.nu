@@ -7,7 +7,7 @@ $env.TRY_PATH = ($env.HOME | path join "code/.personal/.try")
 $env.GIT_CONFIG_GLOBAL = ($env.XDG_CONFIG_HOME | path join "git/config")
 # Legacy Zsh sessions exported this path; Nushell loads it as the global config.
 if ($env.GIT_CONFIG_SYSTEM? | default "") == ($env.XDG_CONFIG_HOME | path join "git/.gitconfig") {
-  hide-env GIT_CONFIG_SYSTEM
+    hide-env GIT_CONFIG_SYSTEM
 }
 $env.PATH = ($env.PATH | prepend [
   ($env.HOME | path join ".local/bin")

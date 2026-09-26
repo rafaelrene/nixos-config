@@ -37,7 +37,7 @@ let
         (toString zoxideNuHook)
         (toString devenvNuHook)
         (toString starshipNuHook)
-        (toString ./git-nav.nu)
+        "${../.}/nushell/git-nav.nu"
         (builtins.toJSON checkout)
         hostname
         (lib.toLower hostname)

@@ -11,6 +11,7 @@
     bashInteractive
     zsh
     nushell
+    nufmt
     lua
     neovim-unwrapped
     python3

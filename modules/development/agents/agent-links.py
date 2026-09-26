@@ -1,12 +1,9 @@
-#!/usr/bin/env python3
 """Reconcile repository-owned agent links during raf's NixOS activation."""
 
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
-import tempfile
 
 
 def link_target(path):
@@ -15,8 +12,6 @@ def link_target(path):
 
 def reconcile(home, source, manifest):
     links = {home / dest: source / src for dest, src in manifest["links"].items()}
-    previous = manifest["previousSettings"]
-    migrations = []
     conflicts = []
 
     for relative in manifest["skillDirectories"]:
@@ -28,8 +23,7 @@ def reconcile(home, source, manifest):
                 conflicts.append(f"Expected a real directory: {parent}")
                 break
 
-    # Check every destination before changing anything. Only the two imported
-    # settings snapshots may replace regular files, and their bytes must match.
+    # Check every destination before changing anything; local files stay intact.
     for dest, target in links.items():
         if not target.exists():
             conflicts.append(f"Missing source: {target}")
@@ -43,28 +37,10 @@ def reconcile(home, source, manifest):
             if link_target(dest) != target:
                 conflicts.append(f"Unmanaged link: {dest}")
         elif dest.exists():
-            expected = previous.get(str(dest.relative_to(home)))
-            if (
-                expected
-                and dest.is_file()
-                and hashlib.sha256(dest.read_bytes()).hexdigest() == expected
-            ):
-                migrations.append(dest)
-            else:
-                conflicts.append(f"Preserving conflicting path: {dest}")
+            conflicts.append(f"Preserving conflicting path: {dest}")
 
     if conflicts:
         raise ValueError("\n".join(dict.fromkeys(conflicts)))
-
-    if migrations:
-        backup_root = home / ".local/state/agent-config-backups"
-        backup_root.mkdir(parents=True, exist_ok=True, mode=0o700)
-        backup = Path(tempfile.mkdtemp(prefix="initial-", dir=backup_root))
-        for dest in migrations:
-            saved = backup / dest.relative_to(home)
-            saved.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-            dest.rename(saved)
-        print(f"Original agent settings saved in {backup}")
 
     for dest, target in links.items():
         dest.parent.mkdir(parents=True, exist_ok=True, mode=0o700)

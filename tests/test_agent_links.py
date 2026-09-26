@@ -1,9 +1,7 @@
-import hashlib
 import importlib.util
-from pathlib import Path
 import tempfile
 import unittest
-
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
@@ -30,7 +28,6 @@ class AgentLinksTest(unittest.TestCase):
         self.manifest = {
             "links": {},
             "skillDirectories": self.dirs,
-            "previousSettings": {},
         }
 
     def add_skill(self, name):
@@ -70,35 +67,18 @@ class AgentLinksTest(unittest.TestCase):
         self.assertTrue((codex / "personal").is_dir())
         self.assertTrue((codex / "external").is_symlink())
 
-    def test_initial_settings_are_backed_up_once_and_newer_edits_conflict(self):
+    def test_existing_settings_are_preserved(self):
         dest = self.home / ".local/share/claude/settings.json"
         dest.parent.mkdir(parents=True)
-        original = b'{"theme":"dark"}\n'
-        dest.write_bytes(original)
+        original = '{"theme":"dark"}\n'
+        dest.write_text(original)
         (self.source / "settings.json").write_text('{"theme":"dark","hooks":{}}')
         relative = str(dest.relative_to(self.home))
         self.manifest["links"][relative] = "settings.json"
-        self.manifest["previousSettings"][relative] = hashlib.sha256(
-            original
-        ).hexdigest()
-        dest.write_text("newer settings")
         with self.assertRaisesRegex(ValueError, "conflicting path"):
             self.activate()
-        self.assertEqual(dest.read_text(), "newer settings")
-        dest.write_bytes(original)
-        self.activate()
-        self.activate()
-        backups = list(
-            (self.home / ".local/state/agent-config-backups").glob(
-                "initial-*/.local/share/claude/settings.json"
-            )
-        )
-        self.assertEqual(len(backups), 1)
-        self.assertEqual(backups[0].read_bytes(), original)
-        dest.write_text("updated settings")
-        self.assertEqual(
-            (self.source / "settings.json").read_text(), "updated settings"
-        )
+        self.assertEqual(dest.read_text(), original)
+        self.assertFalse(dest.is_symlink())
 
     def test_conflicts_and_missing_sources_prevent_partial_activation(self):
         self.add_skill("first")

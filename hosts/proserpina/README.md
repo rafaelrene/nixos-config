@@ -313,8 +313,13 @@ a group-writable checkout file even through a symlink. Editing
 immediately on Othinus, whose SSH config includes it from the checkout.
 Keep project secrets in external secret storage or the project environment.
 
-`~/.local/share/raycast/scripts` contains the Chromium web launchers. Select
-that directory in Raycast’s Script Commands settings.
+`modules/darwin/web-apps/apps.json` declares the Chromium web launchers by name
+and URL. Nix generates individual launcher links in the real directory
+`~/.local/share/raycast/scripts`. Select that directory once in Raycast's Script
+Commands settings and remove obsolete script folders. Keep the directory itself
+real: the macOS folder picker resolves directory symlinks to a fixed store path.
+Rebuild after changing the list. Launchers use the
+Nix-managed Chromium bundle under `/Applications/Nix Apps`.
 
 The Nix-built **Workstation destinations** Raycast extension provides
 **Open destination** for projects, Home, configuration folders, and SSH hosts.

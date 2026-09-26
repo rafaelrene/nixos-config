@@ -11,11 +11,13 @@ let
     runtimeInputs = [
       config.programs.niri.package
       pkgs.coreutils
-      pkgs.jq
+      pkgs.nushell
       pkgs.systemd
       pkgs.upower
     ];
-    text = builtins.readFile ./battery-refresh-rate.sh;
+    text = ''
+      exec nu --no-config-file ${./battery-refresh-rate.nu} "$@"
+    '';
   };
   wallpaperSource = ../../../wallpapers;
   wallpaperFiles = builtins.readDir wallpaperSource;

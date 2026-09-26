@@ -1,5 +1,11 @@
 # TODO
 
+## Pending validation
+
+- On Othinus, unplug the charger, wait five seconds, then reconnect it. Confirm
+  the display stays usable, switches to 60 Hz with VRR off on battery, and
+  returns to 165 Hz with VRR on when charging.
+
 ## Later
 
 - Revisit Helium as the default browser if work and personal usage changes.

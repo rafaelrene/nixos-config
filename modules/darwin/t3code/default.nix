@@ -20,7 +20,7 @@ let
         initialDesktop
       ];
     };
-  updater = import ./update.nix { inherit lib pkgs home; };
+  updater = import ../../applications/t3code/update.nix { inherit lib pkgs home; };
   settings = import ../../applications/t3code/settings.nix { inherit lib pkgs home; };
   run = pkgs.writeShellApplication {
     name = "run-t3code";
@@ -47,10 +47,8 @@ let
       if ! test -e "${base}/userdata/settings.json"; then
         cp ${settings.server} "${base}/userdata/settings.json"
       fi
-      # $declared belongs to yq, not the shell.
-      # shellcheck disable=SC2016
       yq --inplace --output-format=json \
-        'load("${settings.server}") as $declared | .providers *= $declared.providers | .continueThreadsAfterServerUpdate = $declared.continueThreadsAfterServerUpdate | .defaultTheme = $declared.defaultTheme | .defaultThemeSetAt = $declared.defaultThemeSetAt' \
+        ${lib.escapeShellArg settings.merge} \
         "${base}/userdata/settings.json"
       install -m600 ${settings.theme} "${base}/userdata/themes/othinus.json"
       exec "$server" serve --base-dir "${base}" \

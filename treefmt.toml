@@ -1,4 +1,5 @@
 tree-root-file = "devenv.nix"
+excludes = [".devenv/**"]
 
 [formatter.nix]
 command = "nixfmt"
@@ -7,11 +8,13 @@ includes = ["*.nix"]
 [formatter.shell]
 command = "shfmt"
 options = ["-w"]
-includes = [
-  "*.sh",
-  "modules/shell/scripts/git-*",
-  "modules/darwin/scripts/zentty-*",
-]
+includes = ["*.sh"]
+
+[formatter.nushell]
+command = "nufmt"
+includes = ["*.nu"]
+# Nix substitutes these tokens before Nushell can parse the configuration.
+excludes = ["modules/shell/nushell/config.nu"]
 
 [formatter.lua]
 command = "stylua"
