@@ -2,8 +2,9 @@
 
 Both workstations provide `git branches` to switch branches and `git db`
 (also `git delete-branches`) to delete selected local branches and worktrees.
-The helpers are installed in the system package path, with compatibility links
-in `~/.local/bin`, so Git can find them without shell-specific PATH setup.
+The helpers are linked into `$HOME/.local/bin`, which both machines include in
+the shell's PATH. Devenv inherits that PATH. Start a fresh shell after rebuilding
+to load PATH changes.
 
 Run `git db` from any worktree. Each branch has one row, including its worktree
 path when checked out. Deleting that row removes both. Detached worktrees have

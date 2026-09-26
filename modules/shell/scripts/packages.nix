@@ -24,10 +24,4 @@ let
 in
 {
   inherit branches deleteBranches;
-  gitDb = pkgs.linkFarm "git-db" [
-    {
-      name = "bin/git-db";
-      path = "${deleteBranches}/bin/git-delete-branches";
-    }
-  ];
 }

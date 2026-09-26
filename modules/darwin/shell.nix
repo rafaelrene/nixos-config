@@ -13,19 +13,11 @@ let
     rebuildCommand = "sudo darwin-rebuild switch";
     updateCommand = "nix-update-packages";
   };
-  inherit (import ../shell/scripts/packages.nix { inherit pkgs; })
-    branches
-    deleteBranches
-    gitDb
-    ;
+  inherit (import ../shell/scripts/packages.nix { inherit pkgs; }) branches deleteBranches;
 in
 {
   environment = {
-    systemPackages = [
-      branches
-      deleteBranches
-      gitDb
-    ];
+    systemPath = lib.mkBefore [ "$HOME/.local/bin" ];
     # The persistent profile is available before launchd recreates /run at boot.
     shells = [ "/nix/var/nix/profiles/system/sw/bin/nu" ];
     variables = {
