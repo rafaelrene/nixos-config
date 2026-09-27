@@ -2,6 +2,9 @@
 
 ## Pending validation
 
+- On Othinus, diagnose unexpected restarts under compilation load before
+  retrying the patched devenv and system builds. Then verify concurrent Nushell
+  reloads with the patched package.
 - On Othinus, unplug the charger, wait five seconds, then reconnect it. Confirm
   the display stays usable, switches to 60 Hz with VRR off on battery, and
   returns to 165 Hz with VRR on when charging.
