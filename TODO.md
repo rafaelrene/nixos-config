@@ -2,6 +2,10 @@
 
 ## Pending validation
 
+- On Proserpina, repair T3 Code's Bitbucket credential loading. The running
+  server has working credentials, but `local.t3code.bitbucket-env` references
+  a missing `t3code-bitbucket-api-token` Keychain item. Verify authentication
+  survives a server restart and login without storing secrets in the repository.
 - On Othinus, diagnose unexpected restarts under compilation load.
 - After authorized switches on both hosts, verify direnv activation in Nushell,
   concurrent reloads including imported Nix files, failed-evaluation recovery,

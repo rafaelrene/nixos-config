@@ -167,6 +167,7 @@ in
               DBUS_SESSION_BUS_ADDRESS = "unix:path=%t/bus";
             };
             serviceConfig = {
+              EnvironmentFile = "-${baseDir}/bitbucket.env";
               # Published theme files must be regular files: T3 rejects file symlinks.
               ExecStartPre = [
                 (utils.escapeSystemdExecArgs [
