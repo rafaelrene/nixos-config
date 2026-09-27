@@ -251,9 +251,11 @@ T3Code's server and desktop are built from the same official nightly release and
 staged together in `~/.local/state/nix/profiles/t3code`. A matching bootstrap pair
 is included in the system closure, so startup does not wait for an online update.
 A listener on port 3773 blocks activation unless the nix-darwin T3Code service
-is already registered. The unmanaged
-`local.t3code.bitbucket-env` launch agent supplies the Mac's Bitbucket
-environment without putting credentials in this repository.
+is already registered. Bitbucket uses `T3CODE_BITBUCKET_EMAIL` and
+`T3CODE_BITBUCKET_API_TOKEN` in the server environment, outside this repository.
+The unmanaged `local.t3code.bitbucket-env` launch agent references a missing
+Keychain item; persistent credential loading needs repair before restarting
+the authenticated server (see [TODO](../../TODO.md)).
 Launchd starts the server at login, restarts it on failure, checks for updates
 every three hours, and
 restarts it daily at 04:00. When `nup` installs a changed bundle, it restarts the

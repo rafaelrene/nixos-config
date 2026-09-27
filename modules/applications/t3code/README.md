@@ -54,6 +54,19 @@ update, either wait for 04:00 or explicitly restart the server:
 Othinus logs are available through `journalctl --user -u t3code-update.service`.
 Proserpina logs are in `~/.local/state/nix-darwin/t3code-update.log`.
 
+## Bitbucket authentication
+
+On Othinus, the server reads `~/.local/share/t3code/bitbucket.env` at startup.
+This optional systemd environment file supplies `T3CODE_BITBUCKET_EMAIL` and
+`T3CODE_BITBUCKET_API_TOKEN`. Keep it owned by the user with mode `0600`, outside
+the repository and Nix store. The token needs repository, pull request and user
+read access. Restart the server after changing credentials, then use **Rescan
+server environment** in **Settings → Source Control**.
+
+Proserpina uses the same variables in its server environment. Its local
+credential startup wiring needs repair; see the
+[Proserpina guide](../../../hosts/proserpina/README.md).
+
 ## Rollback
 
 Use `nix-env --profile ~/.local/state/nix/profiles/t3code --list-generations` to
