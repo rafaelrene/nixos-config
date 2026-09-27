@@ -14,7 +14,6 @@
         nushell
         nufmt
         lua
-        neovim-unwrapped
         python3
         shellcheck
         shfmt
