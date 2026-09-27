@@ -14,7 +14,7 @@ let
     user
     "--"
     "${pkgs.python3}/bin/python3"
-    (toString ../services/ssh/ssh-keys.py)
+    "${../services/ssh/ssh-keys.py}"
     "--repo"
     "${config.workstation.checkout}/modules/services/ssh"
     "--home"

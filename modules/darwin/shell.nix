@@ -43,10 +43,10 @@ in
   workstation = {
     links = {
       ".config/nushell/config.nu" = toString nuConfig;
-      ".config/nushell/env.nu" = toString ./env.nu;
+      ".config/nushell/env.nu" = "${./env.nu}";
       # Nushell discovers its macOS config in Application Support before it can
       # load env.nu and learn our XDG settings.
-      "Library/Application Support/nushell/env.nu" = toString ./env.nu;
+      "Library/Application Support/nushell/env.nu" = "${./env.nu}";
       "Library/Application Support/nushell/config.nu" = toString nuConfig;
       ".config/starship/starship.toml" = toString (
         import ../shell/starship/config.nix { inherit lib pkgs; }

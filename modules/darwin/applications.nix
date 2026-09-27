@@ -23,7 +23,7 @@ in
   environment.etc = {
     "xdg/nvim-theme.json".text = builtins.toJSON theme.neovim;
     "xdg/ghostty/theme".text = import ../applications/ghostty/theme.nix { inherit lib pkgs; };
-    "xdg/ghostty/common".source = ../applications/ghostty/config-common;
+    "xdg/ghostty/common".source = "${../applications/ghostty/config-common}";
   };
   workstation = {
     links = {
@@ -34,7 +34,7 @@ in
       ".config/git/themes.gitconfig" = toString deltaConfig;
       ".config/nvim" = "${checkout}/modules/applications/neovim/config";
       ".config/ghostty/config" = "${checkout}/modules/darwin/ghostty.config";
-      ".config/tealdeer/config.toml" = toString ../applications/tealdeer/config.toml;
+      ".config/tealdeer/config.toml" = "${../applications/tealdeer/config.toml}";
       ".config/graphite/aliases" = "${checkout}/modules/darwin/graphite-aliases";
       ".config/try-rs/try-rs.zsh" = toString tryZsh;
       ".config/try-rs/config.toml" = toString (
@@ -52,7 +52,7 @@ in
         }
       );
       # OpenSSH rejects group-writable checkout files, even behind a symlink.
-      ".ssh/config" = toString ../services/ssh/hosts.config;
+      ".ssh/config" = "${../services/ssh/hosts.config}";
     }
     // (import ./web-apps { inherit lib pkgs; });
   };

@@ -51,6 +51,10 @@ Keep runtime logic in `.nu` files beside its feature. Package commands with
 small process wrappers in Bash when Nushell would add no value. Share portable
 logic beside the feature, with service integration in the platform modules.
 
+Use path interpolation (`"${./file}"`) for repository files needed at runtime.
+`toString ./file` does not retain the file as a Nix store dependency; generated
+launchers and symlinks can break after the flake source is garbage-collected.
+
 The local Raycast destination extension is built and checked by its Nix package.
 For an editing loop in `modules/darwin/destinations/raycast`, run `npm ci`, then
 `npm run build`, `npm run typecheck` and `npm run lint`. The build writes `dist/`

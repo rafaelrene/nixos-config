@@ -16,7 +16,7 @@ let
       ];
       ssh = "${pkgs.openssh}/bin/ssh";
       ghostty = if darwin then "" else "${pkgs.ghostty}/bin/ghostty";
-      appleScript = toString ./ghostty.applescript;
+      appleScript = "${./ghostty.applescript}";
     }
   );
 in
