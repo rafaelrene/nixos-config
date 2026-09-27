@@ -2,9 +2,13 @@
 
 ## Pending validation
 
-- On Othinus, diagnose unexpected restarts under compilation load before
-  retrying the patched devenv and system builds. Then verify concurrent Nushell
-  reloads with the patched package.
+- On Othinus, diagnose unexpected restarts under compilation load.
+- After authorized switches on both hosts, verify direnv activation in Nushell,
+  concurrent reloads including imported Nix files, failed-evaluation recovery,
+  and unloading when leaving a project.
+- On Proserpina, fix Helium 0.18.1.1's install phase: unpacking enters
+  `Helium/Helium.app`, but installation still copies from `Helium.app/.`.
+  This blocks the full Darwin system build with the current inputs.
 - On Othinus, unplug the charger, wait five seconds, then reconnect it. Confirm
   the display stays usable, switches to 60 Hz with VRR off on battery, and
   returns to 165 Hz with VRR on when charging.

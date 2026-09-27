@@ -19,7 +19,7 @@ def --env cdb [path: path = "."] {
 # Bind navigation to the built-in cd before zoxide replaces it.
 use @git-nav@ *
 source @zoxide-hook@
-source @devenv-hook@
+source @direnv-hook@
 source @starship-hook@
 
 # Distinguish local directories from SSH shells in the destination picker.

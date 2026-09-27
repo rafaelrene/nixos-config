@@ -18,12 +18,6 @@
       starshipNuHook = pkgs.runCommand "starship-hook.nu" { nativeBuildInputs = [ pkgs.starship ]; } ''
         starship init nu > "$out"
       '';
-      devenvNuHook = pkgs.runCommand "devenv-hook.nu" { nativeBuildInputs = [ pkgs.devenv ]; } ''
-        export HOME="$TMPDIR/home"
-        export XDG_CACHE_HOME="$TMPDIR/cache"
-        mkdir -p "$HOME" "$XDG_CACHE_HOME"
-        devenv hook nu > "$out"
-      '';
       zoxideNuHook = pkgs.runCommand "zoxide-hook.nu" { nativeBuildInputs = [ pkgs.zoxide ]; } ''
         zoxide init nushell --cmd cd > "$out"
       '';
@@ -31,7 +25,7 @@
         lib.replaceStrings
           [
             "@zoxide-hook@"
-            "@devenv-hook@"
+            "@direnv-hook@"
             "@starship-hook@"
             "@git-nav@"
             "@checkout@"
@@ -42,7 +36,7 @@
           ]
           [
             (toString zoxideNuHook)
-            (toString devenvNuHook)
+            "${../direnv/hook.nu}"
             (toString starshipNuHook)
             # Retain the tree so git-nav's relative import of shell/scripts/git.nu works.
             "${../..}/applications/nushell/git-nav.nu"

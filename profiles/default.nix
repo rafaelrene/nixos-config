@@ -10,6 +10,7 @@ let
     "curl"
     "delta"
     "devenv"
+    "direnv"
     "eza"
     "fd"
     "forgejo-cli"
