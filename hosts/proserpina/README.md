@@ -282,8 +282,9 @@ Manual updates are included in `nup`; its scheduled log is
 the Nix profile's agent commands are available. The shared Nix launchers take
 precedence in Nushell's PATH and enter the project's Devenv environment before
 starting an agent.
-The Mac trusts Numtide's signed binary cache for these packages and uses Nix's
-explicit `--all` selector when upgrading the profile.
+The Mac trusts Numtide's signed binary cache through its system configuration.
+The [agent updater](../../modules/applications/coding-agents/README.md) installs
+all three agents as one generation without applying upstream flake settings.
 
 ## User files and state
 
