@@ -44,7 +44,7 @@ let
         (if pkgs.stdenv.hostPlatform.isDarwin then pkgs.ghostty-bin else pkgs.ghostty)
       ];
       etc = {
-        "xdg/ghostty/common".source = ./config-common;
+        "xdg/ghostty/common".source = "${./config-common}";
         "xdg/ghostty/theme".text = renderTheme { inherit lib pkgs; };
       };
     };

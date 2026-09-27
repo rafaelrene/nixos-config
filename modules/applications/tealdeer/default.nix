@@ -21,7 +21,7 @@ in
       };
     darwin.tealdeer = {
       imports = [ common ];
-      workstation.links.".config/tealdeer/config.toml" = toString ./config.toml;
+      workstation.links.".config/tealdeer/config.toml" = "${./config.toml}";
     };
   };
 }

@@ -34,7 +34,7 @@
             ]
           }"
           "${pkgs.bash}/bin/bash"
-          (toString ./install-files.sh)
+          "${./install-files.sh}"
           home
           (toString manifest)
           mode

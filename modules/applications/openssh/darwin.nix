@@ -16,7 +16,7 @@
         user
         "--"
         "${pkgs.python3}/bin/python3"
-        (toString ./ssh-keys.py)
+        "${./ssh-keys.py}"
         "--repo"
         "${config.workstation.checkout}/modules/applications/openssh"
         "--home"
@@ -36,7 +36,7 @@
       environment.systemPackages = [ pkgs.openssh ];
       services.openssh.enable = true;
       # OpenSSH rejects group-writable checkout files, even behind a symlink.
-      workstation.links.".ssh/config" = toString ./hosts.config;
+      workstation.links.".ssh/config" = "${./hosts.config}";
 
       # Run after existing preflight checks, before files or services are activated.
       # darwin-rebuild check also enters preActivation and must never provision keys.

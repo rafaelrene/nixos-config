@@ -69,8 +69,8 @@ in
       programs.zsh.enable = true;
       workstation.links = {
         ".config/nushell/config.nu" = toString nuConfig;
-        ".config/nushell/env.nu" = toString ./env.nu;
-        "Library/Application Support/nushell/env.nu" = toString ./env.nu;
+        ".config/nushell/env.nu" = "${./env.nu}";
+        "Library/Application Support/nushell/env.nu" = "${./env.nu}";
         "Library/Application Support/nushell/config.nu" = toString nuConfig;
       };
       # Keep ownership of the existing admin account with macOS.

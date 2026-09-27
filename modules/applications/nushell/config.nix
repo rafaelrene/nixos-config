@@ -44,7 +44,8 @@
             (toString zoxideNuHook)
             (toString devenvNuHook)
             (toString starshipNuHook)
-            (toString ./git-nav.nu)
+            # Retain the tree so git-nav's relative import of shell/scripts/git.nu works.
+            "${../..}/applications/nushell/git-nav.nu"
             (builtins.toJSON checkout)
             hostname
             (lib.toLower hostname)
