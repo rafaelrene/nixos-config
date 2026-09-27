@@ -65,7 +65,7 @@ commands use the configured checkout.
 See the [Proserpina guide](hosts/proserpina/README.md) for Mac setup and operation,
 and the [SSH guide](modules/applications/openssh/README.md) for key provisioning and recovery.
 Contributor constraints and validation commands live in [AGENTS.md](AGENTS.md).
-Use `devenv shell` for repository development; see [DEVELOPMENT.md](DEVELOPMENT.md).
+Use direnv for repository development; see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Forgejo CLI
 

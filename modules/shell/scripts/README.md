@@ -151,8 +151,9 @@ hidden rows. The picker shows these shortcuts:
 Confirmation defaults to Yes; enter `n` to cancel.
 An empty selection or declining confirmation deletes nothing. The current branch
 and worktree, the main worktree and its branch, and the default branch are
-excluded. The worktree containing this shell's `DEVENV_ROOT` is also excluded,
-even after changing directories: exit that devenv shell before deleting it.
+excluded. The worktree containing this shell's `DEVENV_ROOT` is also excluded.
+Change directories and let direnv unload before deleting it. If using an explicit
+devenv subshell, exit that shell first.
 This does not detect environments running in other terminals.
 The default comes from the locally recorded `origin/HEAD`, falling
 back to `main`, `master`, then the main worktree's branch.

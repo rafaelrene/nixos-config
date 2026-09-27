@@ -1,25 +1,19 @@
 # Development
 
-Run `devenv shell` from this checkout, or prefix an individual command with
-`devenv shell --`. Nix with flakes and devenv must already be installed; both
-workstation configurations provide them. The configured Nushell hook also
-supports automatic entry after `devenv allow` in this checkout.
+Run `direnv allow` once in each checkout or worktree. The configured Nushell
+pre-prompt hook then loads the development environment through `.envrc`, reloads
+it after configuration changes, and unloads it when you leave. Both workstation
+configurations provide Nix, devenv, direnv, and the `use devenv` integration.
+For a single command without interactive activation, use `devenv shell -- <command>`.
+See the [devenv guide](modules/applications/devenv/README.md) for setup and reload
+constraints.
 
 Neovim comes from the workstation configuration so its private Mason installer
 runtimes remain available inside the development shell.
 
-Both hosts patch devenv's Nushell reload helper to take the calling shell's
-reload path as an argument. Concurrent shells in one checkout can then share
-the generated helper without consuming each other's pending reloads. The patch
-lives beside `modules/applications/devenv/default.nix`; recheck it when updating
-devenv. After installing a changed devenv package, exit existing development
-shells and re-enter them to regenerate their shell hooks.
-
-A running devenv shell keeps watching the checkout where it started, even if
-you change directories. Exit it before removing that checkout or worktree;
 `git db` protects the worktree containing the calling shell's `DEVENV_ROOT`.
-If the checkout was already deleted and reload fails, run `exit`, change to a
-surviving checkout, and run `devenv shell` there.
+Change to a surviving checkout and let direnv unload before removing a worktree.
+This does not detect environments running in other terminals.
 
 `modules/development/default.nix` declares the repository's tools as a
 flake-parts feature exporting a native devenv module. Root `devenv.nix` evaluates
