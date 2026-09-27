@@ -20,8 +20,6 @@
     in
     if pkgs.stdenv.hostPlatform.isDarwin then
       package.overrideAttrs {
-        # The DMG contains a volume directory around the actual application.
-        sourceRoot = "Helium/Helium.app";
         dontFixup = true; # Preserve the signed Mac bundle.
       }
     else
