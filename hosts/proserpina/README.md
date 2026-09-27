@@ -6,17 +6,17 @@ Apple Silicon, user `rafael`, home `/Users/rafael`, checkout
 
 ## Scope
 
-| Feature            | macOS configuration                                                                                                             |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| Shell and runtimes | Nushell login shell, Starship, zoxide, Devenv and Node 24.                                                                      |
-| Editor             | Shared LazyVim configuration, theme, and private Mason installer runtimes.                                                      |
-| Git                | Shared configuration, Delta theme, ignores, and branch helpers.                                                                 |
-| Terminal           | Ghostty from Nix, shared palette, Mac Option key and quick-terminal settings.                                                   |
-| Desktop apps       | Nixpkgs, upstream flakes and brew-nix; no Homebrew installation required.                                                       |
-| Window management  | OmniWM scrolling columns, Option and Caps Lock shortcuts, and nine workspaces; workspace 1 is Work.                             |
-| Agents             | Shared rules, skills and themes; Codex, Claude Code and OpenCode use an independent rolling Nix profile. Pi comes from Nixpkgs. |
-| Mac helpers        | Chromium web launchers for Raycast.                                                                                             |
-| SSH                | Shared client configuration and all four managed keys; Remote Login trusts `proserpina.pub`. Uses the macOS SSH agent.          |
+| Feature            | macOS configuration                                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Shell and runtimes | Nushell login shell, Starship, zoxide, Devenv and Node 24.                                                             |
+| Editor             | Shared LazyVim configuration, theme, and private Mason installer runtimes.                                             |
+| Git                | Shared configuration, Delta theme, ignores, and branch helpers.                                                        |
+| Terminal           | Ghostty from Nix, shared palette, Mac Option key and quick-terminal settings.                                          |
+| Desktop apps       | Nixpkgs, upstream flakes and brew-nix; no Homebrew installation required.                                              |
+| Window management  | OmniWM scrolling columns, Option and Caps Lock shortcuts, and nine workspaces; workspace 1 is Work.                    |
+| Agents             | Shared rules, skills and themes; Codex, Claude Code and OpenCode use an independent rolling Nix profile.               |
+| Mac helpers        | Chromium web launchers for Raycast.                                                                                    |
+| SSH                | Shared client configuration and all four managed keys; Remote Login trusts `proserpina.pub`. Uses the macOS SSH agent. |
 
 The Mac does not import Niri, systemd services, the Linux SSH server, snapshots,
 or Othinus's network exposure rules. A separate launchd service runs T3Code on
@@ -24,24 +24,27 @@ or Othinus's network exposure rules. A separate launchd service runs T3Code on
 
 ## Package sources
 
-The system uses flake inputs. Package selection and overrides live in
-[packages.nix](../../modules/darwin/packages.nix).
+Applications live in [modules/applications](../../modules/applications/README.md).
+The shared profile selects common apps; Proserpina adds its Mac apps. Each app
+owns its package source, overrides, settings, and platform integration. The
+host keeps its own username, home directory, checkout, and Darwin Nixpkgs pin.
 
-| Source                                                         | Purpose                                                                          |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `nixpkgs` / `nixos-26.05`                                      | Othinus; pinned separately from the Mac base.                                    |
-| `nixpkgs-darwin` / `nixpkgs-26.05-darwin` and nix-darwin 26.05 | Stable Mac base, shell and development environment.                              |
-| `nixpkgs-unstable`                                             | Selected desktop apps and development tools, including OmniWM and Devenv.        |
-| `brew-nix` and `brew-api`                                      | Native Mac app releases, including MongoDB Compass, packaged as Nix derivations. |
-| Upstream flakes                                                | Zen, Helium and Try; independent profiles handle T3Code and agent tools.         |
-| `vendor-sources.json`                                          | Complete Google Drive and Viber app payloads with explicit versions and hashes.  |
+| Source                                                             | Purpose                                                                          |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `nixpkgs` / `nixos-26.05`                                          | Othinus; pinned separately from the Mac base.                                    |
+| `nixpkgs-darwin` / `nixpkgs-26.05-darwin` and nix-darwin 26.05     | Stable Mac base, shell and development environment.                              |
+| `nixpkgs-unstable`                                                 | Selected desktop apps and development tools, including OmniWM and Devenv.        |
+| `brew-nix` and `brew-api`                                          | Native Mac app releases, including MongoDB Compass, packaged as Nix derivations. |
+| Upstream flakes                                                    | Zen and Helium; independent profiles handle T3Code and agent tools.              |
+| [Vendor sources](../../modules/system/updates/vendor-sources.json) | Complete Google Drive and Viber app payloads with explicit versions and hashes.  |
 
-FreeTube and Ghostty use stable Nixpkgs packages. Homebrew is disabled;
+FreeTube, Ghostty, and mpv use stable Nixpkgs packages. mpv is the media player
+on both hosts. Homebrew is disabled;
 brew-nix reads cask metadata without running Brew.
 
 Thaw uses the signed **3.0.0-alpha.7** release for macOS 27, with its
 update channel set to `alpha`. Its archive and checksum are pinned in
-`modules/darwin/packages.nix`; update that override for later alpha releases.
+`modules/applications/thaw/default.nix`; update that override for later alpha releases.
 The alpha override is required for macOS 27 support. Telegram uses the native
 Mac client. Filen uses the signed vendor bundle to preserve its application
 identity and data location.
@@ -49,7 +52,7 @@ identity and data location.
 MongoDB Compass updates through the cask input. `bkt` uses official release
 binaries with the public OAuth client configuration. Update its version and
 platform hashes in
-[bitbucket.nix](../../modules/development/git/bitbucket.nix).
+[package.nix](../../modules/applications/bkt/package.nix).
 
 Raycast requires version 2.5.2 or later for its database schema. The package
 uses the signed upstream 2.5.2 archive when Nixpkgs is below that minimum;
@@ -90,7 +93,7 @@ Zen and check `profiles.ini` and `installs.ini` before changing browser data.
 
 Nix installs OmniWM's signed app, links a generated
 `~/.config/omniwm/settings.toml`, and starts it through a user launchd agent.
-Edit `modules/darwin/omniwm/settings.nix` and rebuild; the GUI cannot save over
+Edit `modules/applications/omniwm/settings.nix` and rebuild; the GUI cannot save over
 the Nix-store configuration. OmniWM's own update checks are disabled.
 
 All nine workspaces use independent horizontal scrolling columns. Workspace 1
@@ -118,24 +121,24 @@ only fire from Caps Lock; the left Control key still reaches apps. Caps Lock
 with a key OmniWM does not use reaches the app as Control plus that key.
 Caps + Control chords are impossible, so Caps-based moves use Shift.
 
-| Shortcut                    | Action                                                            |
-| --------------------------- | ----------------------------------------------------------------- |
-| Option + left/right         | Focus columns                                                     |
-| Option + down/up            | Focus windows upward/downward, then the adjacent workspace        |
-| Option + Shift + left/right | Move the whole column                                             |
-| Option + Shift + down/up    | Move the window upward/downward, then to the adjacent workspace   |
-| Option + 1–9                | Switch workspace; 1 is Work                                       |
-| Option + Shift + 1–9        | Move the focused column to a workspace                            |
-| Caps + Page Up/Down         | Previous/next workspace                                           |
-| Caps + Shift + Page Up/Down | Move the column to the previous/next workspace                    |
-| Caps + O                    | Overview across workspaces                                        |
-| Caps + R / Caps + Shift + R | Cycle column width forward/backward                               |
-| Caps + minus/equal          | Decrease/increase column width by 10%                             |
-| Caps + F                    | Toggle full-width column                                          |
-| Caps + Shift + F            | Toggle managed fullscreen without entering a native Space         |
-| Caps + V                    | Toggle floating                                                   |
-| Caps + Q                    | Close the focused window                                          |
-| Caps + [ / ]                | Consume a window into the column / expel it                       |
+| Shortcut                    | Action                                                          |
+| --------------------------- | --------------------------------------------------------------- |
+| Option + left/right         | Focus columns                                                   |
+| Option + down/up            | Focus windows upward/downward, then the adjacent workspace      |
+| Option + Shift + left/right | Move the whole column                                           |
+| Option + Shift + down/up    | Move the window upward/downward, then to the adjacent workspace |
+| Option + 1–9                | Switch workspace; 1 is Work                                     |
+| Option + Shift + 1–9        | Move the focused column to a workspace                          |
+| Caps + Page Up/Down         | Previous/next workspace                                         |
+| Caps + Shift + Page Up/Down | Move the column to the previous/next workspace                  |
+| Caps + O                    | Overview across workspaces                                      |
+| Caps + R / Caps + Shift + R | Cycle column width forward/backward                             |
+| Caps + minus/equal          | Decrease/increase column width by 10%                           |
+| Caps + F                    | Toggle full-width column                                        |
+| Caps + Shift + F            | Toggle managed fullscreen without entering a native Space       |
+| Caps + V                    | Toggle floating                                                 |
+| Caps + Q                    | Close the focused window                                        |
+| Caps + [ / ]                | Consume a window into the column / expel it                     |
 
 On the built-in keyboard, Fn+up/down supplies Page Up/Down. Three-finger
 horizontal swipes scroll columns; three-finger vertical swipes change
@@ -147,7 +150,7 @@ side-specific, and Control-click is right-click.
 Nix owns macOS's keyboard shortcut list (`com.apple.symbolichotkeys`). It
 disables Mission Control's Control+arrow shortcuts, desktop switching, and
 Spotlight's Command+Space so Raycast can use it. Shortcuts not listed in
-`modules/darwin/omniwm/default.nix` revert to macOS defaults. macOS
+`modules/applications/omniwm/default.nix` revert to macOS defaults. macOS
 applies changes at the next login.
 
 Keep one native macOS desktop and use the nine OmniWM workspaces. OmniWM only
@@ -168,7 +171,7 @@ thumbnails. Return to OmniWM's permission window to continue. These macOS
 permissions cannot be pre-granted by Nix. Leave OmniWM's separate “Start at
 Login” option off because launchd already owns startup.
 
-The complete schema snapshot in `modules/darwin/omniwm/defaults.json` comes
+The complete schema snapshot in `modules/applications/omniwm/defaults.json` comes
 from [OmniWM v0.7.1's canonical settings model](https://github.com/OmniNull/OmniWM/blob/v0.7.1/Sources/OmniWM/Core/Config/CanonicalTOMLConfig.swift).
 Upstream requires every hotkey
 action, even unassigned ones. A version assertion stops upgrades until that
@@ -211,7 +214,7 @@ and `nups` for updating then switching. Shells use `en_US.UTF-8` for `LANG` and
 `LC_ALL` so inherited macOS locale identifiers do not cause POSIX command warnings.
 Open a new shell after switching to load changed environment settings.
 `nup` refreshes stable Darwin and unstable
-Nixpkgs, nix-darwin, shared Rust/browser inputs, brew-nix/cask metadata and Try.
+Nixpkgs, nix-darwin, shared Rust/browser inputs and brew-nix/cask metadata.
 It refreshes the Google Drive/Viber manifest, updates and restarts T3Code, and
 updates all three rolling agent packages. Nix system packages take effect after `ns` or
 `nups`. Updating shared Rust and browser pins affects Othinus's next rebuild too.
@@ -291,11 +294,13 @@ with its path. Reconcile that destination before retrying.
 The installation manifest lives at `~/.local/state/nix-darwin/links.json`;
 stale links are removed only while they still point to their recorded target.
 
-Agent state uses XDG directories. When `~/.codex`, `~/.claude`, `~/.pi/agent`,
+Agent state uses XDG directories. When `~/.codex`, `~/.claude`,
 or `~/.t3` contains state, its XDG counterpart links to that directory.
 If both locations contain separate directories, activation stops rather than
 choosing one. Agent settings stored as real files are subject to the same
 conflict checks as other configuration.
+The Pi state alias remains recognized so stale managed links can be removed
+without changing existing Pi data; the Pi package is not installed.
 Codex's editable host settings live in `hosts/proserpina/codex.toml`; its theme
 is shared, while project trust paths belong to this Mac. Claude's Mac preferences
 live in `hosts/proserpina/claude.json`. Never copy credentials into the checkout.
@@ -310,14 +315,14 @@ installing `personal`, `bitbucket_work`, `othinus`, and `proserpina` in `~/.ssh`
 Unchanged keys need no prompt; differing existing keys are backed up before
 replacement. Cancelling or entering a wrong archive passphrase aborts activation
 before replacing keys. Builds and `darwin-rebuild check` do not provision keys.
-See the [SSH guide](../../modules/services/ssh/README.md) for recovery and rotation.
+See the [SSH guide](../../modules/applications/openssh/README.md) for recovery and rotation.
 The SSH client config links to a read-only Nix-store copy, since OpenSSH rejects
 a group-writable checkout file even through a symlink. Editing
-`modules/services/ssh/hosts.config` takes effect after `ns` on the Mac and
+`modules/applications/openssh/hosts.config` takes effect after `ns` on the Mac and
 immediately on Othinus, whose SSH config includes it from the checkout.
 Keep project secrets in external secret storage or the project environment.
 
-`modules/darwin/web-apps/apps.json` declares the Chromium web launchers by name
+`modules/applications/webapps/darwin-apps.json` declares the Chromium web launchers by name
 and URL. Nix generates individual launcher links in the real directory
 `~/.local/share/raycast/scripts`. Select that directory once in Raycast's Script
 Commands settings and remove obsolete script folders. Keep the directory itself

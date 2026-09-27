@@ -1,40 +1,22 @@
-{ pkgs, ... }:
+{ inputs, ... }:
+let
+  inherit (inputs.nixpkgs) lib;
+  development =
+    inputs.flake-parts.lib.mkFlake
+      {
+        inherit inputs;
+        self.outPath = ./.;
+      }
+      {
+        imports = [
+          inputs.flake-parts.flakeModules.modules
+        ]
+        ++ builtins.filter (path: lib.hasSuffix ".nix" (toString path)) (
+          lib.filesystem.listFilesRecursive ./modules/development
+        );
+        systems = [ ];
+      };
+in
 {
-  packages = with pkgs; [
-    # Nix itself comes from the host installation, which owns the daemon/store.
-    nixd
-    nixfmt
-    statix
-    deadnix
-
-    # Existing shell helpers, Nushell configuration, Lua config and Python tests.
-    bashInteractive
-    zsh
-    nushell
-    nufmt
-    lua
-    neovim-unwrapped
-    python3
-    shellcheck
-    shfmt
-    stylua
-    ruff
-    treefmt
-    taplo
-    prettier
-
-    # Repository maintenance and the utilities used by existing helpers.
-    git
-    ripgrep
-    jq
-    curl
-    coreutils
-    findutils
-    gawk
-    gnugrep
-    gnused
-    fzf
-    openssh
-    age
-  ];
+  imports = [ development.modules.devenv.development ];
 }

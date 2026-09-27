@@ -1,12 +1,14 @@
 # Only the SSH module’s declared source files and ciphertext belong here.
-/modules/services/ssh/*
-!/modules/services/ssh/default.nix
-!/modules/services/ssh/ssh-keys.py
-!/modules/services/ssh/config
-!/modules/services/ssh/hosts.config
-!/modules/services/ssh/*.pub
-!/modules/services/ssh/ssh-keys.age
-!/modules/services/ssh/README.md
+/modules/applications/openssh/*
+!/modules/applications/openssh/default.nix
+!/modules/applications/openssh/nixos.nix
+!/modules/applications/openssh/darwin.nix
+!/modules/applications/openssh/ssh-keys.py
+!/modules/applications/openssh/config
+!/modules/applications/openssh/hosts.config
+!/modules/applications/openssh/*.pub
+!/modules/applications/openssh/ssh-keys.age
+!/modules/applications/openssh/README.md
 __pycache__/
 
 # Local development state; devenv.lock is versioned.

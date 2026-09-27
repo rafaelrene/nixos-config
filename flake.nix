@@ -2,6 +2,11 @@
   description = "Declarative workstation configurations for Othinus and Proserpina";
 
   inputs = {
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
+      inputs.nixpkgs-lib.follows = "nixpkgs";
+    };
+
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     nixpkgs-darwin.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
@@ -23,14 +28,6 @@
         brew-api.follows = "brew-api";
       };
     };
-    try-rs = {
-      url = "github:tassiovirginio/try-rs";
-      inputs = {
-        nixpkgs.follows = "nixpkgs-darwin";
-        rust-overlay.follows = "rust-overlay";
-      };
-    };
-
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -48,22 +45,32 @@
   };
 
   outputs =
-    inputs@{ nixpkgs, ... }:
+    inputs:
     let
-      system = "x86_64-linux";
+      inherit (inputs.nixpkgs) lib;
+      featureFiles = lib.concatMap lib.filesystem.listFilesRecursive [
+        ./modules
+        ./hosts
+        ./profiles
+        ./themes
+      ];
     in
-    {
-      packages.${system}.t3code-nightly =
-        nixpkgs.legacyPackages.${system}.callPackage ./modules/applications/t3code/package/package.nix
-          { };
-      nixosConfigurations.othinus = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = { inherit inputs; };
-        modules = [ ./hosts/othinus/configuration.nix ];
-      };
-      darwinConfigurations.Proserpina = inputs.nix-darwin.lib.darwinSystem {
-        specialArgs = { inherit inputs; };
-        modules = [ ./hosts/proserpina/configuration.nix ];
-      };
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = [
+        inputs.flake-parts.flakeModules.modules
+      ]
+      ++ builtins.filter (
+        path:
+        lib.hasSuffix ".nix" (toString path)
+        && !(builtins.elem (builtins.baseNameOf path) [
+          "flake.nix"
+          "flake-template.nix"
+        ])
+      ) featureFiles;
+
+      systems = [
+        "x86_64-linux"
+        "aarch64-darwin"
+      ];
     };
 }

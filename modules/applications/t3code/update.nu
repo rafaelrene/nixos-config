@@ -1,6 +1,6 @@
 def packaged-version [file: path] {
     open --raw $file
-    | parse --regex '(?m)^  version = "(?<version>[^"]+)";'
+    | parse --regex '(?m)^\s+version = "(?<version>[^"]+)";'
     | get 0.version
 }
 

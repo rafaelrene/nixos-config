@@ -18,6 +18,10 @@ desktop, applications, development tools, and agent configuration for both machi
   locally; only encrypted secret bundles belong in Git.
 
 The [architecture decisions](adrs/) record the reasoning and accepted tradeoffs.
+All Nix configuration follows the dendritic pattern with flake-parts.
+The [module guide](modules/README.md) covers repository-wide composition;
+the [application guide](modules/applications/README.md) covers package ownership
+and host selection.
 
 ## Features
 
@@ -51,9 +55,22 @@ Pass a checkout path to use a worktree: `ns .` rebuilds the current directory,
 commands use the configured checkout.
 
 See the [Proserpina guide](hosts/proserpina/README.md) for Mac setup and operation,
-and the [SSH guide](modules/services/ssh/README.md) for key provisioning and recovery.
+and the [SSH guide](modules/applications/openssh/README.md) for key provisioning and recovery.
 Contributor constraints and validation commands live in [AGENTS.md](AGENTS.md).
 Use `devenv shell` for repository development; see [DEVELOPMENT.md](DEVELOPMENT.md).
+
+## Forgejo CLI
+
+Both machines install [Forgejo CLI](https://codeberg.org/forgejo-contrib/forgejo-cli)
+from Nixpkgs as `fj`. After rebuilding, run `fj version` to check the installed
+version and `fj auth login --host https://codeberg.org` to sign in. Substitute
+your own Forgejo instance URL as needed; credentials stay in the local user
+configuration, outside this repository.
+
+`nup` refreshes each machine's Nixpkgs pin; `ns` installs the pinned version.
+`nups` does both. Releases follow the configured stable Nixpkgs channels, so
+updates can lag behind upstream and the two machines can receive them at
+different times.
 
 ## Application launching
 

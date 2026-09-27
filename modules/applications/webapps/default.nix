@@ -1,38 +1,33 @@
-{ lib, pkgs, ... }:
-let
-  apps = {
-    oryx-zsa-voyager-keyboard-config = {
-      name = "Oryx (ZSA Voyager Keyboard Config)";
-      url = "https://configure.zsa.io/voyager";
-      keywords = [
-        "oryx"
-        "zsa"
-        "voyager"
-        "keyboard"
-        "config"
-      ];
-    };
-
-  };
-
-  # Desktop Exec quoting has different escape rules from shell quoting.
-  quoteExecArg =
-    value:
-    "\"${
-      lib.replaceStrings [ "\\" "\"" "`" "$" "%" ] [ "\\\\\\\\" "\\\\\"" "\\\\`" "\\\\$" "%%" ] value
-    }\"";
-
-  mkWebApp =
-    id: app:
-    pkgs.makeDesktopItem {
-      name = "webapp-${id}";
-      desktopName = "${app.name} Webapp";
-      exec = "/run/current-system/sw/bin/helium ${quoteExecArg "--app=${app.url}"}";
-      icon = if app ? icon then "${app.icon}" else "internet-web-browser";
-      keywords = app.keywords or [ ];
-      terminal = false;
-    };
-in
 {
-  environment.systemPackages = lib.mapAttrsToList mkWebApp apps;
+  flake.modules.darwin.webapps = { lib, pkgs, ... }: {
+    workstation.links =
+      let
+        apps = builtins.fromJSON (builtins.readFile ./darwin-apps.json);
+      in
+      lib.mapAttrs' (
+        name: url:
+        let
+          filename = lib.replaceStrings [ "/" ] [ "-" ] name;
+        in
+        {
+          name = ".local/share/raycast/scripts/${filename}";
+          value = toString (
+            pkgs.writeScript filename ''
+              #!/bin/sh
+              # @raycast.schemaVersion 1
+              # @raycast.title ${name}
+              # @raycast.mode silent
+              # @raycast.packageName Web Apps
+
+              exec ${
+                lib.escapeShellArgs [
+                  "/Applications/Nix Apps/Chromium.app/Contents/MacOS/Chromium"
+                  "--app=${url}"
+                ]
+              } "$@"
+            ''
+          );
+        }
+      ) apps;
+  };
 }
