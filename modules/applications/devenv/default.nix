@@ -17,23 +17,21 @@ let
     {
       environment.systemPackages = [ pkgs.devenv ];
       environment.etc."direnv/lib/devenv.sh".source = direnvrc;
+      # Share the release across hosts while preserving upstream cache identity.
+      nixpkgs.overlays = [
+        (_final: prev: {
+          inherit
+            (import inputs.nixpkgs-unstable {
+              system = prev.stdenv.hostPlatform.system;
+              config.allowUnfree = true;
+            })
+            devenv
+            ;
+        })
+      ];
     };
 in
 {
   flake.modules.nixos.devenv = common;
-  flake.modules.darwin.devenv = {
-    imports = [ common ];
-    # Darwin needs the newer package; keep its upstream binary cache identity.
-    nixpkgs.overlays = [
-      (_final: prev: {
-        inherit
-          (import inputs.nixpkgs-unstable {
-            system = prev.stdenv.hostPlatform.system;
-            config.allowUnfree = true;
-          })
-          devenv
-          ;
-      })
-    ];
-  };
+  flake.modules.darwin.devenv = common;
 }

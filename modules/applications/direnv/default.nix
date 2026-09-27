@@ -1,3 +1,4 @@
+{ inputs, ... }:
 let
   common = {
     programs.direnv = {
@@ -5,6 +6,16 @@ let
       # Devenv supplies use_devenv; nix-direnv's use_nix/use_flake are unnecessary.
       nix-direnv.enable = false;
     };
+    nixpkgs.overlays = [
+      (_final: prev: {
+        inherit
+          (import inputs.nixpkgs-unstable {
+            system = prev.stdenv.hostPlatform.system;
+          })
+          direnv
+          ;
+      })
+    ];
   };
 in
 {

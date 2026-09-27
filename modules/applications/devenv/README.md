@@ -1,9 +1,9 @@
 # Project environments
 
-Both hosts use stock devenv packages and direnv for interactive activation.
-Othinus uses its stable Nixpkgs package; Proserpina uses the independent unstable
-input. The shared Nushell configuration checks direnv before each prompt.
-No Rust source patch is applied to devenv.
+Both hosts use stock devenv and direnv packages from the same pinned
+`nixpkgs-unstable` input, keeping their versions aligned. The shared Nushell
+configuration checks direnv before each prompt. No Rust source patch is applied
+to devenv.
 
 ## Setup
 
