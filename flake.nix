@@ -60,12 +60,7 @@
         inputs.flake-parts.flakeModules.modules
       ]
       ++ builtins.filter (
-        path:
-        lib.hasSuffix ".nix" (toString path)
-        && !(builtins.elem (builtins.baseNameOf path) [
-          "flake.nix"
-          "flake-template.nix"
-        ])
+        path: lib.hasSuffix ".nix" (toString path) && builtins.baseNameOf path != "flake.nix"
       ) featureFiles;
 
       systems = [

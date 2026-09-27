@@ -77,6 +77,8 @@ in
               Type = "oneshot";
               ExecStart = lib.getExe agents.updater;
               TimeoutStartSec = "4h";
+              Restart = "on-failure";
+              RestartSec = "5m";
             };
           };
 
@@ -84,10 +86,9 @@ in
             description = "Update LLM agents daily";
             wantedBy = [ "timers.target" ];
             timerConfig = {
-              OnBootSec = "5m";
-              OnCalendar = "daily";
+              OnStartupSec = "1s";
+              OnCalendar = "*-*-* 04:30:00";
               Persistent = true;
-              RandomizedDelaySec = "30m";
             };
           };
         };

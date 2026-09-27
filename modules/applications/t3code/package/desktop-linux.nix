@@ -1,4 +1,7 @@
 { lib, ... }:
+let
+  release = builtins.fromJSON (builtins.readFile ./release.json);
+in
 {
   options.features.t3code.desktopLinuxPackage = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -10,13 +13,15 @@
       appimageTools,
       fetchurl,
       lib,
+      version ? release.version,
+      hash ? release.x86_64-linux.desktopHash,
     }:
     appimageTools.wrapType2 rec {
       pname = "t3code-desktop";
-      version = "0.0.43-nightly.20260918.1895";
+      inherit version;
       src = fetchurl {
         url = "https://github.com/pingdotgg/t3code/releases/download/v${version}/T3-Code-${version}-x86_64.AppImage";
-        hash = "sha256-h73VlZInR+4c9ywQN54czs/t1FGYX/T+SbEKViAds3k=";
+        inherit hash;
       };
       extraPkgs = pkgs: [ pkgs.libsecret ];
       extraBwrapArgs = [

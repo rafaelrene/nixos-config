@@ -1,4 +1,7 @@
 { lib, ... }:
+let
+  release = builtins.fromJSON (builtins.readFile ./release.json);
+in
 {
   options.features.t3code.serverPackage = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -14,6 +17,8 @@
       stdenv,
       stdenvNoCC,
       versionCheckHook,
+      version ? release.version,
+      hash ? release.${stdenv.hostPlatform.system}.serverHash,
     }:
     let
       isDarwin = stdenv.hostPlatform.isDarwin;
@@ -22,14 +27,10 @@
     in
     buildStdenv.mkDerivation (finalAttrs: {
       pname = "t3code-nightly";
-      version = "0.0.43-nightly.20260918.1895";
+      inherit version;
       src = fetchurl {
         url = "https://github.com/pingdotgg/t3code/releases/download/v${finalAttrs.version}/t3-${finalAttrs.version}-${platform}.tar.gz";
-        hash =
-          if isDarwin then
-            "sha256-drvAN/AVncwKPcwEMmUsyGCsQSJnHUfPk8agzq+wkf0="
-          else
-            "sha256-F6WPRkH51PZisYgzCzyJnmF5eivl0Rw30/e1m4vz6Jk=";
+        inherit hash;
       };
       nativeBuildInputs = lib.optional (!isDarwin) autoPatchelfHook ++ [ installShellFiles ];
       buildInputs = lib.optional (!isDarwin) stdenv.cc.cc.lib;

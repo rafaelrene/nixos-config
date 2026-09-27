@@ -1,100 +1,99 @@
-def packaged-version [file: path] {
-    open --raw $file
-    | parse --regex '(?m)^\s+version = "(?<version>[^"]+)";'
-    | get 0.version
+def prefetch-hash [url: string] {
+    ^nix store prefetch-file --json $url | from json | get hash
 }
 
-def main [settings_file: path] {
-    let settings = (open $settings_file)
-    $env.NIX_CONFIG = "experimental-features = nix-command flakes\naccept-flake-config = false"
-    cd $settings.state
-
-    # Preserve the staged version and make old store copies writable.
-    for file in [flake.nix package.nix desktop.nix] {
-        if not ($file | path exists) {
-            cp ($settings.source | path join $file) $file
-        }
-    }
-    ^chmod u+w flake.nix package.nix desktop.nix
-    if not (".git" | path exists) { ^git init -q }
-    ^git add flake.nix package.nix desktop.nix
-    if $settings.refreshInputs {
-        ^nix flake update --no-accept-flake-config
-    } else if not ("flake.lock" | path exists) {
-        ^nix flake lock --no-accept-flake-config
-    }
-    ^git add flake.lock
-
-    let current = (packaged-version package.nix)
-    let desktop_current = (packaged-version desktop.nix)
-    print $"T3 Code: checking the nightly channel \(packaged version: ($current)\)..."
-    let latest = try {
-        let version = ^curl --fail --silent --show-error --retry 3 https://registry.npmjs.org/t3
+def update [settings: record] {
+    print "T3 Code: checking the nightly channel..."
+    let version = (
+        ^curl --fail --silent --show-error --retry 3 https://registry.npmjs.org/t3
         | from json
         | get dist-tags.nightly
-        if ($version | describe) != string or ($version | is-empty) {
-            error make {msg: "The nightly channel did not return a version."}
-        }
-        $version
-    } catch {|error|
-        if not $settings.allowFallback { error make {msg: $error.msg} }
-        print --stderr $"Could not check the nightly channel; using packaged version ($current)."
-        $current
+    )
+    # These values become Nix string literals as well as release URLs.
+    if ($version | describe) != string or $version !~ '^\d+\.\d+\.\d+-nightly\.[0-9.]+$' {
+        error make {msg: "The nightly channel returned an invalid version."}
     }
 
-    if $latest != $current or $latest != $desktop_current {
-        print $"Updating T3 Code ($current) -> ($latest)"
-        try {
-            ^nix-update --flake --version $latest t3code-nightly
-            ^nix-update --flake --version $latest t3code-desktop
-        } catch {
-            ^git restore package.nix desktop.nix flake.lock
-            if not $settings.allowFallback {
-                error make {msg: "T3 Code: update failed; the installed generation is unchanged."}
-            }
-            print --stderr $"Nightly metadata is not buildable yet; retaining ($current)."
-        }
+    let metadata = $settings.profile | path join share t3code release.json
+    let installed = if ($metadata | path exists) { open $metadata } else { null }
+    let release = if $installed != null and $installed.version == $version {
+        $installed
     } else {
-        print "T3 Code: no newer nightly found."
+        let platform = if $settings.darwin { "darwin-arm64" } else { "linux-x64" }
+        let desktop = if $settings.darwin { "arm64.zip" } else { "x86_64.AppImage" }
+        let url = $"https://github.com/pingdotgg/t3code/releases/download/v($version)"
+        print $"T3 Code: downloading server and desktop ($version)..."
+        {
+            version: $version
+            serverHash: (prefetch-hash $"($url)/t3-($version)-($platform).tar.gz")
+            desktopHash: (prefetch-hash $"($url)/T3-Code-($version)-($desktop)")
+        }
+    }
+    for hash in [$release.serverHash $release.desktopHash] {
+        if $hash !~ '^sha256-[A-Za-z0-9+/]{43}=$' {
+            error make {msg: "Invalid T3 Code download hash."}
+        }
     }
 
-    print "T3 Code: building server and desktop (downloads and build logs follow)..."
-    let generation = try {
-        ^nix build --print-build-logs --no-link --print-out-paths --no-accept-flake-config .#default
+    let expression = $"($settings.bundle) { version = \"($version)\"; serverHash = \"($release.serverHash)\"; desktopHash = \"($release.desktopHash)\"; }"
+    let previous = try {
+        ^readlink -f $settings.profile | str trim
+    } catch { "" }
+    # Also notice recipe changes when the nightly version itself has not changed.
+    let expected = ^nix eval --raw --expr $"\(($expression)\).outPath"
+    if $expected == $previous {
+        print $"T3 Code: server and desktop ($version) are already installed."
+        return false
+    }
+
+    print $"T3 Code: building server and desktop ($version)..."
+    let generation = (
+        ^nix build --print-build-logs --no-link --print-out-paths --expr $expression
         | str trim
-    } catch {
-        ^git restore package.nix desktop.nix flake.lock
-        let installed = (^test -x ($settings.profile | path join bin t3) | complete)
-        if not $settings.allowFallback or $installed.exit_code != 0 {
-            error make {msg: "T3 Code: build failed; no new generation was installed."}
-        }
-        print --stderr "Nightly build failed; retaining the installed generation."
-        null
-    }
+    )
+    mkdir ($settings.profile | path dirname)
+    ^nix-env --profile $settings.profile --set $generation
+    print $"T3 Code: server and desktop ($version) installed."
+    true
+}
 
-    if $generation != null {
-        let previous = (
-            try {
-                ^readlink -f $settings.profile | str trim
-            } catch { "" }
-        )
-        if $generation != $previous {
-            mkdir ($settings.profile | path dirname)
-            ^nix-env --profile $settings.profile --set $generation
-            print "T3 Code: server and desktop staged."
-        } else {
-            print "T3 Code: server and desktop are already staged."
+def main [settings_file: path, --restart, --bootstrap] {
+    let settings = open $settings_file
+    let server = $settings.profile | path join bin t3
+    let changed = if $bootstrap and ($server | path exists) {
+        false
+    } else {
+        try {
+            update $settings
+        } catch {|error|
+            print --stderr $"T3 Code: update failed: ($error.msg)"
+            print --stderr "T3 Code: no server restart requested. The update can be retried."
+            exit 1
         }
-        ^git add package.nix desktop.nix flake.lock
     }
 
     if $settings.project != null {
         let marker = $settings.base | path join .nixos-config-registered
         if not ($marker | path exists) {
             ^install -d -m 0700 $settings.base
-            ^($settings.profile | path join bin t3) project add $settings.project --base-dir $settings.base
+            ^$server project add $settings.project --base-dir $settings.base
             touch $marker
         }
     }
-    print "T3 Code: update check complete. Reopen the desktop after restarting the server."
+
+    if $changed and $restart {
+
+        # Bootstrap may need this same lock when the server starts for the first time.
+        ^flock -u 9
+        print "T3 Code: restarting the server..."
+        if $settings.darwin {
+            let uid = ^id -u | str trim
+            ^($settings.restartCommand) kickstart -k $"gui/($uid)/org.nixos.t3code"
+        } else {
+            ^($settings.restartCommand) --user restart t3code.service
+        }
+        print "T3 Code: server restarted. Reopen the desktop to use the new client."
+    } else if $changed {
+        print "T3 Code: restart the server and reopen the desktop to use the new release."
+    }
 }

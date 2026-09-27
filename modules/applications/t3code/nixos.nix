@@ -30,10 +30,7 @@ in
       updateNow = pkgs.writeShellApplication {
         name = "t3-update-now";
         text = ''
-          ${lib.getExe updateT3Code}
-          echo "T3 Code: restarting the server..."
-          ${pkgs.systemd}/bin/systemctl --user restart t3code.service
-          echo "T3 Code: server restarted. Reopen the desktop to use the staged client."
+          exec ${lib.getExe updateT3Code} --restart
         '';
       };
 
@@ -112,7 +109,7 @@ in
             serviceConfig = {
               Type = "oneshot";
               RemainAfterExit = true;
-              ExecStart = lib.getExe updateT3Code;
+              ExecStart = "${lib.getExe updateT3Code} --bootstrap";
               TimeoutStartSec = "4h";
             };
           };

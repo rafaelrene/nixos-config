@@ -1,7 +1,4 @@
-{ config, lib, ... }:
-let
-  inherit (config) features;
-in
+{ inputs, lib, ... }:
 {
   options.features.t3code.update = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -18,14 +15,14 @@ in
     let
       darwin = pkgs.stdenv.hostPlatform.isDarwin;
       state = "${home}/.local/state/t3code-bundle-updater";
+      source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
       settings = pkgs.writeText "t3code-updater.json" (
         builtins.toJSON {
-          inherit state project;
-          source = features.t3code.updaterSource { inherit pkgs; };
+          inherit project darwin;
+          bundle = "(builtins.getFlake ${builtins.toJSON source}).legacyPackages.${pkgs.stdenv.hostPlatform.system}.t3codeForRelease";
           profile = "${home}/.local/state/nix/profiles/t3code";
           base = "${home}/.local/share/t3code";
-          refreshInputs = darwin;
-          allowFallback = !darwin;
+          restartCommand = if darwin then "/bin/launchctl" else "${pkgs.systemd}/bin/systemctl";
         }
       );
     in
@@ -34,9 +31,7 @@ in
       runtimeInputs = with pkgs; [
         coreutils
         curl
-        git
         nix
-        nix-update
         nushell
         (if darwin then flock else util-linux)
       ];
@@ -46,7 +41,7 @@ in
         exec 9>${lib.escapeShellArg "${state}/update.lock"}
         echo "T3 Code: waiting for any existing update to finish..."
         flock 9
-        exec nu --no-config-file ${./update.nu} ${settings}
+        exec nu --no-config-file ${./update.nu} ${settings} "$@"
       '';
     };
 }

@@ -16,17 +16,7 @@ in
       base = "${home}/.local/share/t3code";
       profile = "${home}/.local/state/nix/profiles/t3code";
       logs = "${home}/.local/state/nix-darwin";
-      initialServer = pkgs.callPackage features.t3code.serverPackage { };
-      initialDesktop = pkgs.callPackage features.t3code.desktopDarwinPackage { };
-      initial =
-        assert initialServer.version == initialDesktop.version;
-        pkgs.buildEnv {
-          name = "t3code-bootstrap";
-          paths = [
-            initialServer
-            initialDesktop
-          ];
-        };
+      initial = features.t3code.bundle { inherit pkgs; };
       updater = features.t3code.update { inherit lib pkgs home; };
       settings = features.t3code.settings { inherit lib pkgs home; };
       run = pkgs.writeShellApplication {
@@ -65,8 +55,7 @@ in
       updateNow = pkgs.writeShellApplication {
         name = "t3-update-now";
         text = ''
-          ${lib.getExe updater}
-          /bin/launchctl kickstart -k "gui/$(id -u)/org.nixos.t3code"
+          exec ${lib.getExe updater} --restart
         '';
       };
       restart = pkgs.writeShellApplication {

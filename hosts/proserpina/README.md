@@ -256,7 +256,8 @@ is already registered. The unmanaged
 environment without putting credentials in this repository.
 Launchd starts the server at login, restarts it on failure, checks for updates
 every three hours, and
-restarts it daily at 04:00. `nup` activates the new server immediately. Open
+restarts it daily at 04:00. When `nup` installs a changed bundle, it restarts the
+server immediately; failed or unchanged updates do not restart it. Open
 **T3 Code** in `/Applications/Nix Apps` for the client. Its launcher disables
 the embedded server and application self-updater while preserving other native
 preferences. Pair it with the local server using `t3 pair`; the connection is

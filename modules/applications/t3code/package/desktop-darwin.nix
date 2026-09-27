@@ -1,4 +1,7 @@
 { lib, ... }:
+let
+  release = builtins.fromJSON (builtins.readFile ./release.json);
+in
 {
   options.features.t3code.desktopDarwinPackage = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -11,13 +14,15 @@
       stdenvNoCC,
       fetchurl,
       unzip,
+      version ? release.version,
+      hash ? release.aarch64-darwin.desktopHash,
     }:
     stdenvNoCC.mkDerivation (finalAttrs: {
       pname = "t3code-desktop";
-      version = "0.0.43-nightly.20260918.1895";
+      inherit version;
       src = fetchurl {
         url = "https://github.com/pingdotgg/t3code/releases/download/v${finalAttrs.version}/T3-Code-${finalAttrs.version}-arm64.zip";
-        hash = "sha256-wntMuGTcI7o2hSsKoEaeCgzUvJbVxVVoqRG1467hR5M=";
+        inherit hash;
       };
       nativeBuildInputs = [ unzip ];
       sourceRoot = ".";

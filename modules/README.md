@@ -89,8 +89,8 @@ enable flags. Shared values need no `flake.lib` output.
 ## Entry points and assets
 
 `flake.nix` starts the workstation configuration. Root `devenv.nix` adapts the
-devenv CLI to the development feature. T3Code's generated `flake-template.nix`
-starts its independent rolling package configuration using flake-parts.
+devenv CLI to the development feature. T3Code's rolling updater calls this
+flake's shared package definitions with the selected release version and hashes.
 Entry points select and evaluate feature modules; they do not duplicate feature
 implementations.
 

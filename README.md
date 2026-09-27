@@ -50,6 +50,14 @@ Both configured shells provide `ns` to rebuild and switch, `nup` to update
 package sources and rolling tools, and `nups` to update and switch. Rolling
 tool updates can take effect independently of a system switch.
 
+T3 Code checks its nightly channel every three hours and prepares the server
+and desktop together. The server restarts daily at 04:00; `nup` restarts it only
+when it installs a changed bundle. Reopen the desktop to use the new client.
+Codex, Claude Code, and OpenCode update when user services start and daily at
+04:30, with failed agent updates retried at roughly five-minute intervals.
+See the [T3 Code guide](modules/applications/t3code/README.md) for package
+definitions, failure behavior, and rollback.
+
 Pass a checkout path to use a worktree: `ns .` rebuilds the current directory,
 `nup .` updates it, and `nups .` updates it then rebuilds. Without a path, these
 commands use the configured checkout.
