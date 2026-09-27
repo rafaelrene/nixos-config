@@ -5,6 +5,9 @@ Run `devenv shell` from this checkout, or prefix an individual command with
 workstation configurations provide them. The configured Nushell hook also
 supports automatic entry after `devenv allow` in this checkout.
 
+Neovim comes from the workstation configuration so its private Mason installer
+runtimes remain available inside the development shell.
+
 Both hosts patch devenv's Nushell reload helper to take the calling shell's
 reload path as an argument. Concurrent shells in one checkout can then share
 the generated helper without consuming each other's pending reloads. The patch

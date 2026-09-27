@@ -29,6 +29,13 @@
           pkgs.viu
           rustNightly
         ])
+      ]
+      ++ lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
+        # Nix's macOS SDK supplies libiconv separately; Mason builds outside stdenv.
+        "--suffix"
+        "LIBRARY_PATH"
+        ":"
+        (lib.makeLibraryPath [ pkgs.libiconv ])
       ];
     };
 }
