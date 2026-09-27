@@ -1,0 +1,54 @@
+{ config, lib, ... }:
+let
+  applications = [
+    "age"
+    "bat"
+    "bkt"
+    "btop"
+    "clang"
+    "coding-agents"
+    "curl"
+    "delta"
+    "devenv"
+    "eza"
+    "fd"
+    "forgejo-cli"
+    "fzf"
+    "gh"
+    "ghostty"
+    "git"
+    "git-branches"
+    "git-delete-branches"
+    "gnutar"
+    "helium"
+    "jq"
+    "lsof"
+    "mongodb-compass"
+    "mpv"
+    "neovim"
+    "nodejs"
+    "nushell"
+    "openssh"
+    "prun"
+    "ripgrep"
+    "starship"
+    "t3code"
+    "tailscale"
+    "tealdeer"
+    "unzip"
+    "webapps"
+    "wget"
+    "workstation-open"
+    "xz"
+    "yazi"
+    "yq-go"
+    "zip"
+    "zoxide"
+    "zen"
+  ];
+in
+{
+  flake.modules = lib.genAttrs [ "nixos" "darwin" ] (platform: {
+    common-applications.imports = map (name: config.flake.modules.${platform}.${name}) applications;
+  });
+}

@@ -1,26 +1,34 @@
-{
-  inputs,
-  lib,
-  pkgs,
-  ...
-}:
+{ config, ... }:
 let
-  theme = import ../../../themes { inherit lib pkgs; };
-  helium =
-    inputs.helium-browser.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs
-      (old: {
-        postFixup = (old.postFixup or "") + ''
-          ${lib.optionalString theme.dark ''wrapProgram $out/bin/helium --add-flags "--force-dark-mode"''}
-        '';
-      });
+  inherit (config) features;
+  common = { lib, pkgs, ... }: {
+    environment.systemPackages = [ (features.helium.package { inherit lib pkgs; }) ];
+  };
 in
 {
-  environment = {
-    systemPackages = [ helium ];
-    sessionVariables.BROWSER = "helium";
-    # The upstream Linux binary reads Chromium's system policy directory.
-    etc."chromium/policies/managed/theme.json".text = builtins.toJSON {
-      BrowserThemeColor = "#${theme.accentColor}";
-    };
+  flake.modules = {
+    nixos.helium =
+      { lib, pkgs, ... }:
+      let
+        theme = features.theme { inherit lib pkgs; };
+      in
+      {
+        imports = [ common ];
+        environment = {
+          sessionVariables.BROWSER = "helium";
+          # The upstream Linux binary reads Chromium's system policy directory.
+          etc."chromium/policies/managed/theme.json".text = builtins.toJSON {
+            BrowserThemeColor = "#${theme.accentColor}";
+          };
+        };
+        xdg.mime.defaultApplications = {
+          "text/html" = "helium.desktop";
+          "x-scheme-handler/http" = "helium.desktop";
+          "x-scheme-handler/https" = "helium.desktop";
+          "x-scheme-handler/about" = "helium.desktop";
+          "x-scheme-handler/unknown" = "helium.desktop";
+        };
+      };
+    darwin.helium = common;
   };
 }

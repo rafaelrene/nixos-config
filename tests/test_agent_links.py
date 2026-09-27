@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
-    "agent_links", ROOT / "modules/development/agents/agent-links.py"
+    "agent_links", ROOT / "modules/applications/coding-agents/agent-links.py"
 )
 agent_links = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(agent_links)

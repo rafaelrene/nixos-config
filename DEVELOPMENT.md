@@ -11,9 +11,18 @@ you change directories. Exit it before removing that checkout or worktree;
 If the checkout was already deleted and reload fails, run `exit`, change to a
 surviving checkout, and run `devenv shell` there.
 
-`devenv.nix` supplies the repository's tools on Linux and macOS. `devenv.lock`
-pins them independently of the system's `flake.lock`; use `devenv update` to
-update development tools. Nix builds supply their own declared build dependencies.
+`modules/development/default.nix` declares the repository's tools as a
+flake-parts feature exporting a native devenv module. Root `devenv.nix` evaluates
+that feature and hands the result to the CLI. `devenv.lock` pins development
+inputs independently of the system's `flake.lock`; use `devenv update` to update
+them. Nix builds supply their own declared build dependencies.
+
+Every non-entry-point Nix file is a flake-parts feature module. The root flake
+loads all `.nix` feature files under `modules/`, `hosts/`, `profiles/`, and
+`themes/`, regardless of filename. Package factories and configuration helpers
+use typed feature options in the same outer configuration. See the
+[module guide](modules/README.md) for composition and the
+[application guide](modules/applications/README.md) for package ownership.
 
 ## Formatting, lint and tests
 
@@ -52,7 +61,7 @@ small process wrappers in Bash when Nushell would add no value. Share portable
 logic beside the feature, with service integration in the platform modules.
 
 The local Raycast destination extension is built and checked by its Nix package.
-For an editing loop in `modules/darwin/destinations/raycast`, run `npm ci`, then
+For an editing loop in `modules/applications/raycast/destinations/raycast`, run `npm ci`, then
 `npm run build`, `npm run typecheck` and `npm run lint`. The build writes `dist/`
 without installing into the running Raycast. Format its TypeScript and JSON
 with Prettier. No `ray develop` process is needed for system installation.

@@ -121,7 +121,7 @@ shell. Other Git subcommands run normally. Rebuild the system and start a fresh
 Nushell to load it. To try the module from this checkout without rebuilding:
 
 ```nu
-use ./modules/shell/nushell/git-nav.nu *
+use ./modules/applications/nushell/git-nav.nu *
 git nav
 ```
 

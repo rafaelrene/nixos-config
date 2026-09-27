@@ -1,0 +1,7 @@
+# This file is linked from ~/.ssh/config. Edits there are edits to this checkout.
+Include ~/.ssh/hosts.config
+
+# Keep defaults last: OpenSSH uses the first value found for each option.
+Host *
+  # Use the NixOS agent even in processes started before the agent migration.
+  IdentityAgent /run/user/%i/ssh-agent

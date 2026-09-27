@@ -8,6 +8,7 @@ departing from a decision.
 
 ## Working principles
 
+- All Nix configuration in this repository must follow the dendritic pattern and use flake-parts.
 - Unless explicitly instructed otherwise, all changes apply to every machine
   managed by this repository.
 - Convenience first: declare workstation changes here and apply them through
