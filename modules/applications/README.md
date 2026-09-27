@@ -75,6 +75,12 @@ Platform services stay with their application as systemd or launchd definitions.
 uses the host's Nixpkgs package. T3Code and coding agents retain their independent
 rolling profiles; see [ADR 0007](../../adrs/0007-rolling-tool-profiles.md).
 
+On both hosts, `update-llm-agents` prefetches Numtide's latest flake source and
+passes its path and hash to a shared Nix bundle factory. It loads the packages
+without applying upstream `nixConfig`; cache trust stays in the system
+configuration. The agents install together after a successful build. See the
+[coding-agent update guide](coding-agents/README.md) for operation and rollback.
+
 Neovim's package wrapper provides Lazygit, Viu, Tree-sitter, and Mason's helper
 runtimes on its private PATH. They are not separate globally selected apps.
 Build dependencies and command `runtimeInputs` also stay with their consumer.
