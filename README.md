@@ -50,6 +50,9 @@ Both configured shells provide `ns` to rebuild and switch, `nup` to update
 package sources and rolling tools, and `nups` to update and switch. Rolling
 tool updates can take effect independently of a system switch.
 
+In Nushell, `fg` aliases `job unfreeze` to resume the latest job suspended with
+Ctrl+Z; use `job list` to inspect jobs.
+
 T3 Code checks its nightly channel every three hours and prepares the server
 and desktop together. The server restarts daily at 04:00; `nup` restarts it only
 when it installs a changed bundle. Reopen the desktop to use the new client.
