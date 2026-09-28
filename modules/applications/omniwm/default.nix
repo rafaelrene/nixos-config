@@ -15,7 +15,21 @@ in
         system = pkgs.stdenv.hostPlatform.system;
         config.allowUnfree = true;
       };
-      package = unstable.omniwm;
+      # 0.7.2+ preserves window PIDs when macOS supplies invalid app metadata.
+      # Without this fix, focusing T3 Code can clear OmniWM's focus highlight.
+      package =
+        if lib.versionOlder unstable.omniwm.version "0.7.3" then
+          unstable.omniwm.overrideAttrs (
+            finalAttrs: _: {
+              version = "0.7.3";
+              src = pkgs.fetchurl {
+                url = "https://github.com/OmniNull/OmniWM/releases/download/v${finalAttrs.version}/OmniWM-v${finalAttrs.version}.zip";
+                hash = "sha256-u5nDoWynF45a6A+EN3x5I8tP+jZC2A1GFXGxlT1Q9d8=";
+              };
+            }
+          )
+        else
+          unstable.omniwm;
       home = config.users.users.${config.system.primaryUser}.home;
       settings = features.omniwm.settings { inherit lib pkgs; };
       # IDs in com.apple.symbolichotkeys.
@@ -43,8 +57,8 @@ in
 
       assertions = [
         {
-          assertion = package.version == "0.7.1";
-          message = "OmniWM's complete settings schema is version-specific. Refresh modules/applications/omniwm/defaults.json and validate settings.nix before upgrading from 0.7.1.";
+          assertion = package.version == "0.7.3";
+          message = "OmniWM's complete settings schema is version-specific. Refresh modules/applications/omniwm/defaults.json and validate settings.nix before upgrading from 0.7.3.";
         }
       ];
 

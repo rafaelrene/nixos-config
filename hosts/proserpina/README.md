@@ -172,7 +172,10 @@ permissions cannot be pre-granted by Nix. Leave OmniWM's separate “Start at
 Login” option off because launchd already owns startup.
 
 The complete schema snapshot in `modules/applications/omniwm/defaults.json` comes
-from [OmniWM v0.7.1's canonical settings model](https://github.com/OmniNull/OmniWM/blob/v0.7.1/Sources/OmniWM/Core/Config/CanonicalTOMLConfig.swift).
+from [OmniWM v0.7.3's canonical settings model](https://github.com/OmniNull/OmniWM/blob/v0.7.3/Sources/OmniWM/Core/Config/CanonicalTOMLConfig.swift).
+The package uses the signed 0.7.3 release while Nixpkgs is older. This includes
+the [window process identity fix](https://github.com/OmniNull/OmniWM/commit/b9e24dfa2b9272bda6ff3d1f5e006de6d3120ef7)
+needed when macOS reports an invalid application PID during T3 Code focus changes.
 Upstream requires every hotkey
 action, even unassigned ones. A version assertion stops upgrades until that
 snapshot and the generated configuration have been checked against the new
