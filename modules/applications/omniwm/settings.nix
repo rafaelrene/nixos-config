@@ -17,9 +17,9 @@
         blue = lib.fromHexString (builtins.substring 4 2 hex) / 255.0;
         alpha = 1.0;
       };
-      # default.nix remaps Caps Lock to Right Control. The built-in keyboard has no
-      # Right Control, so these side-specific chords only fire from Caps Lock.
-      caps = "Right Control";
+      # default.nix maps Caps Lock to F18, which OmniWM uses as Hyper. Exclude Shift
+      # so Caps+Shift actions stay distinct, and leave plain Control to apps.
+      caps = "Hyper";
       bindings = {
         "focus.left" = "Option+Left Arrow";
         "focus.right" = "Option+Right Arrow";
@@ -36,7 +36,7 @@
         "switchWorkspace.next" = "${caps}+PageDown";
         "moveColumnToWorkspaceUp" = "${caps}+Shift+PageUp";
         "moveColumnToWorkspaceDown" = "${caps}+Shift+PageDown";
-        "toggleOverview" = "${caps}+O";
+        "toggleOverview" = "Option+0";
         "closeFocusedWindow" = "${caps}+Q";
         "cycleSizeForward" = "${caps}+R";
         "cycleSizeBackward" = "${caps}+Shift+R";
@@ -66,11 +66,12 @@
       builtins.attrNames bindings
     )) "An OmniWM shortcut refers to an unknown action in defaults.json";
     lib.recursiveUpdate defaults {
-      # OmniWM's own Caps Lock trigger stays off; default.nix remaps the key.
       general = {
         animationsEnabled = false;
         updateChecksEnabled = false;
         ipcEnabled = true;
+        systemHyperTrigger = "F18";
+        hyperKeyModifiers = "Control+Option+Command";
       };
       gaps = {
         size = 2.0;
