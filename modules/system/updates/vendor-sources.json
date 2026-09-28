@@ -4,6 +4,11 @@
     "url": "https://dl.google.com/drive-file-stream/5-percent/GoogleDrive.dmg",
     "hash": "sha256-127TimP0GlCijXJtTvtacgaKXrLYb+ugsE4svDG8uxo="
   },
+  "omniwm": {
+    "version": "0.7.3",
+    "url": "https://github.com/OmniNull/OmniWM/releases/download/v0.7.3/OmniWM-v0.7.3.zip",
+    "hash": "sha256-u5nDoWynF45a6A+EN3x5I8tP+jZC2A1GFXGxlT1Q9d8="
+  },
   "viber": {
     "version": "28.10.0",
     "url": "https://download.viber.com/desktop/mac_arm/update/update.zip",

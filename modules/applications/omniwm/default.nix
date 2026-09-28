@@ -15,7 +15,14 @@ in
         system = pkgs.stdenv.hostPlatform.system;
         config.allowUnfree = true;
       };
-      package = unstable.omniwm;
+      sources = builtins.fromJSON (builtins.readFile ../../system/updates/vendor-sources.json);
+      # Reuse Nixpkgs' signed-bundle packaging with the upstream release from nup.
+      package = unstable.omniwm.overrideAttrs {
+        inherit (sources.omniwm) version;
+        src = pkgs.fetchurl {
+          inherit (sources.omniwm) url hash;
+        };
+      };
       home = config.users.users.${config.system.primaryUser}.home;
       settings = features.omniwm.settings { inherit lib pkgs; };
       # IDs in com.apple.symbolichotkeys.
@@ -41,13 +48,6 @@ in
     {
       environment.systemPackages = [ package ];
 
-      assertions = [
-        {
-          assertion = package.version == "0.7.1";
-          message = "OmniWM's complete settings schema is version-specific. Refresh modules/applications/omniwm/defaults.json and validate settings.nix before upgrading from 0.7.1.";
-        }
-      ];
-
       workstation.links.".config/omniwm/settings.toml" = toString (
         (pkgs.formats.toml { }).generate "omniwm-settings.toml" settings
       );
@@ -55,6 +55,8 @@ in
       launchd.user.agents.omniwm.serviceConfig = {
         # Use the installed, signed copy so macOS permissions have a stable app path.
         ProgramArguments = [ "/Applications/Nix Apps/OmniWM.app/Contents/MacOS/OmniWM" ];
+        # A package change must change the plist so nix-darwin reloads the agent.
+        EnvironmentVariables.OMNIWM_PACKAGE = toString package;
         RunAtLoad = true;
         KeepAlive.Crashed = true;
         ProcessType = "Interactive";

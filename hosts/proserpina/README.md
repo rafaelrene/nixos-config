@@ -33,10 +33,10 @@ host keeps its own username, home directory, checkout, and Darwin Nixpkgs pin.
 | ------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
 | `nixpkgs` / `nixos-26.05`                                          | Othinus; pinned separately from the Mac base.                                    |
 | `nixpkgs-darwin` / `nixpkgs-26.05-darwin` and nix-darwin 26.05     | Stable Mac base, shell and development environment.                              |
-| `nixpkgs-unstable`                                                 | Selected desktop apps and development tools, including OmniWM and Devenv.        |
+| `nixpkgs-unstable`                                                 | Selected desktop apps and development tools, including Devenv; OmniWM's packaging recipe. |
 | `brew-nix` and `brew-api`                                          | Native Mac app releases, including MongoDB Compass, packaged as Nix derivations. |
 | Upstream flakes                                                    | Zen and Helium; independent profiles handle T3Code and agent tools.              |
-| [Vendor sources](../../modules/system/updates/vendor-sources.json) | Complete Google Drive and Viber app payloads with explicit versions and hashes.  |
+| [Vendor sources](../../modules/system/updates/vendor-sources.json) | Google Drive, OmniWM and Viber app archives with explicit versions and hashes.   |
 
 FreeTube, Ghostty, and mpv use stable Nixpkgs packages. mpv is the media player
 on both hosts. Homebrew is disabled;
@@ -172,11 +172,18 @@ permissions cannot be pre-granted by Nix. Leave OmniWM's separate “Start at
 Login” option off because launchd already owns startup.
 
 The complete schema snapshot in `modules/applications/omniwm/defaults.json` comes
-from [OmniWM v0.7.1's canonical settings model](https://github.com/OmniNull/OmniWM/blob/v0.7.1/Sources/OmniWM/Core/Config/CanonicalTOMLConfig.swift).
-Upstream requires every hotkey
-action, even unassigned ones. A version assertion stops upgrades until that
-snapshot and the generated configuration have been checked against the new
-release; otherwise a rejected file can silently start with upstream defaults.
+from [OmniWM v0.7.3's canonical settings model](https://github.com/OmniNull/OmniWM/blob/v0.7.3/Sources/OmniWM/Core/Config/CanonicalTOMLConfig.swift).
+`nup` checks GitHub's latest stable OmniWM release independently of the version
+in Nixpkgs. The vendor-source manifest records its version, permanent signed app
+archive URL and SHA-256 checksum; `ns` builds from that recorded release.
+There is no version fallback or version assertion. Upstream requires
+every hotkey action, even unassigned ones; if a release changes that schema,
+update the defaults snapshot and generated settings to match.
+
+The launch agent includes the package's Nix store path in `OMNIWM_PACKAGE`.
+This makes its plist change when the package changes, so `ns`/`nups` reload
+OmniWM automatically while retaining its stable application path for macOS
+permissions. `nup` alone updates package sources; `ns` installs them.
 
 ## Prerequisites and activation
 
@@ -215,11 +222,12 @@ and `nups` for updating then switching. Shells use `en_US.UTF-8` for `LANG` and
 Open a new shell after switching to load changed environment settings.
 `nup` refreshes stable Darwin and unstable
 Nixpkgs, nix-darwin, shared Rust/browser inputs and brew-nix/cask metadata.
-It refreshes the Google Drive/Viber manifest, updates and restarts T3Code, and
+It refreshes the Google Drive/OmniWM/Viber manifest, updates and restarts T3Code, and
 updates all three rolling agent packages. Nix system packages take effect after `ns` or
 `nups`. Updating shared Rust and browser pins affects Othinus's next rebuild too.
 Failures stop the command and are reported; a failed update does not switch the
-system. Close and reopen desktop applications to use updated versions.
+system. OmniWM restarts automatically when its package changes during a switch.
+Close and reopen other desktop applications to use updated versions.
 
 Writing Proton Drive's sandboxed
 updater preferences requires Full Disk Access; sudo alone does not grant it.

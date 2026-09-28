@@ -7,7 +7,7 @@
   config.features.omniwm.settings =
     { lib, pkgs }:
     let
-      # Complete defaults from OmniWM v0.7.1's SettingsExport/CanonicalTOMLConfig.
+      # Complete defaults from OmniWM v0.7.3's SettingsExport/CanonicalTOMLConfig.
       # Its strict schema requires every action, including unassigned hotkeys.
       defaults = builtins.fromJSON (builtins.readFile ./defaults.json);
       theme = config.features.theme { inherit lib pkgs; };

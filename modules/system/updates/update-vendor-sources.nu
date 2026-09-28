@@ -1,5 +1,5 @@
-# These vendors overwrite download URLs. Inspect both complete app payloads
-# before publishing their versions and hashes together.
+# Google Drive and Viber overwrite download URLs, so inspect their app payloads.
+# OmniWM publishes versioned archives with checksums in GitHub release metadata.
 def --wrapped checked [command: string, ...args: string] {
     let result = run-external $command ...$args | complete
     if $result.exit_code != 0 {
@@ -8,12 +8,33 @@ def --wrapped checked [command: string, ...args: string] {
     $result.stdout
 }
 
+def latest-omniwm [] {
+    let release = http get https://api.github.com/repos/OmniNull/OmniWM/releases/latest
+    let asset = $release.assets | where name == $"OmniWM-($release.tag_name).zip" | first
+    let hash = (checked
+        nix
+        hash
+        convert
+        --hash-algo
+        sha256
+        --to
+        sri
+        ($asset.digest | str replace 'sha256:' '')
+    ) | str trim
+    {
+        version: ($release.tag_name | str replace --regex '^v' '')
+        url: $asset.browser_download_url
+        hash: $hash
+    }
+}
+
 def main [checkout: string] {
     let sources = $checkout | path join "modules/system/updates/vendor-sources.json"
     let manifest = (open $sources)
     let workspace = (mktemp --directory)
 
     try {
+        let omniwm = latest-omniwm
         let downloads = ([
       [name extension];
       [google-drive dmg]
@@ -59,6 +80,7 @@ def main [checkout: string] {
         let updated = ($manifest
       | update google-drive.version $google_version
       | update google-drive.hash $google.hash
+      | upsert omniwm $omniwm
       | update viber.version $viber_version
       | update viber.hash $viber.hash)
         if $updated != $manifest {
@@ -76,7 +98,7 @@ def main [checkout: string] {
             }
             rm --force $staged
         }
-        print $"Pinned Google Drive ($google_version) and Viber ($viber_version)."
+        print $"Pinned Google Drive ($google_version), OmniWM ($omniwm.version) and Viber ($viber_version)."
     } catch {|err|
         rm --recursive --force $workspace
         error make $err

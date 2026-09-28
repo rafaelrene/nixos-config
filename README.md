@@ -49,6 +49,8 @@ sudo nixos-rebuild switch --flake /data/code/nixos-config#othinus
 Both configured shells provide `ns` to rebuild and switch, `nup` to update
 package sources and rolling tools, and `nups` to update and switch. Rolling
 tool updates can take effect independently of a system switch.
+On Proserpina, `nup` selects OmniWM's latest stable upstream release; `ns` or
+`nups` installs it and automatically restarts OmniWM when its package changes.
 
 In Nushell, `fg` aliases `job unfreeze` to resume the latest job suspended with
 Ctrl+Z; use `job list` to inspect jobs.
