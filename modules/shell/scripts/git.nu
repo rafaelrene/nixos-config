@@ -20,6 +20,7 @@ export def worktrees [directory: string] {
         path: ($fields | first | str substring 9.. | path expand)
         branch: ($fields | where {|field| $field starts-with "branch refs/heads/" } | str join | str replace "branch refs/heads/" "")
         head: ($fields | where {|field| $field starts-with "HEAD " } | str join | str replace "HEAD " "")
+        locked: ($fields | any {|field| $field == "locked" or ($field starts-with "locked ") })
       }
     }
   )

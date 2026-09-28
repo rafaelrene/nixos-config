@@ -32,15 +32,19 @@ def candidate [row: record, base: string, devenv: string] {
         print --stderr $"Keeping active devenv worktree: ($row.path | to json --raw) \(exit devenv before deleting it\)."
         return null
     }
-    let status = if $row.path == "" { {exit_code: 0, stdout: ""} } else {
-        ^git -C $row.path status --porcelain --untracked-files=normal --ignore-submodules=none | complete
+    let reason = if $row.locked { "Worktree is locked." } else if $row.path == "" { "" } else {
+        try {
+            removal-options $row.path | ignore
+            ""
+        } catch {|error| $error.msg }
     }
-    let status = if $status.exit_code != 0 { "UNKNOWN" } else if $status.stdout != "" {
-        "DIRTY"
+    let status = if $row.locked { "LOCKED" } else if $reason != "" {
+        if ($reason | str starts-with "Uncommitted changes") { "DIRTY" } else { "BLOCKED" }
     } else if (is-merged $row.head $base) { "merged" } else { "UNMERGED" }
+    let reason = if $status == "UNMERGED" { "Commits are not merged into the default reference." } else { $reason }
     let name = if $row.branch == "" { $"\(detached ($row.head | str substring 0..7)\)" } else { $row.branch }
     let location = if $row.path == "" { "" } else { $"  worktree: ($row.path | to json --raw)" }
-    $row | insert label $"($name) [($status)]($location)"
+    $row | merge {label: $"($name) [($status)]($location)", reason: $reason, force: false}
 }
 
 def require-clean [directory: string] {
@@ -97,6 +101,133 @@ def removal-options [directory: string] {
     if ($modules | is-not-empty) or $has_private_modules { [--force] } else { [] }
 }
 
+# Restart after selection changes, preserving the focused row and hidden selections.
+# Only numeric row IDs enter fzf actions; labels and queries remain data.
+def pick-entries [entries: list<any>, base: string] {
+    mut rows = $entries
+    mut selected = $rows | enumerate | where item.reason == "" | get index
+    mut query = ""
+    mut focus = 0
+    loop {
+        let labels = ($rows | enumerate | each {|row|
+            let mode = if $row.item.force { "[FORCE] " } else { "" }
+            let reason = if $row.item.reason == "" { "" } else { $"  ($row.item.reason)" }
+            $"($row.index)\t($mode)($row.item.label)($reason)"
+        } | str join (char nul))
+        let restore = (
+            $selected
+            | each {|id| $"pos\(($id + 1)\)+select" }
+            | append $"pos\(($focus + 1)\)"
+            | str join '+'
+        )
+        let result = (with-env {FZF_DEFAULT_OPTS: '', FZF_DEFAULT_OPTS_FILE: '', GIT_DB_QUERY: $query} {
+            ($labels | ^fzf --multi --sync --read0 --print0 --print-query --layout=reverse --track
+                --delimiter "\t" --with-nth 2.. --with-shell 'bash -c' --prompt 'Delete> '
+                --header $"Tab cycle state | Shift-Tab reverse | Ctrl-F force required | Ctrl-A all | Ctrl-D clear | Enter review | Esc cancel\nStates: unselected > selected > FORCE. Arrows move. Search keeps hidden selections.\nFORCE discards changes, locks and submodule history. UNMERGED compares with ($base)."
+                --bind $"load:clear-selection+($restore)+transform-query\(printf '%s' \"$GIT_DB_QUERY\"\)+end-of-line"
+                --bind 'tab:transform:id={1}; if [ -n "$id" ]; then printf "print(next:%s:%s)+accept" "$id" "$FZF_SELECT_COUNT"; fi'
+                --bind 'btab:transform:id={1}; if [ -n "$id" ]; then printf "print(previous:%s:%s)+accept" "$id" "$FZF_SELECT_COUNT"; fi'
+                --bind 'ctrl-d:print(clear)+accept,esc:abort'
+                --bind 'ctrl-a:print(all)+accept'
+                --bind 'ctrl-f:transform:id={1}; printf "print(force:%s:%s)+accept" "$id" "$FZF_SELECT_COUNT"'
+                --bind 'enter:transform:if [ "$FZF_SELECT_COUNT" -gt 0 ]; then echo "print(delete)+accept"; else echo abort; fi'
+                | complete)
+        })
+        if $result.exit_code == 130 { return [] }
+        if $result.exit_code not-in [0 1] { error make {msg: $result.stderr} }
+        let output = $result.stdout | split row (char nul)
+        if ($output | length) < 2 { return [] }
+        $query = $output.0
+        if $output.1 == "clear" {
+            $selected = []
+            $rows = ($rows | update force false)
+            continue
+        }
+        if $output.1 == "all" {
+            $selected = $rows | enumerate | get index
+            $query = ""
+            continue
+        }
+        let action = $output.1 | split row ':'
+        $selected = ($output | skip 2 | where {|line| $line != "" } | each {|line|
+            $line | split row "\t" | first | into int
+        })
+        if $action.0 == "delete" {
+            let entries = $rows
+            return ($selected | each {|id| $entries | get $id })
+        }
+        # With zero selections, fzf accepts the focused row as a fallback.
+        if ($action.2 | into int) == 0 { $selected = [] }
+        if $action.1 != "" { $focus = $action.1 | into int }
+        if $action.0 == "force" {
+            let required = $rows | enumerate | where item.reason != ""
+            let selection = $selected
+            let force = not (
+                $required
+                | all {|row| $row.item.force and $row.index in $selection }
+            )
+            let ids = $required | get index
+            $rows = ($rows | each {|row|
+                if $row.reason != "" { $row | update force $force } else { $row }
+            })
+            $selected = if $force {
+                $selected | append $ids | uniq
+            } else {
+                $selected | where {|id| $id not-in $ids }
+            }
+            continue
+        }
+        let id = $focus
+        let row = $rows | get $id
+        let state = if $id not-in $selected { 0 } else if $row.force { 2 } else { 1 }
+        let step = if $action.0 == "next" { 1 } else { 2 }
+        let state = ($state + $step) mod 3
+        $rows = ($rows | update $id ($row | update force ($state == 2)))
+        $selected = ($selected | where {|selected| $selected != $id })
+        if $state != 0 { $selected = ($selected | append $id) }
+    }
+}
+
+# Worktree directories are independent; branch deletion later stays serial because
+# Git also updates the shared repository config when deleting a branch.
+def remove-worktree [row: record] {
+    if not $row.force {
+        if $row.reason != "" {
+            print --stderr $"Skipped ($row.label): ($row.reason) Use Tab to select FORCE, or Ctrl-F to force all blocked entries."
+            return "skipped"
+        }
+        if $row.branch != "" and ((^git rev-parse --verify $"refs/heads/($row.branch)" | complete).stdout | str trim) != $row.head {
+            print --stderr $"Skipped changed branch: ($row.branch)"
+            return "skipped"
+        }
+    }
+    if $row.path == "" { return "ready" }
+    let options = if $row.force { [--force --force] } else {
+        let head = (^git -C $row.path rev-parse --verify HEAD | complete).stdout | str trim
+        let branch = (
+            (^git -C $row.path symbolic-ref --quiet --short HEAD | complete).stdout
+            | str trim
+        )
+        if $head != $row.head or $branch != $row.branch {
+            print --stderr $"Skipped changed worktree: ($row.path | to json --raw)"
+            return "skipped"
+        }
+        let options = (try { removal-options $row.path } catch {|error|
+            print --stderr $"Skipped ($row.path | to json --raw): ($error.msg)"
+            null
+        })
+        if $options == null { return "skipped" }
+        $options
+    }
+    let removed = (^git worktree remove ...$options -- $row.path | complete)
+    if $removed.exit_code != 0 {
+        print --stderr $"Failed removing ($row.path | to json --raw): ($removed.stderr | str trim)"
+        return "failed"
+    }
+    print $"Removed worktree: ($row.path | to json --raw)"
+    "ready"
+}
+
 def main [] {
     let inside = (^git rev-parse --is-inside-work-tree | complete)
     if $inside.exit_code != 0 or ($inside.stdout | str trim) != "true" {
@@ -142,47 +273,29 @@ def main [] {
     | lines | split column "\t" branch head
     | where {|row| $row.branch not-in [$current $default_branch $main.branch] }
     | each {|row|
-      $row | insert path ($trees | where branch == $row.branch | get -o 0.path | default "")
+      let tree = $trees | where branch == $row.branch | get -o 0
+      $row | merge {path: ($tree.path? | default ""), locked: ($tree.locked? | default false)}
     }
   )
     let rows = (
     $branches | append ($trees | where branch == "")
     | where {|row| $row.path not-in [$root $main.path] }
-    | each {|row| candidate $row $base $devenv }
+    | par-each --threads 8 --keep-order {|row| candidate $row $base $devenv }
   )
     if ($rows | is-empty) {
         print "No branches or worktrees to delete."
         return
     }
-    let labels = (
-        $rows
-        | enumerate
-        | each {|row| $"($row.index)\t($row.item.label)" }
-        | str join (char nul)
-    )
-    # These two small fzf bindings use Bash regardless of the user's login shell.
-    # Ignore defaults that could auto-accept or change the returned row format.
-    let selection = (with-env {FZF_DEFAULT_OPTS: '', FZF_DEFAULT_OPTS_FILE: ''} {
-    ($labels | ^fzf --multi --sync --read0 --print0 --layout=reverse
-      --delimiter "\t" --with-nth 2.. --with-shell 'bash -c' --prompt 'Delete> '
-      --header $"Tab/Shift-Tab toggle | Ctrl-A select all | Ctrl-D clear all | Enter review | Esc cancel\nSearch keeps hidden selections. Branch rows also remove their worktree.\nDIRTY = uncommitted changes. UNMERGED compares commits with ($base)."
-      --bind 'start:select-all+unbind(result),result:select-all+unbind(result)'
-      --bind 'tab:toggle+down,btab:toggle+up,ctrl-d:clear-selection,esc:abort'
-      --bind 'ctrl-a:transform:if [ -n "$FZF_QUERY" ]; then echo "rebind(result)+clear-query"; else echo select-all; fi'
-      --bind 'enter:transform:if [ "$FZF_SELECT_COUNT" -gt 0 ]; then echo accept; else echo abort; fi'
-    | complete)
-  })
-    if $selection.exit_code in [1 130] { return }
-    if $selection.exit_code != 0 {
-        print --stderr $selection.stderr
-        exit $selection.exit_code
-    }
-    let selected = ($selection.stdout | split row (char nul) | where {|row| $row != "" } | each {|row|
-    $rows | get ($row | split row "\t" | first | into int)
-  })
+    let selected = pick-entries $rows $base
     if ($selected | is-empty) { return }
-    print "\nDelete these branches and worktrees (including unmerged commits):"
-    for row in $selected { print $"  ($row.label)" }
+    print "\nDelete these branches and worktrees:"
+    for row in $selected {
+        let mode = if $row.force { "[FORCE] " } else { "" }
+        print $"  ($mode)($row.label)"
+    }
+    if ($selected | any {|row| $row.force }) {
+        print "FORCE entries discard uncommitted changes, unmerged commits and private submodule history, including locked worktrees."
+    }
     let answer = (
         try { input $"\nDelete ($selected | length) selected entries? [Y/n] " } catch { null }
     )
@@ -190,57 +303,25 @@ def main [] {
         print "Cancelled."
         return
     }
-    mut status = 0
+    print $"Removing ($selected | length) entries, up to 8 worktrees at a time..."
+    let results = ($selected | par-each --threads 8 --keep-order {|row|
+        $row | insert result (remove-worktree $row)
+    })
     mut deleted_count = 0
-    mut skipped_count = 0
-    mut failed_count = 0
-    for row in $selected {
-        # A checkout or commit may have changed while the picker was open.
-        if $row.branch != "" and ((^git rev-parse --verify $"refs/heads/($row.branch)" | complete).stdout | str trim) != $row.head {
-            print --stderr $"Skipped changed branch: ($row.branch)"
-            $status = 1
-            $skipped_count += 1
-            continue
-        }
-        if $row.path != "" {
-            let head = (
-                (^git -C $row.path rev-parse --verify HEAD | complete).stdout
-                | str trim
-            )
-            let branch = (
-                (^git -C $row.path symbolic-ref --quiet --short HEAD | complete).stdout
-                | str trim
-            )
-            if $head != $row.head or $branch != $row.branch {
-                print --stderr $"Skipped changed worktree: ($row.path | to json --raw)"
-                $status = 1
-                $skipped_count += 1
-                continue
-            }
-            let options = (try { removal-options $row.path } catch {|error|
-                print --stderr $"Skipped ($row.path | to json --raw): ($error.msg)"
-                null
-            })
-            if $options == null {
-                $status = 1
-                $skipped_count += 1
-                continue
-            }
-            # One --force permits submodules; Git still refuses locked/main trees.
-            let removed = (^git worktree remove ...$options -- $row.path | complete)
-            if $removed.exit_code != 0 {
-                print --stderr $"Failed removing ($row.path | to json --raw): ($removed.stderr | str trim)"
-                $status = 1
-                $failed_count += 1
-                continue
-            }
-        }
+    mut skipped_count = $results | where result == "skipped" | length
+    mut failed_count = $results | where result == "failed" | length
+    for row in ($results | where result == "ready") {
         if $row.branch != "" {
+            if not $row.force and ((^git rev-parse --verify $"refs/heads/($row.branch)" | complete).stdout | str trim) != $row.head {
+                print --stderr $"Skipped changed branch: ($row.branch)"
+                $skipped_count += 1
+                continue
+            }
+            # Patch-equivalent squash/rebase merges need -D even in normal mode.
             let deleted = (^git branch -D -- $row.branch | complete)
             print --no-newline $deleted.stdout
             if $deleted.exit_code != 0 {
                 print --stderr $deleted.stderr
-                $status = 1
                 $failed_count += 1
                 continue
             }
@@ -248,5 +329,5 @@ def main [] {
         $deleted_count += 1
     }
     print $"Deleted ($deleted_count); skipped ($skipped_count); failed ($failed_count)."
-    exit $status
+    if $skipped_count > 0 or $failed_count > 0 { exit 1 }
 }
