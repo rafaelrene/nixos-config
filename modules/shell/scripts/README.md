@@ -137,16 +137,21 @@ Run `git db` from any worktree. Each branch has one row, including its worktree
 path when checked out. Deleting that row removes both. Detached worktrees have
 separate rows. Remote branches are never deleted.
 
-Every eligible row starts selected. Type to search; filtering does not deselect
-hidden rows. The picker shows these shortcuts:
+Only entries that pass normal deletion checks start selected. Dirty, locked,
+unmerged, unreadable, and submodule-blocked entries start unselected and show
+the reason. Type to search; filtering does not deselect hidden rows.
+The picker shows these shortcuts:
 
-| Shortcut        | Action                                                    |
-| --------------- | --------------------------------------------------------- |
-| Tab / Shift+Tab | Toggle the current row and move down / up                 |
-| Ctrl+A          | Clear the search and select every row                     |
-| Ctrl+D          | Clear every selection, including hidden rows              |
-| Enter           | Review selected deletions, then confirm with Enter or `y` |
-| Esc             | Cancel                                                    |
+| Shortcut  | Action                                                              |
+| --------- | ------------------------------------------------------------------- |
+| Tab       | Cycle highlighted row: unselected → selected → force → unselected   |
+| Shift+Tab | Cycle the highlighted row in reverse                                |
+| Up / Down | Move between rows                                                   |
+| Ctrl+F    | Toggle force for all entries that require it, including hidden rows |
+| Ctrl+A    | Clear the search and select every row                               |
+| Ctrl+D    | Clear every selection and force flag, including hidden rows         |
+| Enter     | Review selected deletions, then confirm with Enter or `y`           |
+| Esc       | Cancel                                                              |
 
 Confirmation defaults to Yes; enter `n` to cancel.
 An empty selection or declining confirmation deletes nothing. The current branch
@@ -158,34 +163,50 @@ This does not detect environments running in other terminals.
 The default comes from the locally recorded `origin/HEAD`, falling
 back to `main`, `master`, then the main worktree's branch.
 
-`DIRTY` takes precedence over merge status when a worktree has staged, unstaged,
-or untracked changes. Ignored files do not count. `UNKNOWN` means the worktree
-could not be inspected. Commit comparison applies only to committed changes;
-an unchanged branch at the default commit counts as `merged`.
+`DIRTY` marks uncommitted changes, including untracked files; ignored files do
+not count. `LOCKED` marks locked worktrees. `BLOCKED` means inspection failed
+or submodule data needs preserving. The reason appears beside the row.
 
-`merged` means the branch is reachable from that default reference, its patches
+`merged` means the branch is reachable from the default reference, its patches
 were rebased/cherry-picked into it, its combined diff matches an upstream
 squash commit, or it has no net changes since the common ancestor.
-Comparison uses local refs without fetching; fetch first if the
-remote has newer merges. If no default is known, comparison uses current `HEAD`.
+Comparison uses local refs without fetching; fetch first if the remote has
+newer merges. If no default is known, comparison uses current `HEAD`.
 Conflict resolutions that change patches can still show `UNMERGED`.
-These rows also start selected, and their branches are
-force-deleted after confirmation. Dirty or locked worktrees are refused and their
-branches kept. Before removing a worktree with submodules, the helper checks
-each initialized submodule recursively for uncommitted changes, including
-untracked files. It also checks submodule Git repositories, including those
-left behind by deinitialization, for stashes and commits reachable from HEAD,
-local refs or reflogs but absent from all locally recorded remote branches.
-Those entries are skipped with a reason. Preserve that history elsewhere, or
-fetch the submodule's remote if the commits have already been pushed, before
-retrying. These checks do not fetch automatically. Ignored files are still
-removed with their worktree.
+Unmerged branches require force, including branches without worktrees.
 
-Clean submodule worktrees that pass these checks are removed with one
-`--force`, which Git requires for submodules. Locked and main worktrees remain
-protected. The parent branch is deleted only after successful worktree removal.
-Entries changed while the picker was open are skipped; stop processes writing
-to selected worktrees before confirming, since inspection and removal are not
-atomic. The final summary counts deleted, skipped and failed entries. Skipped
-or failed deletions produce a nonzero exit status; other selected entries are
-still attempted. Rebuild the system to install changes to these helpers.
+Normal deletion checks each initialized submodule recursively for uncommitted
+changes. It also checks submodule Git repositories, including those left behind
+by deinitialization, for stashes and commits reachable from HEAD, local refs or
+reflogs but absent from locally recorded remote branches. Preserve that history
+elsewhere, or fetch the submodule's remote if it has already been pushed.
+These checks do not fetch automatically. Clean submodule worktrees that pass
+are removed with one `--force`, which Git requires for submodules. Ignored files
+are removed with their worktree.
+
+**Tab** cycles the highlighted row through unselected, selected, `[FORCE]`, and
+back to unselected. **Shift+Tab** cycles in reverse. Both keep the cursor on
+that row; use the arrow keys to move. Every row supports all three states.
+
+**Ctrl+F** selects and enables force for every entry that requires it, including
+rows hidden by the search. If all such entries are already selected with force,
+it deselects them and clears their force flags. Other entries keep their state.
+Search and hidden selections survive state changes. **Ctrl+D** clears all
+selections and force flags. The confirmation lists force entries explicitly.
+Force skips all pre-deletion rechecks and removes the worktree with
+`git worktree remove --force --force`, then deletes its branch with `git branch -D`.
+This discards uncommitted changes, unmerged commits and private submodule
+history, and bypasses worktree locks. The excluded current, main, default and
+active devenv entries remain unavailable in the picker.
+
+A blocked entry in the ordinary selected state is skipped with a reason; cycle
+it to `[FORCE]` to delete it. Ctrl+A selects all entries without enabling force. Normal entries are checked again before removal,
+and entries changed while the picker was open are skipped. Stop processes writing
+to selected worktrees before confirming, since inspection and removal are not atomic.
+
+Inspection and worktree removal each run up to eight entries concurrently.
+Completed worktree removals print progress. Branch deletion runs sequentially
+afterward to avoid contention on shared Git configuration. A branch is kept if
+its worktree cannot be removed. The final summary counts deleted, skipped and
+failed entries. Skipped or failed deletions produce a nonzero exit status;
+other selected entries are still attempted. Rebuild the system to install changes.
