@@ -49,6 +49,8 @@ sudo nixos-rebuild switch --flake /data/code/nixos-config#othinus
 Both configured shells provide `ns` to rebuild and switch, `nup` to update
 package sources and rolling tools, and `nups` to update and switch. Rolling
 tool updates can take effect independently of a system switch.
+On Proserpina, `nup` selects OmniWM's latest stable upstream release; `ns` or
+`nups` installs it and automatically restarts OmniWM when its package changes.
 
 T3 Code checks its nightly channel every three hours and prepares the server
 and desktop together. The server restarts daily at 04:00; `nup` restarts it only
