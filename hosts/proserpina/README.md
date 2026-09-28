@@ -272,8 +272,9 @@ desktop's theme settings.
 
 Devenv is the project runtime manager. Declare language versions and project
 tools in each project's `devenv.nix`. The shared Nushell direnv hook loads that
-environment after `direnv allow`; agent wrappers use `devenv shell -- <command>`
-when needed. See the [project environment guide](../../modules/applications/devenv/README.md).
+environment automatically in T3 worktrees; regular checkouts require `direnv allow`.
+Agent wrappers use `devenv shell -- <command>` when needed. See the
+[project environment guide](../../modules/applications/devenv/README.md).
 Node 24 and Clang are workstation bootstrap tools,
 as on Othinus. The login shell and Ghostty use
 `/nix/var/nix/profiles/system/sw/bin/nu`, which

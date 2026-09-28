@@ -13,7 +13,19 @@ Declare project tools in `devenv.nix` and put this in the project's `.envrc`:
 use devenv
 ```
 
-Run `direnv allow` in each checkout or worktree. Reapprove after changing `.envrc`.
+Direnv automatically trusts `.envrc` files beneath these directories:
+
+- Othinus: `/home/raf/.local/share/t3code/worktrees/`.
+- Proserpina: `/Users/rafael/.t3/worktrees/` and its
+  `/Users/rafael/.local/share/t3code/worktrees/` alias.
+
+New worktrees and changes to `.envrc` in these directories need no approval.
+Their shell code runs automatically when direnv loads the environment.
+Regular checkouts and worktrees elsewhere still require `direnv allow` and
+reapproval after changing `.envrc`.
+The shared direnv feature declares `programs.direnv.settings.whitelist.prefix`;
+the native NixOS/nix-darwin modules install it in `/etc/direnv/direnv.toml`.
+
 The workstation supplies `use_devenv` through `/etc/direnv/lib/devenv.sh`; do not
 replace it with `eval "$(devenv direnvrc)"` in `.envrc`, which would bypass the
 watch-list correction below. This repository already includes `.envrc`.

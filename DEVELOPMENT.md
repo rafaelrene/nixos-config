@@ -1,7 +1,8 @@
 # Development
 
-Run `direnv allow` once in each checkout or worktree. The configured Nushell
-pre-prompt hook then loads the development environment through `.envrc`, reloads
+T3 worktrees under the configured worktree roots are trusted automatically.
+Regular checkouts and other locations require `direnv allow`. The configured Nushell
+pre-prompt hook loads the development environment through `.envrc`, reloads
 it after configuration changes, and unloads it when you leave. Both workstation
 configurations provide Nix, devenv, direnv, and the `use devenv` integration.
 For a single command without interactive activation, use `devenv shell -- <command>`.
