@@ -7,7 +7,8 @@
   a missing `t3code-bitbucket-api-token` Keychain item. Verify authentication
   survives a server restart and login without storing secrets in the repository.
 - On Othinus, diagnose unexpected restarts under compilation load.
-- After authorized switches on both hosts, verify direnv activation in Nushell,
+- After authorized switches on both hosts, verify approval-free direnv activation
+  in new T3 worktrees, approval in regular checkouts and outside the trusted roots,
   concurrent reloads including imported Nix files, failed-evaluation recovery,
   and unloading when leaving a project.
 - On Proserpina, fix Helium 0.18.1.1's install phase: unpacking enters
