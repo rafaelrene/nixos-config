@@ -41,6 +41,7 @@ alias gl = git log --graph --color=auto --pretty=tformat:'%C(yellow)%h%C(reset) 
 alias gll = git log --color=auto --date=format:'%Y-%m-%d %H:%M' --pretty=tformat:'%C(yellow)%H%C(reset) %C(green)%D%C(reset)%n%C(dim white)%ad  %an%C(reset)%n%n    %C(bold)%s%C(reset)%n%n%w(0,4,4)%b%w(0,0,0)%n'
 alias vim = nvim
 alias v = nvim
+alias fg = job unfreeze
 alias pn = pnpm
 
 # Use the configured checkout unless a worktree path is supplied.
