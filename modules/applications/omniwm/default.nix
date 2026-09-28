@@ -38,8 +38,7 @@ in
           65
           164
         ]
-        # Mission Control, app windows, and space switching take Control+arrows
-        # before OmniWM sees Caps Lock chords.
+        # Keep native Mission Control, app windows, and space switching off.
         ++ lib.range 32 35
         ++ lib.range 79 82
         # "Switch to Desktop 1-10" used Option+digits.
@@ -66,15 +65,14 @@ in
         StandardErrorPath = "${home}/.local/state/nix-darwin/omniwm.log";
       };
 
-      # Caps Lock becomes Right Control in the HID layer: it never toggles capitals,
-      # and drives settings.nix's side-specific chords.
-      # nix-darwin reapplies the mapping at every boot.
+      # F18 is a key trigger, so OmniWM suppresses taps and supplies Hyper while
+      # held. Plain Control remains available to apps. Reapply at every boot.
       system.keyboard = {
         enableKeyMapping = true;
         userKeyMapping = [
           {
             HIDKeyboardModifierMappingSrc = lib.fromHexString "700000039"; # Caps Lock
-            HIDKeyboardModifierMappingDst = lib.fromHexString "7000000E4"; # Right Control
+            HIDKeyboardModifierMappingDst = lib.fromHexString "70000006D"; # F18
           }
         ];
       };

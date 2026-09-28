@@ -114,12 +114,12 @@ columns or windows. Vertical arrows are reversed: Down acts upward and Up acts
 downward, including when moving with Shift. These shortcuts take precedence
 over applications' Option + arrow text navigation and selection.
 
-Other window shortcuts use **Caps Lock**. Nix remaps it to Right Control
-in the keyboard driver, so it never toggles capitals, even on a tap. The
-built-in keyboard has no Right Control, so OmniWM's Right Control shortcuts
-only fire from Caps Lock; the left Control key still reaches apps. Caps Lock
-with a key OmniWM does not use reaches the app as Control plus that key.
-Caps + Control chords are impossible, so Caps-based moves use Shift.
+Other window shortcuts use **Caps Lock** held as OmniWM's **Hyper** trigger,
+which sends Control + Option + Command. Shift remains separate for alternate
+actions. Plain Control shortcuts, including Neovim's Control + O, reach apps.
+Nix remaps Caps Lock to F18, and OmniWM uses F18 as its trigger: tapping it does
+nothing and never toggles capitals. Unassigned Caps chords reach apps with the
+Hyper modifiers. A physical F18 key also acts as Hyper.
 
 | Shortcut                    | Action                                                          |
 | --------------------------- | --------------------------------------------------------------- |
@@ -131,7 +131,7 @@ Caps + Control chords are impossible, so Caps-based moves use Shift.
 | Option + Shift + 1–9        | Move the focused column to a workspace                          |
 | Caps + Page Up/Down         | Previous/next workspace                                         |
 | Caps + Shift + Page Up/Down | Move the column to the previous/next workspace                  |
-| Caps + O                    | Overview across workspaces                                      |
+| Option + 0                  | Overview across workspaces                                      |
 | Caps + R / Caps + Shift + R | Cycle column width forward/backward                             |
 | Caps + minus/equal          | Decrease/increase column width by 10%                           |
 | Caps + F                    | Toggle full-width column                                        |
