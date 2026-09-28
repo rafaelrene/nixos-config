@@ -43,6 +43,60 @@ def candidate [row: record, base: string, devenv: string] {
     $row | insert label $"($name) [($status)]($location)"
 }
 
+def require-clean [directory: string] {
+    let changes = (
+        git-output $directory status --porcelain --untracked-files=all --ignore-submodules=none
+    )
+    if $changes != "" {
+        error make {msg: $"Uncommitted changes in ($directory | to json --raw); commit or save them first."}
+    }
+}
+
+# --force also bypasses Git's dirty check, so inspect everything it would delete.
+def removal-options [directory: string] {
+    require-clean $directory
+    let modules = (
+        git-output $directory submodule foreach --quiet --recursive 'printf "%s\0" "$toplevel/$sm_path"'
+        | split row (char nul) | where {|path| $path != "" }
+    )
+    mut repositories = []
+    for module in $modules {
+        require-clean $module
+        $repositories = ($repositories | append (
+            git-output $module rev-parse --absolute-git-dir | str trim --right --char "\n"
+        ))
+    }
+    let private_modules = (
+        git-output $directory rev-parse --absolute-git-dir
+        | str trim --right --char "\n" | path join modules
+    )
+    # Deinitialized or removed submodules can still have private branches/stashes.
+    let has_private_modules = $private_modules | path exists
+    if $has_private_modules {
+        let archived = (do {
+            cd $private_modules
+            glob **/config | each {|file| $file | path dirname }
+        })
+        $repositories = ($repositories | append $archived)
+    }
+    for repository in ($repositories | uniq) {
+        let stash = (
+            git-output $directory --git-dir $repository for-each-ref '--format=%(refname)' refs/stash
+        )
+        if $stash != "" {
+            error make {msg: $"Submodule repository ($repository | to json --raw) has a stash; preserve it before deleting."}
+        }
+        # HEAD covers detached commits; reflogs cover commits on deleted branches.
+        let local = (
+            git-output $directory --git-dir $repository rev-list --max-count=1 HEAD --all --reflog --not --remotes
+        )
+        if $local != "" {
+            error make {msg: $"Submodule repository ($repository | to json --raw) has history outside recorded remote branches \(($local | str trim)\); preserve it or fetch its remote before retrying."}
+        }
+    }
+    if ($modules | is-not-empty) or $has_private_modules { [--force] } else { [] }
+}
+
 def main [] {
     let inside = (^git rev-parse --is-inside-work-tree | complete)
     if $inside.exit_code != 0 or ($inside.stdout | str trim) != "true" {
@@ -137,11 +191,15 @@ def main [] {
         return
     }
     mut status = 0
+    mut deleted_count = 0
+    mut skipped_count = 0
+    mut failed_count = 0
     for row in $selected {
         # A checkout or commit may have changed while the picker was open.
         if $row.branch != "" and ((^git rev-parse --verify $"refs/heads/($row.branch)" | complete).stdout | str trim) != $row.head {
             print --stderr $"Skipped changed branch: ($row.branch)"
             $status = 1
+            $skipped_count += 1
             continue
         }
         if $row.path != "" {
@@ -156,13 +214,24 @@ def main [] {
             if $head != $row.head or $branch != $row.branch {
                 print --stderr $"Skipped changed worktree: ($row.path | to json --raw)"
                 $status = 1
+                $skipped_count += 1
                 continue
             }
-            # Never force removal: Git refuses dirty, locked, and main worktrees.
-            let removed = (^git worktree remove -- $row.path | complete)
-            if $removed.exit_code != 0 {
-                print --stderr $removed.stderr
+            let options = (try { removal-options $row.path } catch {|error|
+                print --stderr $"Skipped ($row.path | to json --raw): ($error.msg)"
+                null
+            })
+            if $options == null {
                 $status = 1
+                $skipped_count += 1
+                continue
+            }
+            # One --force permits submodules; Git still refuses locked/main trees.
+            let removed = (^git worktree remove ...$options -- $row.path | complete)
+            if $removed.exit_code != 0 {
+                print --stderr $"Failed removing ($row.path | to json --raw): ($removed.stderr | str trim)"
+                $status = 1
+                $failed_count += 1
                 continue
             }
         }
@@ -172,8 +241,12 @@ def main [] {
             if $deleted.exit_code != 0 {
                 print --stderr $deleted.stderr
                 $status = 1
+                $failed_count += 1
+                continue
             }
         }
+        $deleted_count += 1
     }
+    print $"Deleted ($deleted_count); skipped ($skipped_count); failed ($failed_count)."
     exit $status
 }

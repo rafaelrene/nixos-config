@@ -171,6 +171,21 @@ remote has newer merges. If no default is known, comparison uses current `HEAD`.
 Conflict resolutions that change patches can still show `UNMERGED`.
 These rows also start selected, and their branches are
 force-deleted after confirmation. Dirty or locked worktrees are refused and their
-branches kept. Failed deletions produce a nonzero exit status; other selected
-entries are still attempted. Entries changed while the picker was open are
-skipped. Rebuild the system to install changes to these helpers.
+branches kept. Before removing a worktree with submodules, the helper checks
+each initialized submodule recursively for uncommitted changes, including
+untracked files. It also checks submodule Git repositories, including those
+left behind by deinitialization, for stashes and commits reachable from HEAD,
+local refs or reflogs but absent from all locally recorded remote branches.
+Those entries are skipped with a reason. Preserve that history elsewhere, or
+fetch the submodule's remote if the commits have already been pushed, before
+retrying. These checks do not fetch automatically. Ignored files are still
+removed with their worktree.
+
+Clean submodule worktrees that pass these checks are removed with one
+`--force`, which Git requires for submodules. Locked and main worktrees remain
+protected. The parent branch is deleted only after successful worktree removal.
+Entries changed while the picker was open are skipped; stop processes writing
+to selected worktrees before confirming, since inspection and removal are not
+atomic. The final summary counts deleted, skipped and failed entries. Skipped
+or failed deletions produce a nonzero exit status; other selected entries are
+still attempted. Rebuild the system to install changes to these helpers.
