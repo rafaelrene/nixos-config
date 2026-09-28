@@ -1,7 +1,10 @@
 # T3 Code updates
 
-Both machines use the official nightly server and desktop downloads. The shared
-Nix recipes in `package/` accept a version and download hashes. `release.json`
+Both machines use matching official nightly server and desktop downloads. The
+server package runs the desktop's JavaScript server bundle with Nix-managed
+Node 24 and the CLI archive's native runtime dependencies and resource monitor.
+The signed desktop application remains unmodified. The shared Nix recipes in
+`package/` accept a version and download hashes. `release.json`
 pins the default packages and Proserpina's offline bootstrap bundle. The flake
 exposes `packages.<system>.t3code` and a parameterized
 `legacyPackages.<system>.t3codeForRelease` using those same recipes.
@@ -9,6 +12,31 @@ exposes `packages.<system>.t3code` and a parameterized
 The installed updater uses an immutable snapshot of this repository, including
 its locked Nix inputs. A system rebuild installs changes to recipes and their
 dependencies. Nightly version changes do not require a system rebuild.
+
+## Nushell setup actions
+
+Both services keep Nushell as their integrated terminal shell. The server package
+applies `package/nushell-completion.patch` to its separate copy of the JavaScript
+bundle. This adds Nushell detection and a native `try`/`catch` completion wrapper:
+successful commands report 0, failed external commands report their exit code,
+and Nushell errors report 1. T3 Code can finish the setup card and release a
+waiting agent without changing project actions or shell configuration.
+
+The patch applies with no context fuzz. If a nightly changes the patched code,
+the package build fails and the rolling profile retains its installed generation.
+Review the patch when updating the package recipe; remove it once the official
+server supports Nushell completion. Until then, keep the JavaScript server,
+native dependencies and desktop on the same release. Setup commands must use
+valid Nushell syntax, and value-producing Nushell expressions should explicitly
+`print` output because the completion wrapper ends its success block with 0.
+
+`package/nushell-hidden-setup.patch` starts setup terminals with Nushell's
+`--execute` option. It installs a one-time hook after the configured pre-prompt
+hooks, preserving direnv loading, and runs the action before the line editor
+requests a cursor position. Setup therefore runs with the terminal hidden.
+The hook removes itself before running; opening the terminal afterward gives
+the normal Nushell prompt. Retrying setup starts a fresh Nushell process.
+Completion observation starts before spawning so fast actions are not missed.
 
 ## Update flow
 

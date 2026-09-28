@@ -8,10 +8,11 @@ in
     let
       t3pkgs =
         if system == "aarch64-darwin" then import inputs.nixpkgs-darwin { inherit system; } else pkgs;
+      bundle = features.t3code.bundle { pkgs = t3pkgs; };
     in
     {
-      packages.t3code-nightly = t3pkgs.callPackage features.t3code.serverPackage { };
-      packages.t3code = features.t3code.bundle { pkgs = t3pkgs; };
+      packages.t3code-nightly = bundle.server;
+      packages.t3code = bundle;
       # The updater calls the same recipe with the nightly version and its two hashes.
       legacyPackages.t3codeForRelease =
         release:

@@ -1,0 +1,19 @@
+--- a/desktop/apps/server/dist/bin.mjs
++++ b/desktop/apps/server/dist/bin.mjs
+@@ -174391,6 +174391,7 @@
+ 	const shell = env.SHELL ?? "";
+ 	const name = shell.split("/").at(-1) ?? shell;
+ 	if (name === "fish") return "fish";
++	if (name === "nu") return "nushell";
+ 	if (name === "pwsh" || name === "powershell") return "powershell";
+ 	return "posix";
+ }
+@@ -174409,5 +174410,8 @@
+ 		case "fish": return `begin\r${body}\rend; printf '\\n${sentinel}%s\\n' $status`;
++		// Nushell aborts on a failed external command; catch must report its exit code.
++		case "nushell":
++			return `let __t3c = try {\r${body}\r0\r} catch {|e| $e.exit_code? | default 1 }; print $"\\n${sentinel}($__t3c)"`;
+ 		case "posix": return `( ${body}\r); printf '\\n${sentinel}%s\\n' "$?"`;
+ 	}
+ }
+ /** @public Service construction is part of the canonical Effect module API. */

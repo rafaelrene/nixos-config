@@ -19,6 +19,7 @@ in
     }:
     let
       server = pkgs.callPackage t3code.serverPackage {
+        inherit desktop;
         inherit (release) version;
         hash = release.serverHash;
       };
@@ -37,6 +38,7 @@ in
     in
     pkgs.buildEnv {
       name = "t3code-${release.version}";
+      passthru = { inherit server desktop; };
       paths = [
         server
         desktop
