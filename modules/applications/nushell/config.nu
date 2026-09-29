@@ -1,4 +1,5 @@
 $env.config.show_banner = false
+$env.config.edit_mode = "vi"
 $env.EDITOR = "nvim"
 $env.VISUAL = "nvim"
 $env.XDG_CONFIG_HOME = ($env.HOME | path join ".config")
@@ -18,16 +19,30 @@ def --env cdb [path: path = "."] {
 
 # Bind navigation to the built-in cd before zoxide replaces it.
 use @git-nav@ *
+use @nav@ nav
 source @zoxide-hook@
 source @direnv-hook@
 source @starship-hook@
 
-# Distinguish local directories from SSH shells in the destination picker.
-# Full paths also avoid ambiguous home abbreviations when matching windows.
-$env.config.shell_integration.osc2 = false
-$env.config.hooks.pre_prompt = ($env.config.hooks.pre_prompt | append {
-  let directory = ($env.PWD | str replace -ar '[\x00-\x1f\x7f]' '')
-  print -n $"(ansi title)@title-hostname@: ($directory)(char bel)"
+def --env shell-leader [] {
+  print 'Space: nav   n: git nav   p: project-run   Esc: cancel'
+  let key = input listen --types [key]
+  if $key.key_type != char or ($key.modifiers | is-not-empty) { return }
+  match $key.code {
+    ' ' => { nav }
+    'n' => { git nav }
+    'p' => { ^project-run }
+    _ => {}
+  }
+}
+
+# Execute at the prompt, preserving any partially typed command.
+$env.config.keybindings = ($env.config.keybindings | append {
+  name: shell_leader
+  modifier: none
+  keycode: space
+  mode: vi_normal
+  event: {send: executehostcommand, cmd: shell-leader}
 })
 
 # Nushell may start without the PATH configured by /etc/profile.

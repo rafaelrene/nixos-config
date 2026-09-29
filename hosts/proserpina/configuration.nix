@@ -35,6 +35,7 @@ in
         modules.rustdesk
         modules.shottr
         modules.signal
+        modules.skhd
         modules.slack
         modules.standard-notes
         modules.superwhisper

@@ -69,11 +69,17 @@ Use path interpolation (`"${./file}"`) for repository files needed at runtime.
 `toString ./file` does not retain the file as a Nix store dependency; generated
 launchers and symlinks can break after the flake source is garbage-collected.
 
-The local Raycast destination extension is built and checked by its Nix package.
-For an editing loop in `modules/applications/raycast/destinations/raycast`, run `npm ci`, then
-`npm run build`, `npm run typecheck` and `npm run lint`. The build writes `dist/`
-without installing into the running Raycast. Format its TypeScript and JSON
-with Prettier. No `ray develop` process is needed for system installation.
+For `nav` changes, validate the generated Nushell configuration and module with
+`nu-check`, then exercise directory selection, cancellation, and SSH in an
+interactive Nushell on each host. Verify Space Space preserves partially typed
+input. Use temporary fixtures for discovery rules, including hidden projects,
+worktrees, excluded caches, symlinks, and paths containing whitespace.
+
+For shell leader changes, use an interactive Nushell on both hosts to exercise
+Space Space, Space n, and Space p in normal mode, cancellation, preserved input,
+and ordinary spaces in insert mode. Use a temporary project with a harmless
+package.json script to test `project-run`; confirm its exit status and that the
+calling shell's directory stays unchanged. Remove temporary fixtures afterward.
 
 ## System validation
 

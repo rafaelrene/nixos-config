@@ -29,6 +29,6 @@
           ln -s git-delete-branches "$out/bin/git-db"
         '';
       });
-      prun = command "prun";
+      project-run = command "project-run";
     };
 }

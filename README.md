@@ -30,7 +30,7 @@ and host selection.
 - **Mac desktop:** Nix-managed applications and OmniWM window management.
 - **Development environment:** Nushell, Ghostty, Neovim, Git, and Devenv,
   with shared settings where supported and a
-  [project script picker](modules/shell/scripts/README.md#project-scripts) (`prun`).
+  [project script picker](modules/shell/scripts/README.md#project-scripts) (`project-run`).
 - **Coding agents:** T3Code, Codex, Claude Code, and OpenCode, with shared
   instructions, skills, themes, and rolling updates.
 - **Consistent appearance:** A central Catppuccin palette for supported
@@ -96,11 +96,16 @@ On Proserpina, Raycast uses its normal application-opening behavior, which can
 focus an existing window. Its documented settings do not provide a global
 always-open-a-new-window default.
 
-For project folders and SSH connections, use the shared
-[destination picker](modules/shell/scripts/README.md#destination-picker).
-It explicitly opens a Ghostty window or focuses a matching terminal. The
-shortcut is Ctrl+Alt+P on Othinus; assign Control+Option+P to **Open destination**
-in Raycast on Proserpina.
+Option+Enter opens a fresh Ghostty window on Proserpina through Nix-managed skhd,
+even when Ghostty is closed. See the [Mac shortcut setup](hosts/proserpina/README.md#window-management).
+
+For project folders and SSH connections, run
+[`nav`](modules/shell/scripts/README.md#destination-picker) or press Space Space
+in normal mode at a Nushell prompt. It uses fzf to change directory or start
+SSH in the current terminal.
+
+Nushell uses Vi editing with a [Space leader](modules/shell/scripts/README.md#shell-leader)
+for `nav`, `git nav`, and `project-run` on both machines.
 
 ## Future work
 

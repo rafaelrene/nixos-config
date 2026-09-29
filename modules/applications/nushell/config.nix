@@ -10,11 +10,27 @@
       pkgs,
       checkout,
       hostname,
+      home,
+      code,
       rebuildCommand ? "sudo nixos-rebuild switch",
       updateCommand ? "nix-update-packages",
     }:
 
     let
+      navSettings = pkgs.writeText "nav-settings.json" (
+        builtins.toJSON {
+          inherit home code;
+          sshHosts = [
+            "othinus"
+            "proserpina"
+          ];
+        }
+      );
+      navModule = pkgs.writeText "navigation.nu" (
+        lib.replaceStrings [ "@nav-settings@" ] [ (toString navSettings) ] (
+          builtins.readFile ./navigation.nu
+        )
+      );
       starshipNuHook = pkgs.runCommand "starship-hook.nu" { nativeBuildInputs = [ pkgs.starship ]; } ''
         starship init nu > "$out"
       '';
@@ -28,9 +44,9 @@
             "@direnv-hook@"
             "@starship-hook@"
             "@git-nav@"
+            "@nav@"
             "@checkout@"
             "@hostname@"
-            "@title-hostname@"
             "@rebuild-command@"
             "@update-command@"
           ]
@@ -40,9 +56,9 @@
             (toString starshipNuHook)
             # Retain the tree so git-nav's relative import of shell/scripts/git.nu works.
             "${../..}/applications/nushell/git-nav.nu"
+            (toString navModule)
             (builtins.toJSON checkout)
             hostname
-            (lib.toLower hostname)
             rebuildCommand
             updateCommand
           ]

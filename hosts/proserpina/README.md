@@ -123,6 +123,7 @@ Hyper modifiers. A physical F18 key also acts as Hyper.
 
 | Shortcut                    | Action                                                          |
 | --------------------------- | --------------------------------------------------------------- |
+| Option + Enter              | Open a fresh Ghostty window through skhd                        |
 | Option + left/right         | Focus columns                                                   |
 | Option + down/up            | Focus windows upward/downward, then the adjacent workspace      |
 | Option + Shift + left/right | Move the whole column                                           |
@@ -160,8 +161,15 @@ Do not assign apps to desktops through the Dock's Options menu. These are
 configured workspaces, not Niri's automatically added/removed empty workspaces.
 OmniWM accepts one binding per action, so this configuration uses Othinus's
 arrows rather than also duplicating H/J/K/L. Workspace reordering and Niri's
-modifier+wheel workspace switching are not mapped. Launch Ghostty through
-Raycast or its existing Mac shortcuts; Caps+Enter does not launch applications.
+modifier+wheel workspace switching are not mapped.
+
+Option+Enter uses skhd to launch a separate Ghostty instance with a fresh window,
+including when Ghostty is closed. Saved windows are not restored for this launch.
+`modules/applications/skhd/default.nix` configures nix-darwin's native skhd service,
+which installs the package, writes `/etc/skhdrc`, and runs a user launchd agent.
+Grant skhd Accessibility permission in System Settings after the first rebuild,
+then log out and back in to restart it. Secure Keyboard Entry must be disabled
+for skhd to receive shortcuts. Caps+Enter does not launch applications.
 
 The declared “Displays have separate Spaces” setting requires a logout/login
 after it changes. Launchd starts `/Applications/Nix Apps/OmniWM.app`.
@@ -345,16 +353,15 @@ real: the macOS folder picker resolves directory symlinks to a fixed store path.
 Rebuild after changing the list. Launchers use the
 Nix-managed Chromium bundle under `/Applications/Nix Apps`.
 
-The Nix-built **Workstation destinations** Raycast extension provides
-**Open destination** for projects, Home, configuration folders, and SSH hosts.
-Activation registers it through Raycast's native CLI URL on initial installation,
-which opens Raycast. Later switches refresh changed extension builds in the
-background and leave Raycast alone when the build is unchanged. Assign
-**Control+Option+P** to the command in Raycast Settings → Workstation destinations.
-Enter focuses a matching Ghostty terminal; **Cmd+Shift+Enter** forces a new
-window. See the [shared guide](../../modules/shell/scripts/README.md#destination-picker)
-for discovery rules and window-matching limits. Allow Automation access to
-Ghostty if macOS requests it.
+Run `nav` or press **Space Space** in Nushell's normal mode to pick a project,
+Home, a configuration folder, or an SSH host with fzf. Selection changes directory
+or starts SSH in the current terminal. See the
+[shared guide](../../modules/shell/scripts/README.md#destination-picker) for
+discovery rules and removal of any retained Raycast destination shortcut.
+
+Nushell uses Vi editing. In normal mode, **Space Space** opens `nav`, **Space n**
+opens `git nav`, and **Space p** opens `project-run`. See the
+[shell leader guide](../../modules/shell/scripts/README.md#shell-leader).
 
 macOS controls application sign-in and privacy permissions. For example,
 Ghostty's global quick-terminal shortcut needs Accessibility permission. These
@@ -382,9 +389,18 @@ app signature and launchd plist, and verify shortcuts and window management
 after an authorized switch. An IPC response alone does not prove input services
 are running.
 
-For destination-picker changes, build the local extension (its Nix package runs
-TypeScript and ESLint checks), compile `ghostty.applescript` with `osacompile`,
-and validate the generated Nushell configuration. After an authorized switch,
-test the global shortcut from another application, search and cancellation,
-project opening and reuse, forced new windows, and SSH. Repeat the workflow in
-Vicinae on Othinus, including the fallback when a window title is unrecognized.
+For skhd changes, inspect the generated `/etc/skhdrc` and validate its launchd
+plist with `plutil -lint`. After an authorized switch and Accessibility setup,
+press Option+Enter from another application with Ghostty closed, then repeat
+with a Ghostty window already open. Each press should open one fresh terminal
+without restoring saved windows or focusing an existing window.
+
+For `nav` changes, validate the generated Nushell configuration and module.
+After an authorized switch, test the command and Space Space at a fresh
+Nushell prompt: search, change directory, cancel, connect through SSH, and exit
+back to the local shell. Check that the shortcut preserves partially typed input
+and does not open another window. Repeat in Nushell on Othinus.
+
+For shell leader changes, test all three sequences in normal mode on each host,
+including cancellation and preserving partially typed input. Verify spaces still
+insert in insert mode and Neovim receives its own Space leader bindings.
