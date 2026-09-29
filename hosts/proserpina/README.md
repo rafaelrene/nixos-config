@@ -163,8 +163,11 @@ OmniWM accepts one binding per action, so this configuration uses Othinus's
 arrows rather than also duplicating H/J/K/L. Workspace reordering and Niri's
 modifier+wheel workspace switching are not mapped.
 
-Option+Enter uses skhd to launch a separate Ghostty instance with a fresh window,
-including when Ghostty is closed. Saved windows are not restored for this launch.
+Option+Enter uses skhd to open the home directory in a fresh Ghostty window,
+reusing the running application so repeated presses keep one Dock icon. It also
+launches Ghostty when closed, without restoring saved windows. Ghostty's
+`macos-dock-drop-behavior = new-window` setting makes folder-open requests create
+windows rather than tabs; this also applies to folders dropped onto its Dock icon.
 `modules/applications/skhd/default.nix` configures nix-darwin's native skhd service,
 which installs the package, writes `/etc/skhdrc`, and runs a user launchd agent.
 Grant skhd Accessibility permission in System Settings after the first rebuild,
@@ -396,8 +399,9 @@ are running.
 For skhd changes, inspect the generated `/etc/skhdrc` and validate its launchd
 plist with `plutil -lint`. After an authorized switch and Accessibility setup,
 press Option+Enter from another application with Ghostty closed, then repeat
-with a Ghostty window already open. Each press should open one fresh terminal
-without restoring saved windows or focusing an existing window.
+with a Ghostty window already open. Each press should open one fresh terminal in
+the home directory without restoring saved windows or focusing an existing
+window. Repeated presses must reuse the same application process and Dock icon.
 
 For `nav` changes, validate the generated Nushell configuration and module.
 After an authorized switch, test the command and Space Space at a fresh

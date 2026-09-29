@@ -3,7 +3,7 @@
     services.skhd = {
       enable = true;
       skhdConfig = ''
-        alt - return : /usr/bin/open -na Ghostty --args --window-save-state=never
+        alt - return : /usr/bin/open -a Ghostty "$HOME" --args --window-save-state=never
       '';
     };
   };
