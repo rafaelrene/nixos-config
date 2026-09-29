@@ -3,6 +3,9 @@
 Both machines use matching official nightly server and desktop downloads. The
 server package runs the desktop's JavaScript server bundle with Nix-managed
 Node 24 and the CLI archive's native runtime dependencies and resource monitor.
+Node and npm are also on the server's private `PATH` for device-tool installation
+and helper processes. Existing project tools take precedence; Node is not
+installed globally.
 The signed desktop application remains unmodified. The shared Nix recipes in
 `package/` accept a version and download hashes. `release.json`
 pins the default packages and Proserpina's offline bootstrap bundle. The flake

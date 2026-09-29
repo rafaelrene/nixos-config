@@ -322,8 +322,9 @@ tools in each project's `devenv.nix`. The shared Nushell direnv hook loads that
 environment automatically in T3 worktrees; regular checkouts require `direnv allow`.
 Agent wrappers use `devenv shell -- <command>` when needed. See the
 [project environment guide](../../modules/applications/devenv/README.md).
-Node 24 and Clang are workstation bootstrap tools,
-as on Othinus. The login shell and Ghostty use
+Clang is available as a workstation compiler on both hosts. Node and other
+language runtimes come from project environments or application-private
+dependencies. The login shell and Ghostty use
 `/nix/var/nix/profiles/system/sw/bin/nu`, which
 remains available before boot activation recreates `/run/current-system`.
 

@@ -1,7 +1,6 @@
 ---
 name: publish-plan
 description: Use when planning is complete and the model is about to recap, publish, revise, or republish an agreed plan. Do not use while material decisions or unresolved questions remain.
-disable-model-invocation: false
 ---
 
 # Publish or revise a finished plan
@@ -63,7 +62,8 @@ building it:
    reliably, ask the user for the prior link.
 2. Read the current published document and resolve its current `pp` version and
    timestamps. The response header `x-pp-draft-version` or
-   `npx @rraf/pp list --json` can provide the authoritative version.
+   `npx @rraf/pp list --json`, using the runtime described in
+   [Publish](#publish), can provide the authoritative version.
 3. Preserve the plan ID, Created At value, and existing history. Do not edit old
    history entries. Prepend the new entry so history remains newest first.
 4. Set the document version to the current `pp` version plus one. Preserve
@@ -251,17 +251,19 @@ document would require a new planning decision, stop and return to planning.
 
 ## Publish
 
-For an initial publication, run:
+Run all `pp` commands through a temporary Nix shell. For an initial publication:
 
 ```sh
-npx @rraf/pp "<path-to-plan-file.html>"
+nix shell nixpkgs#nodejs_24 --command npx @rraf/pp "<absolute-path-to-plan-file.html>"
 ```
 
-For a revision, run:
+For a revision:
 
 ```sh
-npx @rraf/pp "<path-to-plan-file.html>" --draft "<draft-id>"
+nix shell nixpkgs#nodejs_24 --command npx @rraf/pp "<absolute-path-to-plan-file.html>" --draft "<draft-id>"
 ```
+
+Run `list --json` through the same temporary shell.
 
 If publication fails, retry the same command once. Confirm that the returned
 draft ID and version match the intended revision before reporting success.

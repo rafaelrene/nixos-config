@@ -27,7 +27,6 @@ let
     "mongodb-compass"
     "mpv"
     "neovim"
-    "nodejs"
     "nushell"
     "openssh"
     "project-run"

@@ -83,6 +83,7 @@ in
           chmod +x "$out/libexec/t3code/node_modules/node-pty/prebuilds/darwin-arm64/spawn-helper"
         ''}
         makeWrapper ${lib.getExe nodejs_24} "$out/bin/t3" \
+          --suffix PATH : ${lib.makeBinPath [ nodejs_24 ]} \
           --add-flags "$out/libexec/t3code/bin.mjs"
         runHook postInstall
       '';
