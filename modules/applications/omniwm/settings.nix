@@ -7,7 +7,7 @@
   config.features.omniwm.settings =
     { lib, pkgs }:
     let
-      # Complete defaults from OmniWM v0.7.3's SettingsExport/CanonicalTOMLConfig.
+      # OmniWM v0.7.3 defaults, with app rules declared below instead.
       # Its strict schema requires every action, including unassigned hotkeys.
       defaults = builtins.fromJSON (builtins.readFile ./defaults.json);
       theme = config.features.theme { inherit lib pkgs; };
@@ -66,6 +66,60 @@
       builtins.attrNames bindings
     )) "An OmniWM shortcut refers to an unknown action in defaults.json";
     lib.recursiveUpdate defaults {
+      appRules = [
+        {
+          id = "7876C9EF-437E-4D4F-9C27-B1B02F4AABCE";
+          bundleId = "com.mitchellh.ghostty";
+          assignToWorkspace = "1";
+        }
+        {
+          id = "80AA774B-5F90-44B7-AF27-78DF0AF28D1E";
+          # Match the running client, not the local.proserpina launcher.
+          bundleId = "com.t3tools.t3code";
+          assignToWorkspace = "1";
+        }
+        {
+          id = "69862ED8-4A20-4AC1-90D5-E96B66E867F4";
+          bundleId = "net.imput.helium";
+          assignToWorkspace = "1";
+        }
+        {
+          id = "C0CC8269-974E-499D-A312-334F67477AD3";
+          bundleId = "com.tinyspeck.slackmacgap";
+          assignToWorkspace = "1";
+        }
+        {
+          id = "AE78B053-327D-4B1F-A912-81D85E339068";
+          bundleId = "com.microsoft.teams2";
+          assignToWorkspace = "1";
+        }
+        {
+          id = "F500EA2C-7CC3-42AC-ABC8-3954D2019280";
+          bundleId = "net.whatsapp.WhatsApp";
+          assignToWorkspace = "8";
+        }
+        {
+          id = "CB1220FD-30D8-4C7D-8EAE-56B6C8F86F7D";
+          bundleId = "com.viber.osx";
+          assignToWorkspace = "8";
+        }
+        {
+          id = "3F045253-BBA1-418F-B2D4-CBBF0CD7BBD2";
+          bundleId = "org.whispersystems.signal-desktop";
+          assignToWorkspace = "8";
+        }
+        {
+          id = "1CF39647-F30D-4E76-9686-79B551F1B094";
+          bundleId = "app.zen-browser.zen";
+          assignToWorkspace = "9";
+        }
+        {
+          id = "13B3566D-C476-4E9C-8AAF-C0DFAFE25EE7";
+          bundleId = "com.apple.systempreferences";
+          layout = "tile";
+          initialContainerPrimarySpan = 0.5;
+        }
+      ];
       general = {
         animationsEnabled = false;
         updateChecksEnabled = false;
@@ -83,6 +137,7 @@
         };
       };
       niri = {
+        infiniteLoop = true;
         visibleContainerCount = 1;
         centerFocusedColumn = "onOverflow";
         singleWindowFit = "container_primary_span";
@@ -104,8 +159,11 @@
       # windows keep the full height.
       statusBar.showWorkspaceName = true;
       workspaceBar = {
+        deduplicateAppIcons = true;
+        hideEmptyWorkspaces = true;
         position = "belowMenuBar";
         revealModifier = "option";
+        showFloatingWindows = true;
         accentColor = color theme.accentColor;
         textColor = color theme.colors.text;
       };

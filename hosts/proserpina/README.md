@@ -97,17 +97,22 @@ Edit `modules/applications/omniwm/settings.nix` and rebuild; the GUI cannot save
 the Nix-store configuration. OmniWM's own update checks are disabled.
 
 All nine workspaces use independent horizontal scrolling columns. Workspace 1
-is labelled **Work**; 2–9 are available for other activities. Switch to Work
-before opening work windows. Apps are not assigned globally because a browser
-or terminal can have both work and personal windows. Move existing columns
-between workspaces with the shortcuts below.
+is labelled **Work**. App rules assign Ghostty, T3 Code, Helium, Slack and Teams
+to workspace 1, WhatsApp, Viber and Signal to workspace 8, and Zen to workspace 9.
+System Settings is tiled on the current workspace with a 50% initial container
+span. These rules are declared in
+`modules/applications/omniwm/settings.nix`; GUI edits do not survive an OmniWM
+restart. Move existing columns between workspaces with the shortcuts below.
 
-New columns use the full available width. Width cycling follows Othinus:
+By default, new columns use the full available width. Width cycling follows Othinus:
 ⅓, ½, ⅔, full. Focused columns center on overflow; gaps are 2 points and the
 focus border uses the shared theme. Animations are disabled. OmniWM's menu bar
 item names the current workspace. Hold Option for 200 ms to show the workspace bar
-with each workspace's apps; it overlays the top of windows so they keep the
-full height. It also stays visible while holding Option + Shift to move windows.
+with each workspace's apps, including floating windows. It overlays the top of
+windows so they keep the full height, and stays visible while holding Option +
+Shift to move windows.
+The bar deduplicates app icons and hides empty workspaces.
+OmniWM's Infinite Loop Navigation is enabled for the Niri layout.
 
 Arrow navigation and workspace numbers use **Option**; add **Shift** to move
 columns or windows. Vertical arrows are reversed: Down acts upward and Up acts
@@ -182,8 +187,9 @@ thumbnails. Return to OmniWM's permission window to continue. These macOS
 permissions cannot be pre-granted by Nix. Leave OmniWM's separate “Start at
 Login” option off because launchd already owns startup.
 
-The complete schema snapshot in `modules/applications/omniwm/defaults.json` comes
+The settings defaults in `modules/applications/omniwm/defaults.json` come
 from [OmniWM v0.7.3's canonical settings model](https://github.com/OmniNull/OmniWM/blob/v0.7.3/Sources/OmniWM/Core/Config/CanonicalTOMLConfig.swift).
+All app rules are declared in `settings.nix`.
 `nup` checks GitHub's latest stable OmniWM release independently of the version
 in Nixpkgs. The vendor-source manifest records its version, permanent signed app
 archive URL and SHA-256 checksum; `ns` builds from that recorded release.
