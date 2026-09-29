@@ -17,6 +17,7 @@
       settings = pkgs.writeText "llm-agents-updater.json" (
         builtins.toJSON {
           inherit flake profile;
+          staged = "${profile}-staged";
           bundle = "(builtins.getFlake ${builtins.toJSON source}).legacyPackages.${pkgs.stdenv.hostPlatform.system}.llmAgentsForSource";
         }
       );
@@ -34,7 +35,7 @@
         exec 9>${lib.escapeShellArg "${state}/update.lock"}
         echo "Agent tools: waiting for any existing update to finish..."
         flock 9
-        exec nu --no-config-file ${./update.nu} ${settings}
+        exec nu --no-config-file ${./update.nu} ${settings} "$@"
       '';
     };
 }

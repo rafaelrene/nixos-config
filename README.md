@@ -60,8 +60,11 @@ desktop together. At 04:00, or after `ns`, it activates the pair and reopens the
 desktop if it was running. `nup` also requests activation; `nups` waits until its
 system switch succeeds. `t3-activate` applies an already staged release without
 checking the network. Activation can interrupt running agents.
-Codex, Claude Code, and OpenCode update when user services start and daily at
-04:30, with failed agent updates retried at roughly five-minute intervals.
+Codex, Claude Code, and OpenCode check and stage releases at login and every
+three hours, then activate at 04:00 for new sessions. `nup` and `nups` activate
+them immediately. Codex and Claude follow their publishers' latest stable
+channels; OpenCode follows Numtide. Failed checks retry after five minutes.
+See the [agent guide](modules/applications/coding-agents/README.md) for details.
 See the [T3 Code guide](modules/applications/t3code/README.md) for package
 definitions, failure behavior, and rollback.
 
