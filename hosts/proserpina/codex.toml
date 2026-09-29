@@ -80,7 +80,6 @@ screen_reader_detection_done = true
 "gpt-5.6-sol" = 2
 gpt-6-astra = 2
 
-# The Nix build lacks the codex-package.json layout the background
-# app-server daemon requires, so the TUI would refuse to start.
+# Keep the background daemon disabled for the Nix-managed CLI.
 [features]
 daemon_auto_start = false

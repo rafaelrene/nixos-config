@@ -12,12 +12,7 @@ in
     {
       pkgs,
       profile,
-      installCommand ? (
-        if pkgs.stdenv.hostPlatform.isDarwin then
-          "update-llm-agents"
-        else
-          "systemctl --user start llm-agents-update.service"
-      ),
+      installCommand ? "update-llm-agents",
     }:
     let
       updater = features.coding-agents.update { inherit pkgs profile; };

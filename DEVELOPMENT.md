@@ -101,6 +101,14 @@ files to Git, use `path:.` as the flake reference instead of `.`.
 System activation still requires explicit approval as described in
 [AGENTS.md](AGENTS.md).
 
+For coding-agent updater changes, use temporary profiles to exercise staging,
+offline activation, repeated updates, first installation and failed discovery,
+checksum verification or builds. Failures must preserve both profiles. Verify
+publisher versions, Codex's companion resources and Claude's signature check on
+both platforms. After an authorized switch, check the three-hour staging job
+and 04:00 activation job, then launch both agents through their normal wrappers
+on each host.
+
 For T3 Code lifecycle changes, use temporary fixtures to exercise background
 staging, already-staged activation, duplicate clients, a closed desktop,
 concurrent launch/activation, failed startup, and repeated activation. Validate

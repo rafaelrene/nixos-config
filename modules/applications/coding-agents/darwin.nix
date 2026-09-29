@@ -59,21 +59,35 @@ in
       launchd.user.agents.llm-agents-update = {
         environment.NIX_SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
         serviceConfig = {
-          ProgramArguments = [ "${agents.updater}/bin/update-llm-agents" ];
+          ProgramArguments = [
+            "${agents.updater}/bin/update-llm-agents"
+            "--stage"
+          ];
           RunAtLoad = true;
           # First activation reloads the Nix daemon after starting user services.
           KeepAlive.SuccessfulExit = false;
           ThrottleInterval = 300;
-          StartCalendarInterval = [
-            {
-              Hour = 4;
-              Minute = 30;
-            }
-          ];
+          StartInterval = 10800;
           ProcessType = "Background";
           StandardOutPath = "${home}/.local/state/nix-darwin/agents-update.log";
           StandardErrorPath = "${home}/.local/state/nix-darwin/agents-update.log";
         };
+      };
+
+      launchd.user.agents.llm-agents-activate.serviceConfig = {
+        ProgramArguments = [
+          "${agents.updater}/bin/update-llm-agents"
+          "--activate"
+        ];
+        StartCalendarInterval = [
+          {
+            Hour = 4;
+            Minute = 0;
+          }
+        ];
+        ProcessType = "Background";
+        StandardOutPath = "${home}/.local/state/nix-darwin/agents-activation.log";
+        StandardErrorPath = "${home}/.local/state/nix-darwin/agents-activation.log";
       };
     };
 }

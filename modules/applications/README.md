@@ -75,10 +75,12 @@ Platform services stay with their application as systemd or launchd definitions.
 uses the host's Nixpkgs package. T3Code and coding agents retain their independent
 rolling profiles; see [ADR 0007](../../adrs/0007-rolling-tool-profiles.md).
 
-On both hosts, `update-llm-agents` prefetches Numtide's latest flake source and
-passes its path and hash to a shared Nix bundle factory. It loads the packages
-without applying upstream `nixConfig`; cache trust stays in the system
-configuration. The agents install together after a successful build. See the
+On both hosts, `update-llm-agents` resolves Codex and Claude's latest stable
+publisher releases and checksums. Numtide supplies OpenCode and Claude's platform
+integration without applying upstream `nixConfig`; cache trust stays in the
+system configuration. All agents stage together after a successful build.
+Background checks run every three hours and activate at 04:00; manual updates
+activate immediately. See the
 [coding-agent update guide](coding-agents/README.md) for operation and rollback.
 
 Neovim's package wrapper provides Lazygit, Viu, Tree-sitter, and Mason's helper

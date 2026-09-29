@@ -10,7 +10,7 @@
       pkgs,
       profile,
       name,
-      installCommand ? "systemctl --user start llm-agents-update.service",
+      installCommand ? "update-llm-agents",
     }:
     pkgs.writeShellApplication {
       inherit name;

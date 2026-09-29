@@ -324,16 +324,19 @@ as on Othinus. The login shell and Ghostty use
 `/nix/var/nix/profiles/system/sw/bin/nu`, which
 remains available before boot activation recreates `/run/current-system`.
 
-The agent updater runs at login and daily at 04:30 through launchd. Failed
-updates retry after at least five minutes, including when Nix is still starting.
-Manual updates are included in `nup`; its scheduled log is
-`~/.local/state/nix-darwin/agents-update.log`. The first update must finish before
-the Nix profile's agent commands are available. The shared Nix launchers take
+The agent updater stages releases at login and every three hours through launchd;
+a separate job activates them at 04:00. Failed checks retry after at least five
+minutes, including when Nix is still starting. `nup` and `nups` check and activate
+immediately. Logs are `~/.local/state/nix-darwin/agents-update.log` and
+`agents-activation.log`. The first successful check initializes a missing active
+profile. The shared Nix launchers take
 precedence in Nushell's PATH and enter the project's Devenv environment before
 starting an agent.
 The Mac trusts Numtide's signed binary cache through its system configuration.
-The [agent updater](../../modules/applications/coding-agents/README.md) installs
-all three agents as one generation without applying upstream flake settings.
+The [agent updater](../../modules/applications/coding-agents/README.md) uses
+Codex and Claude's latest stable publisher releases, verified against their
+checksums. Numtide supplies OpenCode and Claude's platform integration. All three
+agents install as one generation without applying upstream flake settings.
 
 ## User files and state
 

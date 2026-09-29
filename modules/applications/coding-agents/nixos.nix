@@ -71,11 +71,11 @@ in
 
         user = {
           services.llm-agents-update = {
-            description = "Update the independent LLM agent profile";
+            description = "Stage the latest LLM agent releases";
             unitConfig.ConditionUser = user;
             serviceConfig = {
               Type = "oneshot";
-              ExecStart = lib.getExe agents.updater;
+              ExecStart = "${lib.getExe agents.updater} --stage";
               TimeoutStartSec = "4h";
               Restart = "on-failure";
               RestartSec = "5m";
@@ -83,11 +83,30 @@ in
           };
 
           timers.llm-agents-update = {
-            description = "Update LLM agents daily";
+            description = "Check for LLM agent releases every three hours";
             wantedBy = [ "timers.target" ];
             timerConfig = {
               OnStartupSec = "1s";
-              OnCalendar = "*-*-* 04:30:00";
+              OnCalendar = "*-*-* 00/3:00:00";
+              Persistent = true;
+            };
+          };
+
+          services.llm-agents-activate = {
+            description = "Activate the staged LLM agent releases";
+            unitConfig.ConditionUser = user;
+            serviceConfig = {
+              Type = "oneshot";
+              ExecStart = "${lib.getExe agents.updater} --activate";
+              TimeoutStartSec = "4h";
+            };
+          };
+
+          timers.llm-agents-activate = {
+            description = "Activate LLM agent releases daily at 04:00";
+            wantedBy = [ "timers.target" ];
+            timerConfig = {
+              OnCalendar = "*-*-* 04:00:00";
               Persistent = true;
             };
           };
