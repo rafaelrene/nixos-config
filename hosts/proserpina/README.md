@@ -8,7 +8,7 @@ Apple Silicon, user `rafael`, home `/Users/rafael`, checkout
 
 | Feature            | macOS configuration                                                                                                    |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| Shell and runtimes | Nushell login shell, Starship, zoxide, Devenv and Node 24.                                                             |
+| Shell and runtimes | Nushell login shell, Bash/sh, Starship, zoxide and Devenv.                                                             |
 | Editor             | Shared LazyVim configuration, theme, and private Mason installer runtimes.                                             |
 | Git                | Shared configuration, Delta theme, ignores, and branch helpers.                                                        |
 | Terminal           | Ghostty from Nix, shared palette, Mac Option key and quick-terminal settings.                                          |
@@ -322,7 +322,7 @@ tools in each project's `devenv.nix`. The shared Nushell direnv hook loads that
 environment automatically in T3 worktrees; regular checkouts require `direnv allow`.
 Agent wrappers use `devenv shell -- <command>` when needed. See the
 [project environment guide](../../modules/applications/devenv/README.md).
-Clang is available as a workstation compiler on both hosts. Node and other
+Bash/sh and Nushell are the workstation shells. Compilers, Node and other
 language runtimes come from project environments or application-private
 dependencies. The login shell and Ghostty use
 `/nix/var/nix/profiles/system/sw/bin/nu`, which

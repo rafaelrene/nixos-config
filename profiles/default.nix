@@ -5,7 +5,6 @@ let
     "bat"
     "bkt"
     "btop"
-    "clang"
     "coding-agents"
     "curl"
     "delta"

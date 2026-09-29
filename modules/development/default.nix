@@ -10,7 +10,6 @@
         deadnix
 
         # Devenv supplies Bash; these support the repository's other config and tests.
-        zsh
         nushell
         nufmt
         lua
