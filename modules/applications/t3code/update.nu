@@ -14,7 +14,8 @@ def update [settings: record] {
         error make {msg: "The nightly channel returned an invalid version."}
     }
 
-    let metadata = $settings.profile | path join share t3code release.json
+    let source = if ($settings.staged | path exists) { $settings.staged } else { $settings.profile }
+    let metadata = $source | path join share t3code release.json
     let installed = if ($metadata | path exists) { open $metadata } else { null }
     let release = if $installed != null and $installed.version == $version {
         $installed
@@ -37,12 +38,12 @@ def update [settings: record] {
 
     let expression = $"($settings.bundle) { version = \"($version)\"; serverHash = \"($release.serverHash)\"; desktopHash = \"($release.desktopHash)\"; }"
     let previous = try {
-        ^readlink -f $settings.profile | str trim
+        ^readlink -f $settings.staged | str trim
     } catch { "" }
     # Also notice recipe changes when the nightly version itself has not changed.
     let expected = ^nix eval --raw --expr $"\(($expression)\).outPath"
     if $expected == $previous {
-        print $"T3 Code: server and desktop ($version) are already installed."
+        print $"T3 Code: server and desktop ($version) are already staged."
         return false
     }
 
@@ -51,9 +52,9 @@ def update [settings: record] {
         ^nix build --print-build-logs --no-link --print-out-paths --expr $expression
         | str trim
     )
-    mkdir ($settings.profile | path dirname)
-    ^nix-env --profile $settings.profile --set $generation
-    print $"T3 Code: server and desktop ($version) installed."
+    mkdir ($settings.staged | path dirname)
+    ^($settings.lifecycle) stage $generation
+    print $"T3 Code: server and desktop ($version) staged."
     true
 }
 
@@ -72,6 +73,8 @@ def main [settings_file: path, --restart, --bootstrap] {
         }
     }
 
+    if $bootstrap and not ($server | path exists) { ^($settings.lifecycle) seed }
+
     if $settings.project != null {
         let marker = $settings.base | path join .nixos-config-registered
         if not ($marker | path exists) {
@@ -81,19 +84,19 @@ def main [settings_file: path, --restart, --bootstrap] {
         }
     }
 
-    if $changed and $restart {
+    if $restart {
 
         # Bootstrap may need this same lock when the server starts for the first time.
         ^flock -u 9
-        print "T3 Code: restarting the server..."
+        print "T3 Code: requesting coordinated activation..."
         if $settings.darwin {
             let uid = ^id -u | str trim
-            ^($settings.restartCommand) kickstart -k $"gui/($uid)/org.nixos.t3code"
+            ^($settings.activateCommand) kickstart $"gui/($uid)/org.nixos.t3code-restart"
         } else {
-            ^($settings.restartCommand) --user restart t3code.service
+            ^($settings.activateCommand) --user start --no-block t3code-restart.service
         }
-        print "T3 Code: server restarted. Reopen the desktop to use the new client."
+        print "T3 Code: activation runs in the service manager; an open desktop will reopen automatically."
     } else if $changed {
-        print "T3 Code: restart the server and reopen the desktop to use the new release."
+        print "T3 Code: release staged for ns, t3-activate, or the 04:00 activation."
     }
 }

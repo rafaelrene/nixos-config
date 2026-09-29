@@ -100,3 +100,11 @@ Git-backed flakes include only tracked files. For validation before adding new
 files to Git, use `path:.` as the flake reference instead of `.`.
 System activation still requires explicit approval as described in
 [AGENTS.md](AGENTS.md).
+
+For T3 Code lifecycle changes, use temporary fixtures to exercise background
+staging, already-staged activation, duplicate clients, a closed desktop,
+concurrent launch/activation, failed startup, and repeated activation. Validate
+both native service definitions. After authorized switches on each host, verify
+one matching server/client pair, preserved history and connection settings,
+Bitbucket authentication, and the 04:00 job's activation path. A build or a
+fixture with a mock service manager does not replace those native checks.

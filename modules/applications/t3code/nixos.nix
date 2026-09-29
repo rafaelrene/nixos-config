@@ -22,8 +22,18 @@ in
         inherit lib pkgs home;
       };
       profile = "${home}/.local/state/nix/profiles/t3code";
-      updateT3Code = features.t3code.update {
+      state = "${home}/.local/state/t3code-bundle-updater";
+      lifecycle = features.t3code.lifecycle {
         inherit lib pkgs home;
+        desktop = client;
+      };
+      updateT3Code = features.t3code.update {
+        inherit
+          lib
+          pkgs
+          home
+          lifecycle
+          ;
         project = config.workstation.checkout;
       };
 
@@ -61,7 +71,12 @@ in
       };
       runT3Code = pkgs.writeShellApplication {
         name = "run-t3code";
+        runtimeInputs = [ pkgs.coreutils ];
         text = ''
+          umask 077
+          mkdir -p "${state}"
+          printf '{"generation":"%s","pid":%s}\n' "$(readlink -f "${profile}")" "$$" > "${state}/running.json.tmp"
+          mv "${state}/running.json.tmp" "${state}/running.json"
           exec "${profile}/bin/t3" serve \
             --base-dir ${lib.escapeShellArg baseDir} \
             --host 0.0.0.0 \
@@ -73,7 +88,25 @@ in
       desktop = pkgs.writeShellApplication {
         name = "t3code-desktop";
         text = ''
+          exec ${lib.getExe lifecycle} launch "$@"
+        '';
+      };
+      activate = pkgs.writeShellApplication {
+        name = "t3-activate";
+        text = ''
+          ${pkgs.systemd}/bin/systemctl --user start --no-block t3code-restart.service
+          echo "T3 Code: activation requested. See journalctl --user -u t3code-restart.service."
+        '';
+      };
+      client = pkgs.writeShellApplication {
+        name = "t3code-client";
+        runtimeInputs = [ pkgs.yq-go ];
+        text = ''
+          umask 077
+          settings="${baseDir}/userdata/desktop-settings.json"
+          yq --inplace --output-format=json '.localEnvironmentEnabled = false' "$settings"
           export T3CODE_HOME="${baseDir}"
+          export T3CODE_DISABLE_AUTO_UPDATE=true
           client="${profile}/bin/t3code-desktop"
           if ! test -x "$client"; then
             echo "T3 Code desktop is not installed yet. Run: t3-update-now" >&2
@@ -87,8 +120,10 @@ in
       environment.variables.T3CODE_HOME = "$HOME/.local/share/t3code";
       environment.systemPackages = [
         t3Command
+        updateT3Code
         updateNow
         desktop
+        activate
         (pkgs.makeDesktopItem {
           name = "t3code";
           desktopName = "T3 Code";
@@ -105,7 +140,11 @@ in
         user.services = {
           t3code-bootstrap = {
             description = "Install the first T3 Code nightly generation";
-            unitConfig.ConditionUser = user;
+            unitConfig = {
+              ConditionUser = user;
+              # Avoid acquiring the download lock while activation waits for startup.
+              ConditionPathExists = "!${profile}/bin/t3";
+            };
             serviceConfig = {
               Type = "oneshot";
               RemainAfterExit = true;
@@ -193,11 +232,12 @@ in
           };
 
           t3code-restart = {
-            description = "Activate the staged T3 Code nightly";
+            description = "Activate the matching T3 Code server and desktop";
             unitConfig.ConditionUser = user;
             serviceConfig = {
               Type = "oneshot";
-              ExecStart = "${pkgs.systemd}/bin/systemctl --user restart t3code.service";
+              ExecStart = "${lib.getExe lifecycle} activate";
+              TimeoutStartSec = "5min";
             };
           };
         };
