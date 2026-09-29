@@ -86,6 +86,13 @@ activate immediately. See the
 Neovim's package wrapper provides Lazygit, Viu, Tree-sitter, and Mason's helper
 runtimes on its private PATH. They are not separate globally selected apps.
 Build dependencies and command `runtimeInputs` also stay with their consumer.
+Language runtimes belong in project Devenv environments or their application's
+private dependencies. Node is private to Neovim and T3 Code.
+Nushell and Bash/sh remain global on both hosts. Othinus also provides GNU Awk
+and Quickshell. Compilers belong in project environments or application-private
+dependencies.
+Othinus omits Perl from NixOS's optional default packages; applications that need
+it retain their interpreter dependency.
 Both hosts install mpv; Othinus retains p7zip for archives.
 
 See [DEVELOPMENT.md](../../DEVELOPMENT.md) for formatting, linting, evaluations,

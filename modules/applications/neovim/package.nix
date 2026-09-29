@@ -24,6 +24,7 @@
           pkgs.gcc
           pkgs.go
           pkgs.lazygit
+          pkgs.nodejs_24
           pkgs.python3
           pkgs.tree-sitter
           pkgs.viu

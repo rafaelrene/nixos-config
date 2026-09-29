@@ -1,6 +1,11 @@
 {
   flake.modules.nixos.system =
-    { config, ... }:
+    {
+      config,
+      lib,
+      options,
+      ...
+    }:
     let
       user = config.workstation.user;
       home = config.users.users.${user}.home;
@@ -20,6 +25,10 @@
       services.power-profiles-daemon.enable = true;
       environment = {
         localBinInPath = true;
+        # Packaged Perl consumers retain their own interpreter dependency.
+        defaultPackages = builtins.filter (
+          package: lib.getName package != "perl"
+        ) options.environment.defaultPackages.default;
       };
       systemd.tmpfiles.rules = [
         "d ${home}/.cache 0700 ${user} ${group} - -"

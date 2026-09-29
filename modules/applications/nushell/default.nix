@@ -68,7 +68,10 @@ in
           lib.mapAttrs (_: value: lib.replaceStrings [ "$HOME" ] [ home ] value) config.environment.variables
         );
       };
-      programs.zsh.enable = true;
+      programs = {
+        bash.enable = true;
+        zsh.enable = false;
+      };
       workstation.links = {
         ".config/nushell/config.nu" = toString nuConfig;
         ".config/nushell/env.nu" = "${./env.nu}";
