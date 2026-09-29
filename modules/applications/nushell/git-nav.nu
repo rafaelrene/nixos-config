@@ -60,7 +60,7 @@ export def --env "git nav" [
         ]
     }
     let destinations = (
-    [{kind: "create", name: "+ Create branch…", path: $main}]
+    [{kind: "create", name: "+ Create worktree…", path: $main}]
     | append $branches
     | append $detached
     | append $submodules
@@ -88,7 +88,7 @@ export def --env "git nav" [
     $rows | ^fzf --read0 --print0 --delimiter "\t" --with-nth 2.. --nth 1,2
       --layout reverse --wrap --tiebreak begin,index --no-multi --no-select-1 --no-exit-0
       --expect ctrl-n,ctrl-t --prompt "Repository > "
-      --header $"($root | path basename) · ($head)\nEnter: (if $new_window { 'new window' } else { 'go' })   Ctrl+T: new window   Ctrl+N: create branch   Esc: cancel"
+      --header $"($root | path basename) · ($head)\nEnter: (if $new_window { 'new window' } else { 'go' })   Ctrl+T: new window   Ctrl+N: create worktree   Esc: cancel"
     | complete
   )
     if $selection.exit_code == 130 { return }
@@ -115,12 +115,14 @@ export def --env "git nav" [
     let target = if $destination.kind == "create" {
         let starting_commit = $current.head
         if $starting_commit =~ '^0+$' {
-            error make {msg: "Commit before creating another branch with git nav."}
+            error make {msg: "Commit before creating a worktree with git nav."}
         }
-        print $"New branch in ($main)"
+        let base = $env.T3CODE_HOME? | default ($env.HOME | path join ".local/share/t3code")
+        let directory = $base | path join "worktrees" ($main | path basename) | path expand
+        print $"New worktree in ($directory)"
         let name = (
             try {
-                input "Branch name (empty cancels): " | str trim
+                input "Worktree / branch name (empty cancels): " | str trim
             } catch { null }
         )
         if $name == null or $name == "" { return }
@@ -128,8 +130,13 @@ export def --env "git nav" [
         if $checked_name != $name {
             error make {msg: "Enter a literal branch name."}
         }
-        git-output $main switch -c $name $starting_commit | ignore
-        $main
+        # Match T3 Code's directory naming while keeping the literal branch name.
+        let target = $directory | path join ($name | str replace --all '/' '-')
+        if ($target | path exists) {
+            error make {msg: $"Worktree path already exists: ($target)"}
+        }
+        git-output $main worktree add -b $name $target $starting_commit | ignore
+        $target
     } else if $destination.kind in [branch worktree] {
         # Refresh ownership: another terminal may have checked out this branch.
         let owners = worktrees $root | where branch == $destination.name
