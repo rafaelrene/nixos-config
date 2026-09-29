@@ -37,22 +37,13 @@ def --env shell-leader [] {
 }
 
 # Execute at the prompt, preserving any partially typed command.
-$env.config.keybindings = ($env.config.keybindings | append [
-  {
-    name: nav
-    modifier: control_alt
-    keycode: char_p
-    mode: [emacs vi_insert vi_normal]
-    event: {send: executehostcommand, cmd: nav}
-  }
-  {
-    name: shell_leader
-    modifier: none
-    keycode: space
-    mode: vi_normal
-    event: {send: executehostcommand, cmd: shell-leader}
-  }
-])
+$env.config.keybindings = ($env.config.keybindings | append {
+  name: shell_leader
+  modifier: none
+  keycode: space
+  mode: vi_normal
+  event: {send: executehostcommand, cmd: shell-leader}
+})
 
 # Nushell may start without the PATH configured by /etc/profile.
 $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local" "bin") | uniq)

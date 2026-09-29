@@ -353,7 +353,7 @@ real: the macOS folder picker resolves directory symlinks to a fixed store path.
 Rebuild after changing the list. Launchers use the
 Nix-managed Chromium bundle under `/Applications/Nix Apps`.
 
-Run `nav` or press **Control+Option+P** at a Nushell prompt to pick a project,
+Run `nav` or press **Space Space** in Nushell's normal mode to pick a project,
 Home, a configuration folder, or an SSH host with fzf. Selection changes directory
 or starts SSH in the current terminal. See the
 [shared guide](../../modules/shell/scripts/README.md#destination-picker) for
@@ -396,10 +396,10 @@ with a Ghostty window already open. Each press should open one fresh terminal
 without restoring saved windows or focusing an existing window.
 
 For `nav` changes, validate the generated Nushell configuration and module.
-After an authorized switch, test the command and Control+Option+P at a fresh
+After an authorized switch, test the command and Space Space at a fresh
 Nushell prompt: search, change directory, cancel, connect through SSH, and exit
 back to the local shell. Check that the shortcut preserves partially typed input
-and does not open another window. Repeat in Nushell on Othinus with Ctrl+Alt+P.
+and does not open another window. Repeat in Nushell on Othinus.
 
 For shell leader changes, test all three sequences in normal mode on each host,
 including cancellation and preserving partially typed input. Verify spaces still

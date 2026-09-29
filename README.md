@@ -100,8 +100,8 @@ Option+Enter opens a fresh Ghostty window on Proserpina through Nix-managed skhd
 even when Ghostty is closed. See the [Mac shortcut setup](hosts/proserpina/README.md#window-management).
 
 For project folders and SSH connections, run
-[`nav`](modules/shell/scripts/README.md#destination-picker) or press Ctrl+Alt+P
-at a Nushell prompt on either machine. It uses fzf to change directory or start
+[`nav`](modules/shell/scripts/README.md#destination-picker) or press Space Space
+in normal mode at a Nushell prompt. It uses fzf to change directory or start
 SSH in the current terminal.
 
 Nushell uses Vi editing with a [Space leader](modules/shell/scripts/README.md#shell-leader)

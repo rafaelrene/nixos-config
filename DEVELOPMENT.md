@@ -71,7 +71,7 @@ launchers and symlinks can break after the flake source is garbage-collected.
 
 For `nav` changes, validate the generated Nushell configuration and module with
 `nu-check`, then exercise directory selection, cancellation, and SSH in an
-interactive Nushell on each host. Verify Ctrl+Alt+P preserves partially typed
+interactive Nushell on each host. Verify Space Space preserves partially typed
 input. Use temporary fixtures for discovery rules, including hidden projects,
 worktrees, excluded caches, symlinks, and paths containing whitespace.
 

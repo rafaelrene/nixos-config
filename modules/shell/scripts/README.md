@@ -15,7 +15,7 @@ without Enter:
 Esc, Ctrl+C, or an unlisted key cancels the leader menu. The command line you
 were editing stays intact. Space inserts ordinary spaces in insert mode.
 These bindings only run at the Nushell prompt; Neovim and other foreground
-programs handle their own keys. Ctrl+Alt+P remains a direct shortcut for `nav`.
+programs handle their own keys.
 Rebuild and start a fresh Nushell to load the bindings.
 
 ## Project scripts
@@ -45,8 +45,8 @@ nu --no-config-file /path/to/nixos-config/modules/shell/scripts/project-run.nu
 
 ## Destination picker
 
-Run `nav` or press **Ctrl+Alt+P** (**Control+Option+P** on macOS) at a Nushell
-prompt on either machine. The fzf picker runs in the current terminal and uses
+Run `nav` or press **Space Space** in normal mode at a Nushell prompt on either
+machine. The fzf picker runs in the current terminal and uses
 the shared fzf theme. The shortcut preserves any partially typed command and
 only runs at the shell prompt, not while an editor or another program is active.
 
@@ -70,8 +70,8 @@ host's Home and Code paths through generated settings.
 
 On macOS, Raycast can retain a registered **Workstation destinations** extension
 and its global hotkey after Nix removes the managed extension link. Remove that
-entry in Raycast Settings → Extensions if present, so Control+Option+P reaches
-Nushell.
+entry in Raycast Settings → Extensions if present to clear the obsolete command
+and hotkey.
 
 ## Repository navigation
 
