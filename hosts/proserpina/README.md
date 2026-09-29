@@ -61,6 +61,21 @@ Do not downgrade Raycast or reset its databases. After updating its bundle,
 verify Command-Space and ensure its login item points to
 `/Applications/Nix Apps/Raycast.app`.
 
+Before replacing applications, activation disables Raycast's user updater
+(`com.raycast.macos.updater`) and privileged updater
+(`com.raycast.macos.updater.daemon`) with `launchctl`, then unloads either helper
+if registered. The disabled state persists across reboots and leaves the signed
+app bundle intact. Raycast can still download updates or show update prompts;
+install app updates through `nups`. Extension updates remain managed by Raycast.
+Removing this configuration does not re-enable the helpers: restoring vendor
+updates also requires `launchctl enable user/<uid>/com.raycast.macos.updater`
+(substitute the numeric UID from `id -u`) and
+`sudo launchctl enable system/com.raycast.macos.updater.daemon`.
+
+Shottr requires confirmation before installing its own updates. Leave those
+prompts unconfirmed and update through `nups`; no supported preference to disable
+its update prompts is configured.
+
 Slack, Teams and Signal use cask metadata. Teams uses Nixpkgs' extraction of
 only the app payload, excluding Microsoft AutoUpdate. Their versions advance
 through `nup`/`nups`. Activation writes Slack's `AutoUpdate = false` policy to
@@ -389,6 +404,14 @@ native checks for the change, such as app signature verification, configuration
 decoding, and launchd plist validation. Activation and interactive checks follow
 an explicitly authorized live switch; report any checks still pending. Evaluation
 and builds do not authorize changing running services. A VM is not required.
+
+For Raycast updater changes, confirm `launchctl print-disabled user/<uid>` and
+`launchctl print-disabled system` report the two updater helpers as disabled
+after an authorized activation. Verify neither helper remains loaded, then test
+Command-Space and an extension. Check that Raycast's update action cannot replace
+the app; do not approve re-enabling its helpers. Repeat after relaunch and reboot.
+Compare the installed version with the Nix package before switching to avoid
+replacing a newer self-updated app with an older package.
 
 Use native Mac validation. For OmniWM updates,
 decode the generated settings against the matching upstream schema, check the
