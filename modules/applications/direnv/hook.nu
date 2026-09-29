@@ -1,3 +1,6 @@
+# Nushell sessions started over SSH can miss the environment from /etc/profile.
+$env.DIRENV_CONFIG = "/etc/direnv"
+
 # Check before every prompt so edits reload without changing directories.
 $env.config.hooks.pre_prompt = ($env.config.hooks.pre_prompt? | default [] | append {||
   let changes = (^direnv export json | from json | default {})
