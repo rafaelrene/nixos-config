@@ -353,16 +353,11 @@ real: the macOS folder picker resolves directory symlinks to a fixed store path.
 Rebuild after changing the list. Launchers use the
 Nix-managed Chromium bundle under `/Applications/Nix Apps`.
 
-The Nix-built **Workstation destinations** Raycast extension provides
-**Open destination** for projects, Home, configuration folders, and SSH hosts.
-Activation registers it through Raycast's native CLI URL on initial installation,
-which opens Raycast. Later switches refresh changed extension builds in the
-background and leave Raycast alone when the build is unchanged. Assign
-**Control+Option+P** to the command in Raycast Settings → Workstation destinations.
-Enter focuses a matching Ghostty terminal; **Cmd+Shift+Enter** forces a new
-window. See the [shared guide](../../modules/shell/scripts/README.md#destination-picker)
-for discovery rules and window-matching limits. Allow Automation access to
-Ghostty if macOS requests it.
+Run `nav` or press **Control+Option+P** at a Nushell prompt to pick a project,
+Home, a configuration folder, or an SSH host with fzf. Selection changes directory
+or starts SSH in the current terminal. See the
+[shared guide](../../modules/shell/scripts/README.md#destination-picker) for
+discovery rules and removal of any retained Raycast destination shortcut.
 
 macOS controls application sign-in and privacy permissions. For example,
 Ghostty's global quick-terminal shortcut needs Accessibility permission. These
@@ -396,9 +391,8 @@ press Option+Enter from another application with Ghostty closed, then repeat
 with a Ghostty window already open. Each press should open one fresh terminal
 without restoring saved windows or focusing an existing window.
 
-For destination-picker changes, build the local extension (its Nix package runs
-TypeScript and ESLint checks), compile `ghostty.applescript` with `osacompile`,
-and validate the generated Nushell configuration. After an authorized switch,
-test the global shortcut from another application, search and cancellation,
-project opening and reuse, forced new windows, and SSH. Repeat the workflow in
-Vicinae on Othinus, including the fallback when a window title is unrecognized.
+For `nav` changes, validate the generated Nushell configuration and module.
+After an authorized switch, test the command and Control+Option+P at a fresh
+Nushell prompt: search, change directory, cancel, connect through SSH, and exit
+back to the local shell. Check that the shortcut preserves partially typed input
+and does not open another window. Repeat in Nushell on Othinus with Ctrl+Alt+P.

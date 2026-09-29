@@ -27,11 +27,10 @@ nu --no-config-file /path/to/nixos-config/modules/shell/scripts/prun.nu
 
 ## Destination picker
 
-`workstation-open` opens a searchable destination picker in Vicinae on Othinus
-and Raycast on Proserpina. Use **Ctrl+Alt+P** on Linux. On the Mac, assign
-**Control+Option+P** to Raycast's **Open destination** command in
-Settings → Workstation destinations after rebuilding. Nix builds and registers
-the local extension; no store publication or manual JavaScript build is needed.
+Run `nav` or press **Ctrl+Alt+P** (**Control+Option+P** on macOS) at a Nushell
+prompt on either machine. The fzf picker runs in the current terminal and uses
+the shared fzf theme. The shortcut preserves any partially typed command and
+only runs at the shell prompt, not while an editor or another program is active.
 
 The list contains Home, Code, Git projects below Code, `~/.config` and its
 immediate application folders, plus SSH aliases `othinus` and `proserpina`.
@@ -40,36 +39,21 @@ grouping folders such as `.personal` are included. Ordinary folders are not
 projects. Dependency/build caches and symlinks below Code are skipped; nested
 repositories are left to `git nav`. Configuration-directory symlinks are included.
 
-Enter focuses an identifiable matching Ghostty terminal, or opens a new window.
-A project matches its directory and descendants; Home, Code and configuration
-entries match only their exact directory. Matching uses canonical paths and
-prefers the most recently focused window. No commands are typed into an existing
-terminal. SSH selections always create a new connection in a new window.
+Enter changes the current shell's directory or runs `ssh` for the selected host.
+Exiting SSH returns to the local shell in its original directory. Esc cancels
+without changing directory or starting a connection. To use a separate terminal,
+open one first, then run `nav`.
 
-To force a new local window, use **Cmd+Shift+Enter** or **Open New Window** in
-Raycast's action panel. Vicinae provides an **Open new window · …** row for each
-local destination. Esc cancels without opening anything.
+`nav` is an environment-changing Nushell command, like `git nav`, so directory
+changes persist in the calling shell. Rebuild and start a fresh Nushell to load
+the command and shortcut. The implementation lives in
+[navigation.nu](../../applications/nushell/navigation.nu); the Nushell feature supplies each
+host's Home and Code paths through generated settings.
 
-Nushell sets prompt titles to `hostname: /full/path`. This distinguishes local
-terminals from remote SSH shells. Start a fresh shell after rebuilding to load
-the hook. macOS reads Ghostty's native terminal directories through AppleScript;
-Linux uses Niri's window titles. Only titles identifying the local host are
-reused. Programs that replace the title, old shell sessions, and other shells
-can cause a new window to open. On Linux only the visible window title is
-available, so hidden tabs and splits cannot be matched independently.
-
-The shared implementation is in [destinations/](destinations/); the Mac picker
-is in [the Raycast extension](../../darwin/destinations/). Both inherit their
-launcher's theme. macOS may request Automation permission to control Ghostty;
-an AppleScript error is shown rather than silently creating another window.
-
-For terminal use and diagnostics:
-
-```sh
-workstation-open list
-workstation-open open 'ssh:othinus'
-workstation-open open 'home:/Users/rafael' --new-window
-```
+On macOS, Raycast can retain a registered **Workstation destinations** extension
+and its global hotkey after Nix removes the managed extension link. Remove that
+entry in Raycast Settings → Extensions if present, so Control+Option+P reaches
+Nushell.
 
 ## Repository navigation
 

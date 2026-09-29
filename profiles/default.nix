@@ -39,7 +39,6 @@ let
     "unzip"
     "webapps"
     "wget"
-    "workstation-open"
     "xz"
     "yazi"
     "yq-go"

@@ -99,11 +99,10 @@ always-open-a-new-window default.
 Option+Enter opens a fresh Ghostty window on Proserpina through Nix-managed skhd,
 even when Ghostty is closed. See the [Mac shortcut setup](hosts/proserpina/README.md#window-management).
 
-For project folders and SSH connections, use the shared
-[destination picker](modules/shell/scripts/README.md#destination-picker).
-It explicitly opens a Ghostty window or focuses a matching terminal. The
-shortcut is Ctrl+Alt+P on Othinus; assign Control+Option+P to **Open destination**
-in Raycast on Proserpina.
+For project folders and SSH connections, run
+[`nav`](modules/shell/scripts/README.md#destination-picker) or press Ctrl+Alt+P
+at a Nushell prompt on either machine. It uses fzf to change directory or start
+SSH in the current terminal.
 
 ## Future work
 

@@ -12,6 +12,8 @@ let
       inherit lib pkgs;
       checkout = config.workstation.checkout;
       hostname = config.networking.hostName;
+      home = config.users.users.${config.workstation.user}.home;
+      code = config.workstation.codeRoot;
       rebuildCommand =
         if pkgs.stdenv.hostPlatform.isDarwin then
           "sudo darwin-rebuild switch"
