@@ -98,11 +98,13 @@ its main checkout. Nested submodules can be traversed one level at a time.
 
 Enter selects a destination in the current shell; Ctrl+T opens it in a new
 Ghostty window and keeps the calling shell's directory. Run `git nav --new-window`
-(or `git nav -w`) to make Enter and Ctrl+N open new windows too. On macOS, new
+(or `git nav -w`) to make Enter open new windows too. On macOS, new
 windows launch a separate Ghostty instance without restoring saved windows;
 Linux uses Ghostty's new-window action.
 
-Esc cancels. Ctrl+N opens worktree creation even when the search has no matches.
+Ctrl+N and Ctrl+P move to the next and previous rows. Esc cancels.
+Select the first row, **Create worktree…**, to create a worktree; Enter enters
+it in the current shell, while Ctrl+T opens it in a new window.
 An empty name or Ctrl+C cancels the prompt. Entering a name immediately
 creates a worktree and matching branch from the invoking checkout's commit when
 the picker opened. There is no starting-point prompt. The main checkout and its

@@ -87,30 +87,24 @@ export def --env "git nav" [
     let selection = (
     $rows | ^fzf --read0 --print0 --delimiter "\t" --with-nth 2.. --nth 1,2
       --layout reverse --wrap --tiebreak begin,index --no-multi --no-select-1 --no-exit-0
-      --expect ctrl-n,ctrl-t --prompt "Repository > "
-      --header $"($root | path basename) · ($head)\nEnter: (if $new_window { 'new window' } else { 'go' })   Ctrl+T: new window   Ctrl+N: create worktree   Esc: cancel"
+      --expect ctrl-t --prompt "Repository > "
+      --header $"($root | path basename) · ($head)\nEnter: (if $new_window { 'new window' } else { 'go' })   Ctrl+T: new window   Esc: cancel"
     | complete
   )
-    if $selection.exit_code == 130 { return }
-    if $selection.exit_code not-in [0 1] {
+    if $selection.exit_code in [1 130] { return }
+    if $selection.exit_code != 0 {
         error make {
             msg: ($selection.stderr | str trim)
         }
     }
     let selected = $selection.stdout | split row "\u{0}"
-    # fzf returns 1 for Ctrl+N when the current query has no matching rows.
-    if $selection.exit_code == 1 and $selected.0 != "ctrl-n" { return }
-    let destination = if $selected.0 == "ctrl-n" {
-        $destinations.0
-    } else {
-        let index = (
-            $selected.1
-            | split row "\t"
-            | first
-            | into int
-        )
-        $destinations | get $index
-    }
+    let index = (
+        $selected.1
+        | split row "\t"
+        | first
+        | into int
+    )
+    let destination = $destinations | get $index
 
     let target = if $destination.kind == "create" {
         let starting_commit = $current.head
