@@ -96,6 +96,9 @@ On Proserpina, Raycast uses its normal application-opening behavior, which can
 focus an existing window. Its documented settings do not provide a global
 always-open-a-new-window default.
 
+Option+Enter opens a fresh Ghostty window on Proserpina through Nix-managed skhd,
+even when Ghostty is closed. See the [Mac shortcut setup](hosts/proserpina/README.md#window-management).
+
 For project folders and SSH connections, use the shared
 [destination picker](modules/shell/scripts/README.md#destination-picker).
 It explicitly opens a Ghostty window or focuses a matching terminal. The
