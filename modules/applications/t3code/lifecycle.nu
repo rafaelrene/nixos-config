@@ -66,6 +66,50 @@ def wait-ready [settings: record, target: string] {
     error make {msg: "T3 Code did not become ready. The desktop stays closed; inspect the server logs before retrying t3-activate."}
 }
 
+def wait-stopped [settings: record, service: string, pid] {
+
+    # bootout returns before launchd finishes removing a terminating service.
+    for attempt in 1..30 {
+        let loaded = ^($settings.serviceCommand) print $service | complete
+        if $loaded.exit_code == 113 and ($pid == null or $pid == 0 or (ps | where pid == $pid | is-empty)) {
+            return
+        }
+        if $loaded.exit_code not-in [0 113] {
+            error make {msg: $"Cannot inspect the stopping T3 Code service: ($loaded.stderr | str trim)"}
+        }
+        sleep 1sec
+    }
+    error make {msg: "T3 Code did not stop. The active profile is unchanged; inspect the server logs before retrying t3-activate."}
+}
+
+def request [settings: record] {
+    print "T3 Code: waiting for coordinated activation..."
+    if $settings.darwin {
+        let service = $"gui/(^id -u | str trim)/org.nixos.t3code-restart"
+        ^($settings.serviceCommand) kickstart -p $service | ignore
+        for attempt in 1..240 {
+            let result = ^($settings.serviceCommand) list org.nixos.t3code-restart | complete
+            if $result.exit_code != 0 {
+                error make {msg: $"Cannot inspect T3 Code activation: ($result.stderr | str trim)"}
+            }
+            let pid = $result.stdout | parse --regex '"PID" = (?<pid>\d+);' | get -o 0.pid
+            if $pid == null {
+                let status = $result.stdout | parse --regex '"LastExitStatus" = (?<status>-?\d+);' | get 0.status | into int
+                if $status != 0 {
+                    error make {msg: $"T3 Code activation failed. See ($settings.home)/.local/state/nix-darwin/t3code-activation.log."}
+                }
+                print "T3 Code: activation completed."
+                return
+            }
+            sleep 1sec
+        }
+        error make {msg: "T3 Code activation is still running after four minutes. Inspect the activation log."}
+    } else {
+        ^($settings.serviceCommand) --user start t3code-restart.service
+        print "T3 Code: activation completed."
+    }
+}
+
 def launch [settings: record, args: list<string>] {
     let target = active $settings
     if $target == null or not (healthy $settings $target) {
@@ -111,8 +155,10 @@ def activate [settings: record] {
     print "T3 Code: stopping the managed server..."
     if $settings.darwin {
         let domain = $"gui/(^id -u | str trim)"
+        let pid = server-pid $settings
         let loaded = ^($settings.serviceCommand) print $"($domain)/org.nixos.t3code" | complete
         if $loaded.exit_code == 0 { ^($settings.serviceCommand) bootout $"($domain)/org.nixos.t3code" }
+        wait-stopped $settings $"($domain)/org.nixos.t3code" $pid
     } else {
         ^($settings.serviceCommand) --user stop t3code.service
     }
@@ -144,8 +190,19 @@ def main [settings_file: path, action: string, ...args: string] {
                 ^nix-env --profile $settings.profile --set $target
             }
         }
-        activate => { activate $settings }
-        launch => { launch $settings $args }
+        request => { request $settings }
+        activate | launch => {
+            try {
+                if $action == activate { activate $settings } else { launch $settings $args }
+            } catch {|error|
+                let message = $"T3 Code: ($error.msg)"
+                let log = if $action == launch { "desktop.log" } else { "activation.log" }
+                $"(date now | format date '%Y-%m-%d %H:%M:%S') ($message)\n"
+                | save --append ($settings.state | path join $log)
+                ^$settings.notifyCommand $message | complete | ignore
+                error make {msg: $error.msg}
+            }
+        }
         _ => { error make {msg: $"Unknown T3 Code lifecycle action: ($action)"} }
     }
 }

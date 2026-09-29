@@ -1,3 +1,5 @@
+model = "gpt-6.1-sol"
+model_reasoning_effort = "high"
 [projects."/Users/rafael/code/.personal/flux"]
 trust_level = "trusted"
 
@@ -79,6 +81,7 @@ screen_reader_detection_done = true
 [tui.model_availability_nux]
 "gpt-5.6-sol" = 2
 gpt-6-astra = 2
+"gpt-6.1-sol" = 3
 
 # Keep the background daemon disabled for the Nix-managed CLI.
 [features]

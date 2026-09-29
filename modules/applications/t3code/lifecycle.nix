@@ -16,6 +16,18 @@
     let
       darwin = pkgs.stdenv.hostPlatform.isDarwin;
       state = "${home}/.local/state/t3code-bundle-updater";
+      notify = pkgs.writeShellApplication {
+        name = "notify-t3code-error";
+        text =
+          if darwin then
+            ''
+              exec /usr/bin/osascript ${./notify.applescript} "$@"
+            ''
+          else
+            ''
+              exec ${pkgs.libnotify}/bin/notify-send "T3 Code" "$@"
+            '';
+      };
       spawn = pkgs.writeShellApplication {
         name = "spawn-t3code-client";
         text =
@@ -40,6 +52,7 @@
           profile = "${home}/.local/state/nix/profiles/t3code";
           staged = "${home}/.local/state/nix/profiles/t3code-staged";
           spawn = lib.getExe spawn;
+          notifyCommand = lib.getExe notify;
           serviceCommand = if darwin then "/bin/launchctl" else "${pkgs.systemd}/bin/systemctl";
           serviceFile = "${home}/Library/LaunchAgents/org.nixos.t3code.plist";
           healthUrl = "http://127.0.0.1:3773/.well-known/t3/environment";
@@ -58,6 +71,10 @@
       ];
       text = ''
         install -d -m 0700 ${lib.escapeShellArg state}
+        # Requests wait for the independent coordinator, which takes this lock itself.
+        if [[ "''${1-}" == request ]]; then
+          exec nu --no-config-file ${./lifecycle.nu} ${settings} "$@"
+        fi
         # The child does not inherit the lock descriptor, including detached clients.
         exec flock --close ${lib.escapeShellArg "${state}/activation.lock"} \
           nu --no-config-file ${./lifecycle.nu} ${settings} "$@"

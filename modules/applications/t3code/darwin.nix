@@ -83,8 +83,7 @@ in
       activate = pkgs.writeShellApplication {
         name = "t3-activate";
         text = ''
-          /bin/launchctl kickstart "gui/$(id -u)/org.nixos.t3code-restart"
-          echo "T3 Code: activation requested. See ${logs}/t3code-activation.log."
+          exec ${lib.getExe lifecycle} request
         '';
       };
       command = pkgs.writeShellApplication {

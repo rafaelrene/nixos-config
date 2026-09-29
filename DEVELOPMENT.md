@@ -111,8 +111,10 @@ on each host.
 
 For T3 Code lifecycle changes, use temporary fixtures to exercise background
 staging, already-staged activation, duplicate clients, a closed desktop,
-concurrent launch/activation, failed startup, and repeated activation. Validate
-both native service definitions. After authorized switches on each host, verify
+concurrent launch/activation, failed startup, and repeated activation. Exercise
+delayed launchd service removal and server exit, shutdown timeouts that preserve
+the active profile, activation failure reporting, and launcher error notifications.
+Validate both native service definitions. After authorized switches on each host, verify
 one matching server/client pair, preserved history and connection settings,
 Bitbucket authentication, and the 04:00 job's activation path. A build or a
 fixture with a mock service manager does not replace those native checks.

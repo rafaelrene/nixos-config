@@ -94,8 +94,7 @@ in
       activate = pkgs.writeShellApplication {
         name = "t3-activate";
         text = ''
-          ${pkgs.systemd}/bin/systemctl --user start --no-block t3code-restart.service
-          echo "T3 Code: activation requested. See journalctl --user -u t3code-restart.service."
+          exec ${lib.getExe lifecycle} request
         '';
       };
       client = pkgs.writeShellApplication {

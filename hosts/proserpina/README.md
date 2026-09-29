@@ -301,7 +301,10 @@ Launchd starts the server at login, restarts it on failure, checks for updates
 every three hours, and activates staged releases at 04:00. `ns` and explicit
 updates request the same coordinated activation: close running clients, activate
 the matching server and desktop, check server readiness, and reopen a previously
-open client. Failed downloads leave both profiles unchanged. See the
+open client. Activation waits for launchd to finish removing the old server
+before promoting the profile. `t3-activate`, `ns` and `nups` wait for activation
+and report failures; launcher failures also send a native notification and write
+to the desktop log. Failed downloads leave both profiles unchanged. See the
 [T3 Code guide](../../modules/applications/t3code/README.md) for activation logs,
 failure handling, and direct rebuild commands. Open
 **T3 Code** in `/Applications/Nix Apps` for the client. Its launcher disables

@@ -80,6 +80,8 @@ server's release.
   switching, avoiding a restart in the middle of the rebuild.
 - `t3-activate` activates the staged release without checking the network. After
   a direct `darwin-rebuild switch` or `nixos-rebuild switch`, call it explicitly.
+  It waits for the independent activation job and returns failure if that job
+  fails, so `ns` and `nups` report activation failures in the calling terminal.
   An existing shell keeps its old `ns` definition until a fresh shell is opened.
 
 Without a path, `ns` and `nups` rebuild the configured main checkout. To keep
@@ -90,8 +92,11 @@ an existing shell reports that T3 Code activation was skipped.
 Activation runs as an independent launchd/systemd job so restarting T3 Code
 cannot terminate its own coordinator. It closes the current user's Nix T3 Code
 clients, stops the managed server, promotes the staged profile, and starts the
-server. It checks the service PID, generation, and environment descriptor before
-reopening a previously open client. A closed desktop stays closed. Repeated
+server. On macOS, it waits up to 30 seconds for launchd to remove the old service
+and for its server process to exit before promoting the profile. A shutdown
+timeout leaves the active profile unchanged. It checks the service PID,
+generation, and environment descriptor before reopening a previously open client.
+A closed desktop stays closed. Repeated
 activation skips restarting an already current server and matching client.
 Activation can interrupt running agents, including at 04:00.
 
@@ -107,6 +112,10 @@ Inspect activation results with `journalctl --user -u t3code-restart.service` on
 Othinus or `~/.local/state/nix-darwin/t3code-activation.log` on Proserpina.
 Download logs use `t3code-update.service` and `t3code-update.log` respectively.
 Desktop output is in `~/.local/state/t3code-bundle-updater/desktop.log`.
+Launcher and activation errors also send a native desktop notification. Launcher
+errors are retained in `desktop.log`; activation errors are also retained in
+`~/.local/state/t3code-bundle-updater/activation.log`. Notification delivery
+depends on the desktop session and its notification settings.
 
 ## Bitbucket authentication
 
