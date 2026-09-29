@@ -75,21 +75,21 @@ workstation-open open 'home:/Users/rafael' --new-window
 
 Run `git nav` in Nushell from any directory inside a checkout. Both workstations
 provide the same searchable picker for local branches, worktrees, submodules,
-the parent repository, and branch creation. Search matches destination names
+the parent repository, and worktree creation. Search matches destination names
 and kinds; rows also show destination paths. Paths inside the current checkout
 are relative to its root; other destinations show full paths. `●` marks the
 current checkout. The original checkout is labelled `main`; linked checkouts
 are labelled `worktree` (or `detached` when no branch is checked out).
 
-| Selection                               | Result                                                                   |
-| --------------------------------------- | ------------------------------------------------------------------------ |
-| Main checkout                           | Enter the original checkout.                                             |
-| Branch checked out in a linked worktree | Enter that worktree.                                                     |
-| Other local branch                      | Switch branches in the main checkout, then enter it.                     |
-| Detached worktree                       | Enter its directory without switching branches.                          |
-| Submodule                               | Enter its checkout. Uninitialized submodules must be initialized first.  |
-| Parent                                  | Enter the containing repository's root.                                  |
-| Create branch…                          | Ask for a name, then immediately create and switch in the main checkout. |
+| Selection                               | Result                                                                  |
+| --------------------------------------- | ----------------------------------------------------------------------- |
+| Main checkout                           | Enter the original checkout.                                            |
+| Branch checked out in a linked worktree | Enter that worktree.                                                    |
+| Other local branch                      | Switch branches in the main checkout, then enter it.                    |
+| Detached worktree                       | Enter its directory without switching branches.                         |
+| Submodule                               | Enter its checkout. Uninitialized submodules must be initialized first. |
+| Parent                                  | Enter the containing repository's root.                                 |
+| Create worktree…                        | Ask for a name, then create and enter a worktree with a new branch.     |
 
 The main checkout is the original working directory, regardless of its branch
 name. Inside a submodule, branch operations use that submodule's main checkout.
@@ -98,23 +98,33 @@ its main checkout. Nested submodules can be traversed one level at a time.
 
 Enter selects a destination in the current shell; Ctrl+T opens it in a new
 Ghostty window and keeps the calling shell's directory. Run `git nav --new-window`
-(or `git nav -w`) to make Enter and Ctrl+N open new windows too. On macOS, new
+(or `git nav -w`) to make Enter open new windows too. On macOS, new
 windows launch a separate Ghostty instance without restoring saved windows;
 Linux uses Ghostty's new-window action.
 
-Esc cancels. Ctrl+N opens branch creation even when the search has no matches.
-An empty branch name or Ctrl+C cancels the prompt. Entering a name immediately
-creates the branch from the invoking checkout's commit when the picker opened.
-There is no starting-point prompt. Every new branch
-uses the main checkout, including when invoked from a linked worktree.
+Ctrl+N and Ctrl+P move to the next and previous rows. Esc cancels.
+Select the first row, **Create worktree…**, to create a worktree; Enter enters
+it in the current shell, while Ctrl+T opens it in a new window.
+An empty name or Ctrl+C cancels the prompt. Entering a name immediately
+creates a worktree and matching branch from the invoking checkout's commit when
+the picker opened. There is no starting-point prompt. The main checkout and its
+local changes stay untouched.
+
+New worktrees use T3 Code's layout:
+`$T3CODE_HOME/worktrees/<main-checkout-name>/<worktree-name>`, defaulting to
+`~/.local/share/t3code` when `T3CODE_HOME` is unset. On Proserpina, this resolves
+to `~/.t3/worktrees/` through the existing alias. Slashes in branch names become
+hyphens in directory names, so `feature/login` uses `feature-login`. No random
+suffix is added. Existing branch names and destination paths are rejected.
 
 Git's normal switch checks preserve local changes. A failed switch or creation
-leaves the shell in its original directory. Opening a new window still switches
-or creates branches in the selected checkout; it does not isolate those changes.
+leaves the shell in its original directory. Opening an existing branch in a new
+window still switches that branch in its checkout. Creating a worktree opens
+the new checkout instead.
 If window launch fails, completed Git operations remain in effect.
 The navigator does not fetch,
-initialize submodules, create worktrees, or support bare repositories.
-Repositories need an initial commit before creating another branch here.
+initialize submodules or support bare repositories.
+Repositories need an initial commit before creating a worktree here.
 
 `git nav` is a Nushell command, so directory changes persist in the calling
 shell. Other Git subcommands run normally. Rebuild the system and start a fresh
