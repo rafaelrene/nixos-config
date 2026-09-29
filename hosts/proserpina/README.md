@@ -29,14 +29,14 @@ The shared profile selects common apps; Proserpina adds its Mac apps. Each app
 owns its package source, overrides, settings, and platform integration. The
 host keeps its own username, home directory, checkout, and Darwin Nixpkgs pin.
 
-| Source                                                             | Purpose                                                                          |
-| ------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `nixpkgs` / `nixos-26.05`                                          | Othinus; pinned separately from the Mac base.                                    |
-| `nixpkgs-darwin` / `nixpkgs-26.05-darwin` and nix-darwin 26.05     | Stable Mac base, shell and development environment.                              |
+| Source                                                             | Purpose                                                                                   |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `nixpkgs` / `nixos-26.05`                                          | Othinus; pinned separately from the Mac base.                                             |
+| `nixpkgs-darwin` / `nixpkgs-26.05-darwin` and nix-darwin 26.05     | Stable Mac base, shell and development environment.                                       |
 | `nixpkgs-unstable`                                                 | Selected desktop apps and development tools, including Devenv; OmniWM's packaging recipe. |
-| `brew-nix` and `brew-api`                                          | Native Mac app releases, including MongoDB Compass, packaged as Nix derivations. |
-| Upstream flakes                                                    | Zen and Helium; independent profiles handle T3Code and agent tools.              |
-| [Vendor sources](../../modules/system/updates/vendor-sources.json) | Google Drive, OmniWM and Viber app archives with explicit versions and hashes.   |
+| `brew-nix` and `brew-api`                                          | Native Mac app releases, including MongoDB Compass, packaged as Nix derivations.          |
+| Upstream flakes                                                    | Zen and Helium; independent profiles handle T3Code and agent tools.                       |
+| [Vendor sources](../../modules/system/updates/vendor-sources.json) | Google Drive, OmniWM and Viber app archives with explicit versions and hashes.            |
 
 FreeTube, Ghostty, and mpv use stable Nixpkgs packages. mpv is the media player
 on both hosts. Homebrew is disabled;
@@ -230,7 +230,7 @@ and `nups` for updating then switching. Shells use `en_US.UTF-8` for `LANG` and
 Open a new shell after switching to load changed environment settings.
 `nup` refreshes stable Darwin and unstable
 Nixpkgs, nix-darwin, shared Rust/browser inputs and brew-nix/cask metadata.
-It refreshes the Google Drive/OmniWM/Viber manifest, updates and restarts T3Code, and
+It refreshes the Google Drive/OmniWM/Viber manifest, stages T3Code (activating it immediately with `nup`, or after the switch with `nups`), and
 updates all three rolling agent packages. Nix system packages take effect after `ns` or
 `nups`. Updating shared Rust and browser pins affects Othinus's next rebuild too.
 Failures stop the command and are reported; a failed update does not switch the
@@ -264,7 +264,8 @@ macOS reports an installation-path mismatch, quit Proton Drive and reopen
 sign out to fix a path mismatch.
 
 T3Code's server and desktop are built from the same official nightly release and
-staged together in `~/.local/state/nix/profiles/t3code`. A matching bootstrap pair
+staged together in `~/.local/state/nix/profiles/t3code-staged`; the running pair
+uses `~/.local/state/nix/profiles/t3code`. A matching bootstrap pair
 is included in the system closure, so startup does not wait for an online update.
 A listener on port 3773 blocks activation unless the nix-darwin T3Code service
 is already registered. Bitbucket uses `T3CODE_BITBUCKET_EMAIL` and
@@ -273,9 +274,12 @@ The unmanaged `local.t3code.bitbucket-env` launch agent references a missing
 Keychain item; persistent credential loading needs repair before restarting
 the authenticated server (see [TODO](../../TODO.md)).
 Launchd starts the server at login, restarts it on failure, checks for updates
-every three hours, and
-restarts it daily at 04:00. When `nup` installs a changed bundle, it restarts the
-server immediately; failed or unchanged updates do not restart it. Open
+every three hours, and activates staged releases at 04:00. `ns` and explicit
+updates request the same coordinated activation: close running clients, activate
+the matching server and desktop, check server readiness, and reopen a previously
+open client. Failed downloads leave both profiles unchanged. See the
+[T3 Code guide](../../modules/applications/t3code/README.md) for activation logs,
+failure handling, and direct rebuild commands. Open
 **T3 Code** in `/Applications/Nix Apps` for the client. Its launcher disables
 the embedded server and application self-updater while preserving other native
 preferences. Pair it with the local server using `t3 pair`; the connection is

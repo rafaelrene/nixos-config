@@ -44,7 +44,9 @@ Completion observation starts before spawning so fast actions are not missed.
 release with `nix store prefetch-file`, and passes their hashes and the version
 directly to the shared Nix bundle definition. It does not edit package recipes,
 generate a flake, or maintain a Git repository. Both packages must build before
-Nix changes `~/.local/state/nix/profiles/t3code`.
+Nix changes `~/.local/state/nix/profiles/t3code-staged`.
+The active profile, `~/.local/state/nix/profiles/t3code`, stays unchanged until
+activation. Both profiles retain Nix generations for rollback.
 
 The generation contains its version and hashes in `share/t3code/release.json`.
 When the version is unchanged, the updater reuses those hashes and evaluates the
@@ -54,33 +56,57 @@ An older generation without this metadata is packaged once through the new
 updater, without changing the profile until the bundle succeeds.
 
 Failed discovery, downloads, or builds return a failure status and leave the
-installed profile unchanged. A first installation needs a successful build;
+staged and active profiles unchanged. A first installation needs a successful build;
 Othinus's bootstrap service skips network access if a server is already installed.
 Package checks remain enabled. A successful build does not test the running
 server's health or automatically roll back a failed server startup.
 
-The updater serializes updates with
-`~/.local/state/t3code-bundle-updater/update.lock`. This is the directory's only
-active state; old files in that directory are unused. The updater does not
-delete them or previous profile generations.
+Downloads serialize through `~/.local/state/t3code-bundle-updater/update.lock`.
+Promotion and desktop launches share `activation.lock`; downloads do not hold
+that lock while building. `running.json` records the server's generation and PID,
+and client versions are checked against the executables mapped by their processes.
+The service manager remains responsible for the server process.
 
 ## Scheduling and manual use
 
-Both hosts check every three hours and restart the server daily at 04:00, with
-platform-specific startup and missed-run behavior. Scheduled checks stage the
-new generation without restarting the running server. Reopen the desktop after
-the server restarts to use the matching client.
+Both hosts download every three hours and activate at 04:00. A background check
+only changes the staged profile, so reopening the desktop still uses the active
+server's release.
 
-`t3-update-now`, also called by `nup` and `nups`, runs the same updater and
-restarts the server only after installing a changed generation. Failed and
-unchanged updates do not restart it. If an automatic check already staged an
-update, either wait for 04:00 or explicitly restart the server:
+- `t3-update-now` and `nup` download and request activation, including when the
+  release was already staged.
+- `ns` requests activation after a successful switch, using the newly installed
+  `t3-activate` command. `nups` stages during its update phase and activates after
+  switching, avoiding a restart in the middle of the rebuild.
+- `t3-activate` activates the staged release without checking the network. After
+  a direct `darwin-rebuild switch` or `nixos-rebuild switch`, call it explicitly.
+  An existing shell keeps its old `ns` definition until a fresh shell is opened.
 
-- Othinus: `systemctl --user restart t3code.service`
-- Proserpina: `launchctl kickstart -k gui/$(id -u)/org.nixos.t3code` from Bash or Zsh.
+Without a path, `ns` and `nups` rebuild the configured main checkout. To keep
+testing unmerged changes, pass their worktree path on each switch. Switching
+back to a checkout without these changes removes the lifecycle coordinator;
+an existing shell reports that T3 Code activation was skipped.
 
-Othinus logs are available through `journalctl --user -u t3code-update.service`.
-Proserpina logs are in `~/.local/state/nix-darwin/t3code-update.log`.
+Activation runs as an independent launchd/systemd job so restarting T3 Code
+cannot terminate its own coordinator. It closes the current user's Nix T3 Code
+clients, stops the managed server, promotes the staged profile, and starts the
+server. It checks the service PID, generation, and environment descriptor before
+reopening a previously open client. A closed desktop stays closed. Repeated
+activation skips restarting an already current server and matching client.
+Activation can interrupt running agents, including at 04:00.
+
+A client that refuses to quit aborts activation before the server changes.
+A failed server startup leaves the desktop closed and reports failure; it does
+not roll back application data or automatically run an older server against it.
+Correct the reported failure and retry `t3-activate`. Desktop launches wait for
+activation and refuse to open against an unhealthy or mismatched local server.
+On macOS, LaunchServices focuses an existing client of the selected release.
+Both platforms keep the desktop's embedded server and self-updater disabled.
+
+Inspect activation results with `journalctl --user -u t3code-restart.service` on
+Othinus or `~/.local/state/nix-darwin/t3code-activation.log` on Proserpina.
+Download logs use `t3code-update.service` and `t3code-update.log` respectively.
+Desktop output is in `~/.local/state/t3code-bundle-updater/desktop.log`.
 
 ## Bitbucket authentication
 
@@ -97,9 +123,9 @@ credential startup wiring needs repair; see the
 
 ## Rollback
 
-Use `nix-env --profile ~/.local/state/nix/profiles/t3code --list-generations` to
-inspect retained generations, and `nix-env --profile
-~/.local/state/nix/profiles/t3code --rollback` to select the previous one. Then
-restart the server and reopen the desktop. The profile changes both packages
-together; application data is not rolled back. The next automatic check can
-install the current nightly again.
+Inspect retained releases with `nix-env --profile
+~/.local/state/nix/profiles/t3code-staged --list-generations`. Select the desired
+staged generation with `--switch-generation NUMBER`, then run `t3-activate`.
+Only activation changes the running pair. Application data is not rolled back;
+confirm compatibility before selecting an older release. The next automatic
+check can stage the current nightly again.

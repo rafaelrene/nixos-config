@@ -16,8 +16,25 @@ in
       base = "${home}/.local/share/t3code";
       profile = "${home}/.local/state/nix/profiles/t3code";
       logs = "${home}/.local/state/nix-darwin";
+      state = "${home}/.local/state/t3code-bundle-updater";
       initial = features.t3code.bundle { inherit pkgs; };
-      updater = features.t3code.update { inherit lib pkgs home; };
+      lifecycle = features.t3code.lifecycle {
+        inherit
+          lib
+          pkgs
+          home
+          initial
+          ;
+        desktop = client;
+      };
+      updater = features.t3code.update {
+        inherit
+          lib
+          pkgs
+          home
+          lifecycle
+          ;
+      };
       settings = features.t3code.settings { inherit lib pkgs home; };
       run = pkgs.writeShellApplication {
         name = "run-t3code";
@@ -48,6 +65,11 @@ in
             ${lib.escapeShellArg settings.merge} \
             "${base}/userdata/settings.json"
           install -m600 ${settings.theme} "${base}/userdata/themes/othinus.json"
+          mkdir -p "${state}"
+          generation="${initial}"
+          if test -x "${profile}/bin/t3"; then generation="$(readlink -f "${profile}")"; fi
+          printf '{"generation":"%s","pid":%s}\n' "$generation" "$$" > "${state}/running.json.tmp"
+          mv "${state}/running.json.tmp" "${state}/running.json"
           exec "$server" serve --base-dir "${base}" \
             --host 127.0.0.1 --port 3773 --no-browser "${codeRoot}"
         '';
@@ -58,10 +80,11 @@ in
           exec ${lib.getExe updater} --restart
         '';
       };
-      restart = pkgs.writeShellApplication {
-        name = "restart-t3code";
+      activate = pkgs.writeShellApplication {
+        name = "t3-activate";
         text = ''
-          /bin/launchctl kickstart -k "gui/$(id -u)/org.nixos.t3code"
+          /bin/launchctl kickstart "gui/$(id -u)/org.nixos.t3code-restart"
+          echo "T3 Code: activation requested. See ${logs}/t3code-activation.log."
         '';
       };
       command = pkgs.writeShellApplication {
@@ -78,6 +101,12 @@ in
       };
       desktop = pkgs.writeShellApplication {
         name = "t3code-desktop";
+        text = ''
+          exec ${lib.getExe lifecycle} launch "$@"
+        '';
+      };
+      client = pkgs.writeShellApplication {
+        name = "t3code-client";
         runtimeInputs = [
           pkgs.coreutils
           pkgs.yq-go
@@ -91,11 +120,14 @@ in
           yq --inplace --output-format=json '.localEnvironmentEnabled = false' "$settings"
           export T3CODE_HOME="${base}"
           export T3CODE_DISABLE_AUTO_UPDATE=true
-          client="${profile}/Applications/T3 Code (Nightly).app/Contents/MacOS/T3 Code (Nightly)"
-          if ! test -x "$client"; then
-            client="${initial}/Applications/T3 Code (Nightly).app/Contents/MacOS/T3 Code (Nightly)"
+          client="${profile}/Applications/T3 Code (Nightly).app"
+          if ! test -d "$client"; then
+            client="${initial}/Applications/T3 Code (Nightly).app"
           fi
-          exec "$client" "$@"
+          /bin/launchctl setenv T3CODE_HOME "${base}"
+          /bin/launchctl setenv T3CODE_DISABLE_AUTO_UPDATE true
+          # LaunchServices focuses an existing client rather than starting another.
+          exec /usr/bin/open -a "$(readlink -f "$client")" --args "$@"
         '';
       };
       desktopApp = pkgs.runCommand "t3code-client-launcher" { } ''
@@ -133,6 +165,7 @@ in
         desktopApp
         updater
         updateNow
+        activate
       ];
       environment.variables.T3CODE_HOME = base;
       workstation.stateAliases.".local/share/t3code" = ".t3";
@@ -176,7 +209,12 @@ in
           };
         };
         t3code-restart.serviceConfig = {
-          ProgramArguments = [ (lib.getExe restart) ];
+          ProgramArguments = [
+            (lib.getExe lifecycle)
+            "activate"
+          ];
+          StandardOutPath = "${logs}/t3code-activation.log";
+          StandardErrorPath = "${logs}/t3code-activation.log";
           StartCalendarInterval = [
             {
               Hour = 4;

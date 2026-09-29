@@ -55,9 +55,11 @@ On Proserpina, `nup` selects OmniWM's latest stable upstream release; `ns` or
 In Nushell, `fg` aliases `job unfreeze` to resume the latest job suspended with
 Ctrl+Z; use `job list` to inspect jobs.
 
-T3 Code checks its nightly channel every three hours and prepares the server
-and desktop together. The server restarts daily at 04:00; `nup` restarts it only
-when it installs a changed bundle. Reopen the desktop to use the new client.
+T3 Code checks its nightly channel every three hours and stages the server and
+desktop together. At 04:00, or after `ns`, it activates the pair and reopens the
+desktop if it was running. `nup` also requests activation; `nups` waits until its
+system switch succeeds. `t3-activate` applies an already staged release without
+checking the network. Activation can interrupt running agents.
 Codex, Claude Code, and OpenCode update when user services start and daily at
 04:30, with failed agent updates retried at roughly five-minute intervals.
 See the [T3 Code guide](modules/applications/t3code/README.md) for package

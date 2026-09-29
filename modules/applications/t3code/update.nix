@@ -10,6 +10,7 @@
       lib,
       pkgs,
       home,
+      lifecycle,
       project ? null,
     }:
     let
@@ -21,8 +22,10 @@
           inherit project darwin;
           bundle = "(builtins.getFlake ${builtins.toJSON source}).legacyPackages.${pkgs.stdenv.hostPlatform.system}.t3codeForRelease";
           profile = "${home}/.local/state/nix/profiles/t3code";
+          staged = "${home}/.local/state/nix/profiles/t3code-staged";
           base = "${home}/.local/share/t3code";
-          restartCommand = if darwin then "/bin/launchctl" else "${pkgs.systemd}/bin/systemctl";
+          lifecycle = lib.getExe lifecycle;
+          activateCommand = if darwin then "/bin/launchctl" else "${pkgs.systemd}/bin/systemctl";
         }
       );
     in

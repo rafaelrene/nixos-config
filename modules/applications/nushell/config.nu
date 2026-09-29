@@ -63,6 +63,13 @@ alias pn = pnpm
 def ns [path: path = @checkout@] {
   let checkout = ($path | path expand)
   @rebuild-command@ --flake $"path:($checkout)#@hostname@"
+  # Resolve from the new system, not this shell's previously generated configuration.
+  let activate = '/nix/var/nix/profiles/system/sw/bin/t3-activate'
+  if ($activate | path exists) {
+    ^$activate
+  } else {
+    print --stderr $"System switch completed from ($checkout). This configuration has no t3-activate; T3 Code activation was skipped."
+  }
 }
 
 def nup [path: path = @checkout@] {
@@ -71,6 +78,6 @@ def nup [path: path = @checkout@] {
 
 # Update packages, then switch only after a successful update.
 def nups [path: path = @checkout@] {
-  nup $path
+  @update-command@ ($path | path expand) --stage-t3
   ns $path
 }
