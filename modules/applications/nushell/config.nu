@@ -1,4 +1,5 @@
 $env.config.show_banner = false
+$env.config.edit_mode = "vi"
 $env.EDITOR = "nvim"
 $env.VISUAL = "nvim"
 $env.XDG_CONFIG_HOME = ($env.HOME | path join ".config")
@@ -23,14 +24,35 @@ source @zoxide-hook@
 source @direnv-hook@
 source @starship-hook@
 
+def --env shell-leader [] {
+  print 'Space: nav   n: git nav   p: project-run   Esc: cancel'
+  let key = input listen --types [key]
+  if $key.key_type != char or ($key.modifiers | is-not-empty) { return }
+  match $key.code {
+    ' ' => { nav }
+    'n' => { git nav }
+    'p' => { ^project-run }
+    _ => {}
+  }
+}
+
 # Execute at the prompt, preserving any partially typed command.
-$env.config.keybindings = ($env.config.keybindings | append {
-  name: nav
-  modifier: control_alt
-  keycode: char_p
-  mode: [emacs vi_insert vi_normal]
-  event: {send: executehostcommand, cmd: nav}
-})
+$env.config.keybindings = ($env.config.keybindings | append [
+  {
+    name: nav
+    modifier: control_alt
+    keycode: char_p
+    mode: [emacs vi_insert vi_normal]
+    event: {send: executehostcommand, cmd: nav}
+  }
+  {
+    name: shell_leader
+    modifier: none
+    keycode: space
+    mode: vi_normal
+    event: {send: executehostcommand, cmd: shell-leader}
+  }
+])
 
 # Nushell may start without the PATH configured by /etc/profile.
 $env.PATH = ($env.PATH | prepend ($env.HOME | path join ".local" "bin") | uniq)

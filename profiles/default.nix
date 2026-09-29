@@ -30,7 +30,7 @@ let
     "nodejs"
     "nushell"
     "openssh"
-    "prun"
+    "project-run"
     "ripgrep"
     "starship"
     "t3code"

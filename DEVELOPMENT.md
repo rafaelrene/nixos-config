@@ -75,6 +75,12 @@ interactive Nushell on each host. Verify Ctrl+Alt+P preserves partially typed
 input. Use temporary fixtures for discovery rules, including hidden projects,
 worktrees, excluded caches, symlinks, and paths containing whitespace.
 
+For shell leader changes, use an interactive Nushell on both hosts to exercise
+Space Space, Space n, and Space p in normal mode, cancellation, preserved input,
+and ordinary spaces in insert mode. Use a temporary project with a harmless
+package.json script to test `project-run`; confirm its exit status and that the
+calling shell's directory stays unchanged. Remove temporary fixtures afterward.
+
 ## System validation
 
 ```sh

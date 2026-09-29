@@ -1,8 +1,26 @@
 # Shell helpers
 
+## Shell leader
+
+Both machines use Nushell's Vi editing mode. Press Esc for normal mode and `i`
+to insert text. In normal mode, Space shows these choices; press the second key
+without Enter:
+
+| Keys        | Command       | Action                              |
+| ----------- | ------------- | ----------------------------------- |
+| Space Space | `nav`         | Pick a directory or SSH host.       |
+| Space n     | `git nav`     | Navigate the current repository.    |
+| Space p     | `project-run` | Pick and run a package.json script. |
+
+Esc, Ctrl+C, or an unlisted key cancels the leader menu. The command line you
+were editing stays intact. Space inserts ordinary spaces in insert mode.
+These bindings only run at the Nushell prompt; Neovim and other foreground
+programs handle their own keys. Ctrl+Alt+P remains a direct shortcut for `nav`.
+Rebuild and start a fresh Nushell to load the bindings.
+
 ## Project scripts
 
-Run `prun` to fuzzy-search `package.json` scripts in the current directory and
+Run `project-run` to fuzzy-search `package.json` scripts in the current directory and
 its parents, stopping at the Git repository root. Rows show the script name,
 package path relative to that root, and command. The nearest package appears
 first; sibling packages are not scanned. Outside Git, only the current
@@ -18,11 +36,11 @@ and Bun, with npm as the fallback. The command uses the current environment
 and PATH, so enter the project's development environment first. It does not
 install package managers or dependencies. Malformed manifests are reported.
 
-Both machines install `prun` through the system rebuild. To try it from a
+Both machines install `project-run` through the system rebuild. To try it from a
 checkout before rebuilding, run this from a project directory:
 
 ```sh
-nu --no-config-file /path/to/nixos-config/modules/shell/scripts/prun.nu
+nu --no-config-file /path/to/nixos-config/modules/shell/scripts/project-run.nu
 ```
 
 ## Destination picker

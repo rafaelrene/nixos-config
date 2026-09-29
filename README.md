@@ -30,7 +30,7 @@ and host selection.
 - **Mac desktop:** Nix-managed applications and OmniWM window management.
 - **Development environment:** Nushell, Ghostty, Neovim, Git, and Devenv,
   with shared settings where supported and a
-  [project script picker](modules/shell/scripts/README.md#project-scripts) (`prun`).
+  [project script picker](modules/shell/scripts/README.md#project-scripts) (`project-run`).
 - **Coding agents:** T3Code, Codex, Claude Code, and OpenCode, with shared
   instructions, skills, themes, and rolling updates.
 - **Consistent appearance:** A central Catppuccin palette for supported
@@ -103,6 +103,9 @@ For project folders and SSH connections, run
 [`nav`](modules/shell/scripts/README.md#destination-picker) or press Ctrl+Alt+P
 at a Nushell prompt on either machine. It uses fzf to change directory or start
 SSH in the current terminal.
+
+Nushell uses Vi editing with a [Space leader](modules/shell/scripts/README.md#shell-leader)
+for `nav`, `git nav`, and `project-run` on both machines.
 
 ## Future work
 

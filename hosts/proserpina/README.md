@@ -359,6 +359,10 @@ or starts SSH in the current terminal. See the
 [shared guide](../../modules/shell/scripts/README.md#destination-picker) for
 discovery rules and removal of any retained Raycast destination shortcut.
 
+Nushell uses Vi editing. In normal mode, **Space Space** opens `nav`, **Space n**
+opens `git nav`, and **Space p** opens `project-run`. See the
+[shell leader guide](../../modules/shell/scripts/README.md#shell-leader).
+
 macOS controls application sign-in and privacy permissions. For example,
 Ghostty's global quick-terminal shortcut needs Accessibility permission. These
 prompts are not bypassed by activation.
@@ -396,3 +400,7 @@ After an authorized switch, test the command and Control+Option+P at a fresh
 Nushell prompt: search, change directory, cancel, connect through SSH, and exit
 back to the local shell. Check that the shortcut preserves partially typed input
 and does not open another window. Repeat in Nushell on Othinus with Ctrl+Alt+P.
+
+For shell leader changes, test all three sequences in normal mode on each host,
+including cancellation and preserving partially typed input. Verify spaces still
+insert in insert mode and Neovim receives its own Space leader bindings.
