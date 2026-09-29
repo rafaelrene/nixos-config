@@ -25,6 +25,8 @@ Regular checkouts and worktrees elsewhere still require `direnv allow` and
 reapproval after changing `.envrc`.
 The shared direnv feature declares `programs.direnv.settings.whitelist.prefix`;
 the native NixOS/nix-darwin modules install it in `/etc/direnv/direnv.toml`.
+The shared Nushell hook sets `DIRENV_CONFIG=/etc/direnv`, including in SSH sessions
+that do not load `/etc/profile`.
 
 The workstation supplies `use_devenv` through `/etc/direnv/lib/devenv.sh`; do not
 replace it with `eval "$(devenv direnvrc)"` in `.envrc`, which would bypass the
