@@ -58,6 +58,7 @@ format = '\([$state( $progress_current / $progress_total)]($style)\)'
 
 [git_status]
 format = '([\[$all_status$ahead_behind\]]($style))'
+use_git_executable = true
 
 [golang]
 format = '[$symbol($version)]($style)'
