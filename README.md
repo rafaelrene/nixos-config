@@ -1,118 +1,146 @@
 # Workstation configuration
 
-Personal workstation configuration for **Othinus** (NixOS) and **Proserpina**
-(macOS with nix-darwin). This repository manages the operating system settings,
-desktop, applications, development tools, and agent configuration for both machines.
+Personal workstation configuration for all of
+my machines (both NixOS and MacOS with nix-darwin).
+This repository manages the operating system settings,
+desktop, applications, development tools, and agent configuration, etc...
 
 ## Philosophy
 
 - **Convenience comes first.** Keep workstation setup and changes in this
   repository and apply them through a system rebuild.
-- **Use native Nix options.** Prefer declarative packages, services, and
-  configuration. Keep custom runtime logic small; do not use Home Manager.
-- **Share what fits.** Reuse application settings and themes across machines,
-  while keeping hardware and operating-system differences explicit.
-- **Separate system and tool updates.** Pin the system configuration; let
-  fast-moving tools such as T3Code and coding agents use independent Nix profiles.
-- **Keep secrets outside the repository and Nix store.** Store credentials
-  locally; only encrypted secret bundles belong in Git.
-
-The [architecture decisions](adrs/) record the reasoning and accepted tradeoffs.
-All Nix configuration follows the dendritic pattern with flake-parts.
-The [module guide](modules/README.md) covers repository-wide composition;
-the [application guide](modules/applications/README.md) covers package ownership
-and host selection.
 
 ## Features
 
-- **Linux desktop:** Niri, DankMaterialShell, application launchers, screenshot
-  annotation, and power-aware display and idle settings.
-- **Mac desktop:** Nix-managed applications and OmniWM window management.
-- **Development environment:** Nushell, Ghostty, Neovim, Git, and Devenv,
-  with shared settings where supported and a
-  [project script picker](modules/shell/scripts/README.md#project-scripts) (`project-run`).
-- **Coding agents:** T3Code, Codex, Claude Code, and OpenCode, with shared
-  instructions, skills, themes, and rolling updates.
-- **Consistent appearance:** A central Catppuccin palette for supported
-  applications, plus a curated wallpaper collection.
-- **Othinus services:** SSH and T3Code access over the LAN and Tailscale,
-  encrypted SSH key provisioning, and local filesystem snapshots.
+### Desktop
 
-## Applying changes
+Both machines use scrolling, tiled windows and a shared Catppuccin palette
+across supported applications.
 
-Othinus uses the checkout at `/data/code/nixos-config`:
+- **Othinus (NixOS):** Niri, DankMaterialShell, Vicinae, and screenshot annotation.
+  The display uses 60 Hz without VRR on battery and 165 Hz with VRR on AC power.
+  Battery idle timers lock after 10 minutes and suspend after 15; AC disables both.
+- **Proserpina (macOS):** OmniWM with nine workspaces, Raycast, and Nix-managed
+  native apps. Option + arrows navigates windows; Option + 1–9 switches workspaces;
+  Option + Enter opens a fresh Ghostty window. Homebrew is not required.
+- **Web apps:** Dedicated Helium launchers on Linux and Chromium launchers in
+  Raycast on macOS.
 
-```sh
-sudo nixos-rebuild switch --flake /data/code/nixos-config#othinus
-```
+### Shell and development
 
-Both configured shells provide `ns` to rebuild and switch, `nup` to update
-package sources and rolling tools, and `nups` to update and switch. Rolling
-tool updates can take effect independently of a system switch.
-On Proserpina, `nup` selects OmniWM's latest stable upstream release; `ns` or
-`nups` installs it and automatically restarts OmniWM when its package changes.
+Ghostty runs Nushell with Vi editing, Starship, and fuzzy navigation. In normal
+mode, press Space followed by a key to open a picker:
 
-In Nushell, `fg` aliases `job unfreeze` to resume the latest job suspended with
-Ctrl+Z; use `job list` to inspect jobs.
+| Keys        | Command       | Purpose                                        |
+| ----------- | ------------- | ---------------------------------------------- |
+| Space Space | `nav`         | Jump to a project, config folder, or SSH host. |
+| Space n     | `git nav`     | Navigate branches, worktrees, and submodules.  |
+| Space p     | `project-run` | Find and run a `package.json` script.          |
 
-T3 Code checks its nightly channel every three hours and stages the server and
-desktop together. At 04:00, or after `ns`, it activates the pair and reopens the
-desktop if it was running. `nup` also requests activation; `nups` waits until its
-system switch succeeds. `t3-activate` applies an already staged release without
-checking the network. Activation can interrupt running agents.
-Codex, Claude Code, and OpenCode check and stage releases at login and every
-three hours, then activate at 04:00 for new sessions. `nup` and `nups` activate
-them immediately. Codex and Claude follow their publishers' latest stable
-channels; OpenCode follows Numtide. Failed checks retry after five minutes.
-See the [agent guide](modules/applications/coding-agents/README.md) for details.
-See the [T3 Code guide](modules/applications/t3code/README.md) for package
-definitions, failure behavior, and rollback.
+- **Project environments:** Devenv supplies project tools and language runtimes.
+  Direnv loads them on entry, reloads configuration changes, and unloads on exit.
+  T3 worktrees are trusted automatically; other checkouts require `direnv allow`.
+- **Editor:** Shared LazyVim configuration, theme, language tooling, Git
+  integration, and image previews. Project tools take precedence over Neovim's
+  bundled helper runtimes.
+- **Forge tools:** GitHub CLI (`gh`), Bitbucket CLI (`bkt`), and Forgejo CLI (`fj`).
 
-Pass a checkout path to use a worktree: `ns .` rebuilds the current directory,
-`nup .` updates it, and `nups .` updates it then rebuilds. Without a path, these
-commands use the configured checkout.
+### Coding agents
 
-See the [Proserpina guide](hosts/proserpina/README.md) for Mac setup and operation,
-and the [SSH guide](modules/applications/openssh/README.md) for key provisioning and recovery.
-Contributor constraints and validation commands live in [AGENTS.md](AGENTS.md).
-Use direnv for repository development; see [DEVELOPMENT.md](DEVELOPMENT.md).
+T3 Code, Codex, Claude Code, and OpenCode share instructions, skills, and themes.
+Agent launchers enter the project's Devenv environment when needed.
 
-## Forgejo CLI
+- T3 Code keeps its nightly server and desktop on the same release.
+- Codex and Claude Code follow stable publisher releases; OpenCode follows Numtide.
+- Updates stage every three hours and activate at 04:00, independently of system
+  rebuilds. Failed downloads or builds preserve the installed versions.
+- Agent updates apply to new sessions. T3 Code activation restarts its server and
+  reopens the desktop if it was running, which can interrupt active work.
 
-Both machines install [Forgejo CLI](https://codeberg.org/forgejo-contrib/forgejo-cli)
-from Nixpkgs as `fj`. After rebuilding, run `fj version` to check the installed
-version and `fj auth login --host https://codeberg.org` to sign in. Substitute
-your own Forgejo instance URL as needed; credentials stay in the local user
-configuration, outside this repository.
+### Remote access and snapshots
 
-`nup` refreshes each machine's Nixpkgs pin; `ns` installs the pinned version.
-`nups` does both. Releases follow the configured stable Nixpkgs channels, so
-updates can lag behind upstream and the two machines can receive them at
-different times.
+- **SSH:** `ssh othinus` and `ssh proserpina` connect to the two machines.
+  A shared, passphrase-encrypted bundle provisions personal, work, and machine
+  keys during rebuilds. Plaintext keys stay outside the repository and Nix store.
+- **Private access:** Othinus exposes SSH and T3 Code over the LAN and Tailscale.
+  Proserpina's T3 Code server listens only on localhost.
+- **Snapshots:** Othinus snapshots home hourly and replicates it to the data disk;
+  the data filesystem gets daily local snapshots.
 
-## Application launching
+### Wallpapers
 
-On Othinus, Vicinae defaults to **Launch app** when pressing Enter, including
-when the app already has a window. Ghostty and Helium open another window;
-other apps decide how to handle repeated launches. Per-app preferences in Vicinae can
-override this default.
+On Othinus, DMS rotates the images in `~/Pictures/Wallpapers`. Its current local
+setting changes wallpaper every five minutes; rotation is controlled in DMS,
+not pinned by this repository. Wallpaper changes leave application themes intact.
 
-On Proserpina, Raycast uses its normal application-opening behavior, which can
-focus an existing window. Its documented settings do not provide a global
-always-open-a-new-window default.
+Nix includes one image per original from [wallpapers/](wallpapers/), accepting
+JPG, JPEG, PNG, and WebP. It prefers a `-2560x1440` variant matching the configured
+display, otherwise the original. Variants never appear as separate rotation
+entries. Akame uses the resized variant; the other six use their originals.
 
-Option+Enter opens a fresh Ghostty window on Proserpina through Nix-managed skhd,
-even when Ghostty is closed. See the [Mac shortcut setup](hosts/proserpina/README.md#window-management).
+| Wallpaper                      | Preview                                                                                                         |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Stellar Blade: Eve, monochrome | <img src="wallpapers/stellar-blade-eve-monochrome-6l2yzw.jpg" width="180" alt="Stellar Blade: Eve, monochrome"> |
+| Stellar Blade: 2B              | <img src="wallpapers/stellar-blade-2b-vpod58.png" width="180" alt="Stellar Blade: 2B">                          |
+| NieR: Automata, dark           | <img src="wallpapers/nier-automata-dark-6o5qjl.jpg" width="180" alt="NieR: Automata, dark">                     |
+| NieR: Automata, 2B, A2 and 9S  | <img src="wallpapers/nier-automata-2b-a2-9s-gjlg2q.png" width="180" alt="NieR: Automata, 2B, A2 and 9S">        |
+| NieR: Automata, YoRHa          | <img src="wallpapers/nier-automata-yorha-285v3m.jpg" width="180" alt="NieR: Automata, YoRHa">                   |
+| Neverness to Everness: city    | <img src="wallpapers/neverness-to-everness-city-gwdvxq.jpg" width="180" alt="Neverness to Everness: city">      |
+| Akame                          | <img src="wallpapers/akame-95y5rk-2560x1440.png" width="180" alt="Akame">                                       |
 
-For project folders and SSH connections, run
-[`nav`](modules/shell/scripts/README.md#destination-picker) or press Space Space
-in normal mode at a Nushell prompt. It uses fzf to change directory or start
-SSH in the current terminal.
+## Configuration and updates
 
-Nushell uses Vi editing with a [Space leader](modules/shell/scripts/README.md#shell-leader)
-for `nav`, `git nav`, and `project-run` on both machines.
+The repository uses flake-parts and the dendritic pattern, without Home Manager.
+[Modules](modules/) own features, [profiles](profiles/) select shared applications,
+[hosts](hosts/) declare machine differences, and [themes](themes/) define the palette.
+Linux and macOS have separate Nixpkgs pins.
 
-## Future work
+| Command | Action                                            |
+| ------- | ------------------------------------------------- |
+| `ns`    | Rebuild and switch to the configured system.      |
+| `nup`   | Refresh package sources and update rolling tools. |
+| `nups`  | Update, then rebuild and switch.                  |
 
-Deferred work lives in [TODO.md](TODO.md), including replacing DankMaterialShell
-with a custom Quickshell desktop.
+Pass a checkout path, such as `ns .`, to use a worktree. Without one, these commands
+use the configured main checkout. Development checks live in [AGENTS.md](AGENTS.md).
+
+## TODO
+
+### Pending validation
+
+- On Othinus, unplug the charger, wait five seconds, then reconnect it. Confirm
+  the display stays usable, switches to 60 Hz with VRR off on battery, and
+  returns to 165 Hz with VRR on when charging.
+
+### Replace DankMaterialShell with our own Quickshell
+
+Status: incomplete. Priority: low. Handle after the other TODO items.
+
+Keep DMS until the custom shell covers every feature we want. Replace features
+incrementally, then remove DMS in one deliberate change.
+
+- [ ] Bar layout and per-monitor behavior
+- [ ] Dynamic Niri workspace indicator and controls
+- [ ] Clock, Slovak-style numeric dates, English month and weekday names
+- [ ] Calendar and event integration
+- [ ] System tray and status notifier items
+- [ ] Wi-Fi status, network selection, and VPN controls
+- [ ] Bluetooth status and device controls
+- [ ] Output volume, microphone, mixer, and device selection
+- [ ] Display brightness
+- [ ] Battery state, charging state, and power profiles
+- [ ] Notification daemon, popups, history, and notification center
+- [ ] Clipboard history
+- [ ] Vicinae launcher handoff and launcher state
+- [ ] Lock screen and authentication flow
+- [ ] Logout, suspend, reboot, and shutdown menu
+- [ ] Audio, brightness, media, and power on-screen displays
+- [ ] Idle timers, locking, display power, and suspend policy UI
+- [ ] CPU, memory, disk, network, temperature, and process monitoring
+- [ ] Media controls and player metadata
+- [ ] Weather widgets
+- [ ] Wallpaper and theme integration
+- [ ] Central settings UI
+- [ ] Screen recording and screen sharing indicators
+- [ ] Keyboard layout and input state
+- [ ] DND, night light, and other quick toggles
