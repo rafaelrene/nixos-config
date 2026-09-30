@@ -12,7 +12,7 @@ Example: URL `http://othinus.local:3773`, app name `T3Code (Othinus)`.
 
 ## Add the registry entry
 
-1. Work in the current checkout. Read `AGENTS.md`, the relevant ADRs, and
+1. Work in the current checkout. Read `AGENTS.md` and
    `modules/applications/webapps/nixos.nix`.
 2. Require an absolute HTTP or HTTPS URL. Preserve its scheme, host, port,
    path, query, and fragment. If the scheme is missing, ask for it rather
@@ -53,7 +53,7 @@ Reuse an appropriate icon already in `modules/applications/webapps/icons/`.
 Otherwise, obtain the app's official PNG or SVG from its site or upstream
 repository. Prefer a pinned upstream revision when available. Store it as
 `icons/<key>.png` or `icons/<key>.svg`, reference it with `icon`, and record
-its source, revision if available, and SHA-256 in `icons/README.md`. Preserve
+its source, revision if available, and SHA-256 in a comment beside the registry entry. Preserve
 its applicable license or attribution alongside the asset.
 
 If the official icon or its redistribution terms cannot be established,

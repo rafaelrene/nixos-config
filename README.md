@@ -17,11 +17,7 @@ desktop, applications, development tools, and agent configuration for both machi
 - **Keep secrets outside the repository and Nix store.** Store credentials
   locally; only encrypted secret bundles belong in Git.
 
-The [architecture decisions](adrs/) record the reasoning and accepted tradeoffs.
 All Nix configuration follows the dendritic pattern with flake-parts.
-The [module guide](modules/README.md) covers repository-wide composition;
-the [application guide](modules/applications/README.md) covers package ownership
-and host selection.
 
 ## Features
 
@@ -29,8 +25,7 @@ and host selection.
   annotation, and power-aware display and idle settings.
 - **Mac desktop:** Nix-managed applications and OmniWM window management.
 - **Development environment:** Nushell, Ghostty, Neovim, Git, and Devenv,
-  with shared settings where supported and a
-  [project script picker](modules/shell/scripts/README.md#project-scripts) (`project-run`).
+  with shared settings where supported and a project script picker (`project-run`).
 - **Coding agents:** T3Code, Codex, Claude Code, and OpenCode, with shared
   instructions, skills, themes, and rolling updates.
 - **Consistent appearance:** A central Catppuccin palette for supported
@@ -64,18 +59,15 @@ Codex, Claude Code, and OpenCode check and stage releases at login and every
 three hours, then activate at 04:00 for new sessions. `nup` and `nups` activate
 them immediately. Codex and Claude follow their publishers' latest stable
 channels; OpenCode follows Numtide. Failed checks retry after five minutes.
-See the [agent guide](modules/applications/coding-agents/README.md) for details.
-See the [T3 Code guide](modules/applications/t3code/README.md) for package
-definitions, failure behavior, and rollback.
 
 Pass a checkout path to use a worktree: `ns .` rebuilds the current directory,
 `nup .` updates it, and `nups .` updates it then rebuilds. Without a path, these
 commands use the configured checkout.
 
-See the [Proserpina guide](hosts/proserpina/README.md) for Mac setup and operation,
-and the [SSH guide](modules/applications/openssh/README.md) for key provisioning and recovery.
 Contributor constraints and validation commands live in [AGENTS.md](AGENTS.md).
-Use direnv for repository development; see [DEVELOPMENT.md](DEVELOPMENT.md).
+Use direnv for repository development: run `direnv allow` in a regular checkout,
+or `devenv shell` to enter the development environment directly. Configured T3
+worktrees are trusted automatically.
 
 ## Forgejo CLI
 
@@ -102,17 +94,12 @@ focus an existing window. Its documented settings do not provide a global
 always-open-a-new-window default.
 
 Option+Enter opens a fresh Ghostty window on Proserpina through Nix-managed skhd,
-even when Ghostty is closed. See the [Mac shortcut setup](hosts/proserpina/README.md#window-management).
+even when Ghostty is closed.
 
 For project folders and SSH connections, run
-[`nav`](modules/shell/scripts/README.md#destination-picker) or press Space Space
+`nav` or press Space Space
 in normal mode at a Nushell prompt. It uses fzf to change directory or start
 SSH in the current terminal.
 
-Nushell uses Vi editing with a [Space leader](modules/shell/scripts/README.md#shell-leader)
+Nushell uses Vi editing with a Space leader
 for `nav`, `git nav`, and `project-run` on both machines.
-
-## Future work
-
-Deferred work lives in [TODO.md](TODO.md), including replacing DankMaterialShell
-with a custom Quickshell desktop.
