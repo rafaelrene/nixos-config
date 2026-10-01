@@ -31,11 +31,12 @@ across supported applications.
 Ghostty runs Nushell with Vi editing, Starship, and fuzzy navigation. In normal
 mode, press Space followed by a key to open a picker:
 
-| Keys        | Command       | Purpose                                        |
-| ----------- | ------------- | ---------------------------------------------- |
-| Space Space | `nav`         | Jump to a project, config folder, or SSH host. |
-| Space g n   | `git nav`     | Navigate branches, worktrees, and submodules.  |
-| Space g r   | `project-run` | Find and run a `package.json` script.          |
+| Keys        | Command               | Purpose                                      |
+| ----------- | --------------------- | -------------------------------------------- |
+| Space Space | `nav`                 | Jump to a project, config folder, or SSH host. |
+| Space g n   | `git nav`             | Navigate branches, worktrees, and submodules. |
+| Space g r   | `project-run`         | Find and run a `package.json` script.         |
+| Space g d   | `git delete-branches` | Pick branches and worktrees to delete.       |
 
 - **Project environments:** Devenv supplies project tools and language runtimes.
   Direnv loads them on entry, reloads configuration changes, and unloads on exit.

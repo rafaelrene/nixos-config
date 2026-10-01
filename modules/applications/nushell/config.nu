@@ -31,12 +31,13 @@ def --env shell-leader [] {
   match $key.code {
     ' ' => { nav }
     'g' => {
-      print 'n: git nav   r: project-run   Esc: cancel'
+      print 'n: git nav   r: project-run   d: delete branches   Esc: cancel'
       let key = input listen --types [key]
       if $key.key_type != char or ($key.modifiers | is-not-empty) { return }
       match $key.code {
         'n' => { git nav }
         'r' => { ^project-run }
+        'd' => { ^git-delete-branches }
         _ => {}
       }
     }
