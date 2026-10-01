@@ -26,6 +26,14 @@ across supported applications.
 - **Web apps:** Dedicated Helium launchers on Linux and Chromium launchers in
   Raycast on macOS.
 
+Numbered navigation uses keys 1–9. Columns count from the left in the current workspace.
+
+| Action | Othinus | Proserpina |
+| ------ | ------- | ---------- |
+| Switch workspace | Super + 1–9 | Option + 1–9 |
+| Focus column | Super + Alt + 1–9 | Control + Option + 1–9 |
+| Move column to workspace | Super + Control + 1–9 | Option + Shift + 1–9 |
+
 ### Shell and development
 
 Ghostty runs Nushell with Vi editing, Starship, and fuzzy navigation. In normal
