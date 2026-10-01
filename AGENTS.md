@@ -36,8 +36,10 @@ command, use `devenv shell -- <command>`.
 treefmt --fail-on-change
 statix check . --ignore .devenv
 deadnix --fail --exclude .devenv
-python3 -m unittest discover -s tests -v
 ```
+
+Use temporary tests to verify behavior when useful. Remove them and their artifacts
+before finishing the task
 
 For configuration changes, run formatting, lint, and relevant checks, including:
 
