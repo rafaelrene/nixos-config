@@ -48,12 +48,16 @@
         "consumeWindowIntoColumn" = "${caps}+[";
         "expelWindowFromColumn" = "${caps}+]";
       }
-      # OmniWM's numbered workspace actions stop at 9.
+      # OmniWM's numbered workspace and column action IDs run from 0 to 8.
       // builtins.listToAttrs (
         lib.concatMap (index: [
           {
             name = "switchWorkspace.${toString index}";
             value = "Option+${toString (index + 1)}";
+          }
+          {
+            name = "focusColumn.${toString index}";
+            value = "Control+Option+${toString (index + 1)}";
           }
           {
             name = "moveColumnToWorkspace.${toString index}";

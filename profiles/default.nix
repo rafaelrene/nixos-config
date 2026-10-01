@@ -17,7 +17,6 @@ let
     "gh"
     "ghostty"
     "git"
-    "git-branches"
     "git-delete-branches"
     "gnutar"
     "helium"
