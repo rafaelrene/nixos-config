@@ -8,14 +8,17 @@ def active [settings: record] {
     generation $settings.profile | default $settings.initial
 }
 
-def desktops [] {
+def desktop-processes [] {
     let uid = ^id -u | str trim | into int
-    let candidates = ps --long | where {|p|
+    ps --long | where {|p|
         ($p.user_id == $uid
         and ($p.name =~ '^T3 Code \(' or $p.name in [t3code t3code-desktop])
-        and ($p.command =~ '/nix/store/.*t3code-desktop' or $p.command =~ '/nix/profiles/t3code/')
-        and $p.command !~ ' --type=')
+        and ($p.command =~ '/nix/store/.*t3code-desktop' or $p.command =~ '/nix/profiles/t3code/'))
     }
+}
+
+def desktops [] {
+    let candidates = desktop-processes | where command !~ ' --type='
     # Electron workers can use the main executable too. Only manage their parent.
     $candidates | where {|p| $p.ppid not-in $candidates.pid }
 }
@@ -130,11 +133,34 @@ def launch [settings: record, args: list<string>] {
     error make {msg: $"T3 Code desktop did not start. See ($settings.state)/desktop.log."}
 }
 
+def stop-desktops [processes: table] {
+    print "T3 Code: closing desktop clients..."
+    # Let the main clients shut down their workers before forcing any survivors.
+    for client in ($processes | where {|p| $p.ppid not-in $processes.pid }) {
+        kill --quiet $client.pid
+    }
+    for attempt in 1..5 {
+        if (ps | where pid in $processes.pid | is-empty) { return }
+        sleep 1sec
+    }
+    let remaining = ps | where pid in $processes.pid
+    if ($remaining | is-not-empty) {
+        print "T3 Code: force-stopping unresponsive desktop processes..."
+        kill --force --quiet ...$remaining.pid
+    }
+    for attempt in 1..5 {
+        if (ps | where pid in $processes.pid | is-empty) { return }
+        sleep 1sec
+    }
+    error make {msg: "T3 Code desktop did not quit. Activation stopped before changing the server."}
+}
+
 def activate [settings: record] {
     let target = generation $settings.staged | default (active $settings)
     if $target == null { error make {msg: "No T3 Code release is installed. Run t3-update-now."} }
+    let processes = desktop-processes
     let clients = desktops
-    let clients_current = ($clients | is-empty) or (
+    let clients_current = ($processes | is-empty) or (
         ($clients | length) == 1 and (desktop-current $clients.0 $target)
     )
     if (active $settings) == $target and (healthy $settings $target) and $clients_current {
@@ -142,14 +168,9 @@ def activate [settings: record] {
         return
     }
 
-    print "T3 Code: closing desktop clients..."
-    for client in $clients { kill $client.pid }
-    for attempt in 1..30 {
-        if (desktops | is-empty) { break }
-        sleep 1sec
-    }
-    if (desktops | is-not-empty) {
-        error make {msg: "T3 Code desktop did not quit. Activation stopped before changing the server."}
+    stop-desktops $processes
+    if (desktop-processes | is-not-empty) {
+        error make {msg: "A T3 Code desktop process appeared during shutdown. Retry t3-activate."}
     }
 
     print "T3 Code: stopping the managed server..."

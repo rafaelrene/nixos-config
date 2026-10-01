@@ -55,7 +55,8 @@ Agent launchers enter the project's Devenv environment when needed.
 - Updates stage every three hours and activate at 04:00, independently of system
   rebuilds. Failed downloads or builds preserve the installed versions.
 - Agent updates apply to new sessions. T3 Code activation restarts its server and
-  reopens the desktop if it was running, which can interrupt active work.
+  reopens the desktop if it was running, force-stopping unresponsive clients and
+  leftover workers after five seconds. Activation can interrupt active work.
 
 ### Remote access and snapshots
 
