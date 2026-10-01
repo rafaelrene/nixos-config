@@ -23,7 +23,6 @@
         };
     in
     {
-      branches = command "git-branches";
       deleteBranches = (command "git-delete-branches").overrideAttrs (previous: {
         buildCommand = previous.buildCommand + ''
           ln -s git-delete-branches "$out/bin/git-db"

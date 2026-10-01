@@ -25,13 +25,21 @@ source @direnv-hook@
 source @starship-hook@
 
 def --env shell-leader [] {
-  print 'Space: nav   n: git nav   p: project-run   Esc: cancel'
+  print 'Space: nav   g: git   Esc: cancel'
   let key = input listen --types [key]
   if $key.key_type != char or ($key.modifiers | is-not-empty) { return }
   match $key.code {
     ' ' => { nav }
-    'n' => { git nav }
-    'p' => { ^project-run }
+    'g' => {
+      print 'n: git nav   r: project-run   Esc: cancel'
+      let key = input listen --types [key]
+      if $key.key_type != char or ($key.modifiers | is-not-empty) { return }
+      match $key.code {
+        'n' => { git nav }
+        'r' => { ^project-run }
+        _ => {}
+      }
+    }
     _ => {}
   }
 }

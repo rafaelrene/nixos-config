@@ -34,8 +34,8 @@ mode, press Space followed by a key to open a picker:
 | Keys        | Command       | Purpose                                        |
 | ----------- | ------------- | ---------------------------------------------- |
 | Space Space | `nav`         | Jump to a project, config folder, or SSH host. |
-| Space n     | `git nav`     | Navigate branches, worktrees, and submodules.  |
-| Space p     | `project-run` | Find and run a `package.json` script.          |
+| Space g n   | `git nav`     | Navigate branches, worktrees, and submodules.  |
+| Space g r   | `project-run` | Find and run a `package.json` script.          |
 
 - **Project environments:** Devenv supplies project tools and language runtimes.
   Direnv loads them on entry, reloads configuration changes, and unloads on exit.
