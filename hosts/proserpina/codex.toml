@@ -74,6 +74,9 @@ trusted_hash = "sha256:58ea9ed30e0b5e81a223f3d6b01959e6f16ed8410b9267c9d6e3b9a4f
 [projects."/Users/rafael/code/.personal/nixos-config"]
 trust_level = "trusted"
 
+[projects."/Users/rafael/.t3/worktrees/global-repo/t3code-a683c45c/src/firebase/libs/gs3-ai-agents"]
+trust_level = "trusted"
+
 [tui]
 theme = "workstation"
 screen_reader_detection_done = true
@@ -81,7 +84,7 @@ screen_reader_detection_done = true
 [tui.model_availability_nux]
 "gpt-5.6-sol" = 2
 gpt-6-astra = 2
-"gpt-6.1-sol" = 3
+"gpt-6.1-sol" = 4
 
 # Keep the background daemon disabled for the Nix-managed CLI.
 [features]
