@@ -68,6 +68,22 @@ in
         ./nushell-completion.patch
         ./nushell-hidden-setup.patch
       ];
+      prePatch = ''
+        # The CLI chunk's hash changes between releases.
+        serverModules=(desktop/apps/server/dist/binCli-*.mjs)
+        if [ "''${#serverModules[@]}" -ne 1 ] || [ ! -f "''${serverModules[0]}" ]; then
+          echo "Expected one T3 Code CLI chunk." >&2
+          exit 1
+        fi
+        adaptedPatches=""
+        for patch in $patches; do
+          adapted="$TMPDIR/$(basename "$patch")"
+          substitute "$patch" "$adapted" \
+            --replace-fail desktop/apps/server/dist/binCli.mjs "''${serverModules[0]}"
+          adaptedPatches="$adaptedPatches $adapted"
+        done
+        patches="$adaptedPatches"
+      '';
       patchFlags = [
         "-p1"
         "--fuzz=0"
