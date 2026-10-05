@@ -5,13 +5,13 @@
     "hash": "sha256-x5pfZhmMXgqGNNKQGzHaveNxptMBL4TmDmWozgJ2xvY="
   },
   "omniwm": {
-    "version": "0.7.3",
-    "url": "https://github.com/OmniNull/OmniWM/releases/download/v0.7.3/OmniWM-v0.7.3.zip",
-    "hash": "sha256-u5nDoWynF45a6A+EN3x5I8tP+jZC2A1GFXGxlT1Q9d8="
+    "version": "0.7.5",
+    "url": "https://github.com/OmniNull/OmniWM/releases/download/v0.7.5/OmniWM-v0.7.5.zip",
+    "hash": "sha256-oV/KNBGojdBviTUyjChiY9V6RMe8wiVUd+KTA/qUzM4="
   },
   "viber": {
-    "version": "28.10.0",
+    "version": "28.11.0",
     "url": "https://download.viber.com/desktop/mac_arm/update/update.zip",
-    "hash": "sha256-hwDELMP9UfTc9iJt3BqAlY/c8v3svJZ8zwRiY0L3qg8="
+    "hash": "sha256-LTMCtPQgkH3kiXpo6c8FMvtEuAAeatsRt+bcugaCVAU="
   }
 }
