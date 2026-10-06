@@ -60,6 +60,7 @@ T3 Code, Codex, Claude Code, and OpenCode share instructions, skills, and themes
 Agent launchers enter the project's Devenv environment when needed.
 
 - T3 Code keeps its nightly server and desktop on the same release.
+  Its terminals use a private zsh with direnv; the server uses the unpatched release.
 - Codex and Claude Code follow stable publisher releases; OpenCode follows Numtide.
 - Updates stage every three hours and activate at 04:00, independently of system
   rebuilds. Failed downloads or builds preserve the installed versions.

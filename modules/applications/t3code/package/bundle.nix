@@ -19,7 +19,6 @@ in
     }:
     let
       server = pkgs.callPackage t3code.serverPackage {
-        inherit desktop;
         inherit (release) version;
         hash = release.serverHash;
       };
