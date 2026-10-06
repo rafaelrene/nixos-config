@@ -87,6 +87,12 @@ in
           exec ${lib.getExe lifecycle} request
         '';
       };
+      rollback = pkgs.writeShellApplication {
+        name = "t3-rollback";
+        text = ''
+          exec ${lib.getExe lifecycle} request-rollback
+        '';
+      };
       command = pkgs.writeShellApplication {
         name = "t3";
         text = ''
@@ -120,34 +126,13 @@ in
           yq --inplace --output-format=json '.localEnvironmentEnabled = false' "$settings"
           export T3CODE_HOME="${base}"
           export T3CODE_DISABLE_AUTO_UPDATE=true
-          client="${profile}/Applications/T3 Code (Nightly).app"
-          if ! test -d "$client"; then
-            client="${initial}/Applications/T3 Code (Nightly).app"
-          fi
+          client="${home}/Applications/T3 Code.app"
           /bin/launchctl setenv T3CODE_HOME "${base}"
           /bin/launchctl setenv T3CODE_DISABLE_AUTO_UPDATE true
           # LaunchServices focuses an existing client rather than starting another.
-          exec /usr/bin/open -a "$(readlink -f "$client")" --args "$@"
+          exec /usr/bin/open -a "$client" --args "$@"
         '';
       };
-      desktopApp = pkgs.runCommand "t3code-client-launcher" { } ''
-        mkdir -p "$out/Applications/T3 Code.app/Contents/MacOS"
-        mkdir -p "$out/Applications/T3 Code.app/Contents/Resources"
-        ln -s ${lib.getExe desktop} "$out/Applications/T3 Code.app/Contents/MacOS/t3code-desktop"
-        ln -s "${initial}/Applications/T3 Code (Nightly).app/Contents/Resources/icon.icns" "$out/Applications/T3 Code.app/Contents/Resources/icon.icns"
-        cat > "$out/Applications/T3 Code.app/Contents/Info.plist" <<'PLIST'
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0"><dict>
-          <key>CFBundleName</key><string>T3 Code</string>
-          <key>CFBundleIdentifier</key><string>local.proserpina.t3code-client</string>
-          <key>CFBundleExecutable</key><string>t3code-desktop</string>
-          <key>CFBundleIconFile</key><string>icon.icns</string>
-          <key>CFBundleVersion</key><string>1</string>
-          <key>CFBundlePackageType</key><string>APPL</string>
-        </dict></plist>
-        PLIST
-      '';
     in
     {
       system.activationScripts.preActivation.text = lib.mkBefore ''
@@ -162,10 +147,10 @@ in
       environment.systemPackages = [
         command
         desktop
-        desktopApp
         updater
         updateNow
         activate
+        rollback
       ];
       environment.variables.T3CODE_HOME = base;
       workstation.stateAliases.".local/share/t3code" = ".t3";
@@ -221,6 +206,14 @@ in
               Minute = 0;
             }
           ];
+        };
+        t3code-rollback.serviceConfig = {
+          ProgramArguments = [
+            (lib.getExe lifecycle)
+            "rollback"
+          ];
+          StandardOutPath = "${logs}/t3code-activation.log";
+          StandardErrorPath = "${logs}/t3code-activation.log";
         };
       };
     };

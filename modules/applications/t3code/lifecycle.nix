@@ -16,6 +16,13 @@
     let
       darwin = pkgs.stdenv.hostPlatform.isDarwin;
       state = "${home}/.local/state/t3code-bundle-updater";
+      desktopSupport = pkgs.writeShellApplication {
+        name = "t3code-darwin-app";
+        runtimeInputs = [ pkgs.python3 ];
+        text = ''
+          exec python3 ${./darwin-app.py} "$@"
+        '';
+      };
       notify = pkgs.writeShellApplication {
         name = "notify-t3code-error";
         text =
@@ -51,6 +58,9 @@
           initial = if initial == null then null else toString initial;
           profile = "${home}/.local/state/nix/profiles/t3code";
           staged = "${home}/.local/state/nix/profiles/t3code-staged";
+          previous = "${home}/.local/state/nix/profiles/t3code-previous";
+          desktopApp = "${home}/Applications/T3 Code.app";
+          desktopCommand = if darwin then lib.getExe desktopSupport else null;
           spawn = lib.getExe spawn;
           notifyCommand = lib.getExe notify;
           serviceCommand = if darwin then "/bin/launchctl" else "${pkgs.systemd}/bin/systemctl";
@@ -72,7 +82,7 @@
       text = ''
         install -d -m 0700 ${lib.escapeShellArg state}
         # Requests wait for the independent coordinator, which takes this lock itself.
-        if [[ "''${1-}" == request ]]; then
+        if [[ "''${1-}" == request || "''${1-}" == request-rollback ]]; then
           exec nu --no-config-file ${./lifecycle.nu} ${settings} "$@"
         fi
         # The child does not inherit the lock descriptor, including detached clients.
