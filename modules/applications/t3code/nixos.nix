@@ -98,6 +98,12 @@ in
           exec ${lib.getExe lifecycle} request
         '';
       };
+      rollback = pkgs.writeShellApplication {
+        name = "t3-rollback";
+        text = ''
+          exec ${lib.getExe lifecycle} request-rollback
+        '';
+      };
       client = pkgs.writeShellApplication {
         name = "t3code-client";
         runtimeInputs = [ pkgs.yq-go ];
@@ -124,6 +130,7 @@ in
         updateNow
         desktop
         activate
+        rollback
         (pkgs.makeDesktopItem {
           name = "t3code";
           desktopName = "T3 Code";
@@ -236,6 +243,15 @@ in
             serviceConfig = {
               Type = "oneshot";
               ExecStart = "${lib.getExe lifecycle} activate";
+              TimeoutStartSec = "5min";
+            };
+          };
+          t3code-rollback = {
+            description = "Restore the previous matching T3 Code server and desktop";
+            unitConfig.ConditionUser = user;
+            serviceConfig = {
+              Type = "oneshot";
+              ExecStart = "${lib.getExe lifecycle} rollback";
               TimeoutStartSec = "5min";
             };
           };

@@ -8,22 +8,31 @@ def active [settings: record] {
     generation $settings.profile | default $settings.initial
 }
 
-def desktop-processes [] {
+def desktop-processes [settings: record] {
     let uid = ^id -u | str trim | into int
+    let retained = $settings.home | path join Applications '.T3 Code.next.app'
     ps --long | where {|p|
         ($p.user_id == $uid
         and ($p.name =~ '^T3 Code \(' or $p.name in [t3code t3code-desktop])
-        and ($p.command =~ '/nix/store/.*t3code-desktop' or $p.command =~ '/nix/profiles/t3code/'))
+        and ($p.command =~ '/nix/store/.*t3code-desktop' or $p.command =~ '/nix/profiles/t3code/'
+            or ($settings.darwin and (
+                ($p.command | str contains $settings.desktopApp)
+                or ($p.command | str contains $retained)
+            ))))
     }
 }
 
-def desktops [] {
-    let candidates = desktop-processes | where command !~ ' --type='
+def desktops [settings: record] {
+    let candidates = desktop-processes $settings | where command !~ ' --type='
     # Electron workers can use the main executable too. Only manage their parent.
     $candidates | where {|p| $p.ppid not-in $candidates.pid }
 }
 
-def desktop-current [client: record, target: string] {
+def desktop-current [settings: record, client: record, target: string] {
+    if $settings.darwin {
+        let result = ^($settings.desktopCommand) $settings.file process-current $target ($client.pid | into string) | complete
+        return ($result.exit_code == 0 and ($result.stdout | str trim) == 'true')
+    }
     let version = open ($target | path join share t3code release.json) | get version
     # A process launched through a mutable profile still maps its original binary.
     let mapped = ^lsof -a -p $client.pid -d txt -Fn | complete
@@ -85,13 +94,14 @@ def wait-stopped [settings: record, service: string, pid] {
     error make {msg: "T3 Code did not stop. The active profile is unchanged; inspect the server logs before retrying t3-activate."}
 }
 
-def request [settings: record] {
+def request [settings: record, rollback: bool] {
+    let name = if $rollback { 't3code-rollback' } else { 't3code-restart' }
     print "T3 Code: waiting for coordinated activation..."
     if $settings.darwin {
-        let service = $"gui/(^id -u | str trim)/org.nixos.t3code-restart"
+        let service = $"gui/(^id -u | str trim)/org.nixos.($name)"
         ^($settings.serviceCommand) kickstart -p $service | ignore
         for attempt in 1..240 {
-            let result = ^($settings.serviceCommand) list org.nixos.t3code-restart | complete
+            let result = ^($settings.serviceCommand) list $"org.nixos.($name)" | complete
             if $result.exit_code != 0 {
                 error make {msg: $"Cannot inspect T3 Code activation: ($result.stderr | str trim)"}
             }
@@ -108,7 +118,7 @@ def request [settings: record] {
         }
         error make {msg: "T3 Code activation is still running after four minutes. Inspect the activation log."}
     } else {
-        ^($settings.serviceCommand) --user start t3code-restart.service
+        ^($settings.serviceCommand) --user start $"($name).service"
         print "T3 Code: activation completed."
     }
 }
@@ -118,15 +128,15 @@ def launch [settings: record, args: list<string>] {
     if $target == null or not (healthy $settings $target) {
         error make {msg: "T3 Code's active server is not ready. Run t3-activate, then reopen the desktop."}
     }
-    let existing = desktops
-    if ($existing | length) > 1 or ($existing | any {|client| not (desktop-current $client $target) }) {
+    let existing = desktops $settings
+    if ($existing | length) > 1 or ($existing | any {|client| not (desktop-current $settings $client $target) }) {
         error make {msg: "An outdated or duplicate T3 Code desktop is running. Run t3-activate to replace it."}
     }
     ^($settings.spawn) ...$args
     for attempt in 1..30 {
-        let clients = desktops
+        let clients = desktops $settings
         if ($clients | length) == 1 {
-            if (desktop-current $clients.0 $target) { return }
+            if (desktop-current $settings $clients.0 $target) { return }
         }
         sleep 1sec
     }
@@ -155,25 +165,34 @@ def stop-desktops [processes: table] {
     error make {msg: "T3 Code desktop did not quit. Activation stopped before changing the server."}
 }
 
-def activate [settings: record] {
-    let target = generation $settings.staged | default (active $settings)
-    if $target == null { error make {msg: "No T3 Code release is installed. Run t3-update-now."} }
-    let processes = desktop-processes
-    let clients = desktops
-    let clients_current = ($processes | is-empty) or (
-        ($clients | length) == 1 and (desktop-current $clients.0 $target)
-    )
-    if (active $settings) == $target and (healthy $settings $target) and $clients_current {
-        print "T3 Code: the active server and desktop are current."
-        return
-    }
+# Every journal write reaches disk before its corresponding mutation.
+def save-state [settings: record, name: string, value] {
+    let file = $settings.state | path join $name
+    let temporary = $"($file).tmp"
+    $value | to json | save --force $temporary
+    ^sync $temporary
+    ^mv --force $temporary $file
+    ^sync $settings.state
+}
 
-    stop-desktops $processes
-    if (desktop-processes | is-not-empty) {
-        error make {msg: "A T3 Code desktop process appeared during shutdown. Retry t3-activate."}
-    }
+def clear-journal [settings: record] {
+    rm --force ($settings.state | path join activation.json)
+    ^sync $settings.state
+}
 
-    print "T3 Code: stopping the managed server..."
+def desktop-action [settings: record, action: string, target: string] {
+    if $settings.darwin {
+        ^($settings.desktopCommand) $settings.file $action $target
+    }
+}
+
+def app-current [settings: record, target: string] {
+    if not $settings.darwin { return true }
+    let result = ^($settings.desktopCommand) $settings.file current $target | complete
+    $result.exit_code == 0 and ($result.stdout | str trim) == 'true'
+}
+
+def stop-server [settings: record] {
     if $settings.darwin {
         let domain = $"gui/(^id -u | str trim)"
         let pid = server-pid $settings
@@ -183,24 +202,110 @@ def activate [settings: record] {
     } else {
         ^($settings.serviceCommand) --user stop t3code.service
     }
+}
 
-    ^nix-env --profile $settings.profile --set $target
+def start-server [settings: record] {
     if $settings.darwin {
         ^($settings.serviceCommand) bootstrap $"gui/(^id -u | str trim)" $settings.serviceFile
     } else {
         ^($settings.serviceCommand) --user start t3code.service
     }
-    wait-ready $settings $target
-    if ($clients | is-not-empty) { launch $settings [] }
+}
+
+def recover [settings: record] {
+    let journal = open ($settings.state | path join activation.json)
+    print "T3 Code: restoring the previous release after an incomplete activation..."
+    # Reuse the retained complete desktop when possible. Never start an older
+    # server alongside a newer desktop, or erase a journal before recovery works.
+    desktop-action $settings prepare $journal.previous
+    stop-desktops (desktop-processes $settings)
+    stop-server $settings
+    ^nix-env --profile $settings.profile --set $journal.previous
+    desktop-action $settings install $journal.previous
+    start-server $settings
+    wait-ready $settings $journal.previous
+    desktop-action $settings dock $journal.previous
+    if $journal.reopen { launch $settings [] }
+    ^nix-env --profile $settings.staged --set $journal.previous
+    if $journal.target != $journal.previous {
+        save-state $settings blocked.json $journal.target
+    }
+    clear-journal $settings
+    print "T3 Code: the previous release is running. Database files were left untouched."
+}
+
+def activate [settings: record, rollback: bool] {
+    let previous = active $settings
+    let target = if $rollback {
+        generation $settings.previous
+    } else {
+        generation $settings.staged | default $previous
+    }
+    if $target == null { error make {msg: "No T3 Code release is available for this operation."} }
+    let blocked = try { open ($settings.state | path join blocked.json) } catch { null }
+    if $target == $blocked {
+        error make {msg: "This T3 Code generation failed or was rolled back. Stage a different release before activating it."}
+    }
+    let processes = desktop-processes $settings
+    let clients = desktops $settings
+    let clients_current = ($processes | is-empty) or (
+        ($clients | length) == 1 and (desktop-current $settings $clients.0 $target)
+    )
+    if $previous == $target and (healthy $settings $target) and $clients_current and (app-current $settings $target) {
+        desktop-action $settings dock $target
+        print "T3 Code: the active server and desktop are current."
+        return
+    }
+    if $previous == null { error make {msg: "No previous T3 Code release exists. Bootstrap it before activation."} }
+
+    # Copy and verify before interrupting the working app. Retain the old Nix
+    # release as a GC root before recording a recoverable activation intent.
+    desktop-action $settings prepare $target
+    if $target != $previous {
+        ^nix-env --profile $settings.previous --set $previous
+    }
+    save-state $settings activation.json {
+        previous: $previous
+        target: $target
+        reopen: ($clients | is-not-empty)
+    }
+    try {
+        stop-desktops $processes
+        if (desktop-processes $settings | is-not-empty) {
+            error make {msg: "A T3 Code desktop appeared during shutdown."}
+        }
+        print "T3 Code: stopping the managed server..."
+        stop-server $settings
+        ^nix-env --profile $settings.profile --set $target
+        desktop-action $settings install $target
+        start-server $settings
+        wait-ready $settings $target
+        desktop-action $settings dock $target
+        if ($clients | is-not-empty) { launch $settings [] }
+        if $rollback {
+            ^nix-env --profile $settings.staged --set $target
+            if $previous != $target { save-state $settings blocked.json $previous }
+        }
+        clear-journal $settings
+    } catch {|failure|
+        try {
+            recover $settings
+        } catch {|recovery| error make {msg: $"Activation failed: ($failure.msg). Recovery also failed: ($recovery.msg). The previous release and recovery journal are retained; retry t3-activate."} }
+        error make {msg: $"Activation failed: ($failure.msg). The previous release was restored."}
+    }
     print $"T3 Code: activated (open ($target | path join share t3code release.json) | get version)."
 }
 
 def main [settings_file: path, action: string, ...args: string] {
-    let settings = open $settings_file
+    let settings = open $settings_file | insert file $settings_file
     mkdir ($settings.profile | path dirname)
     match $action {
         stage => {
             let target = $args.0
+            let blocked = try { open ($settings.state | path join blocked.json) } catch { null }
+            if $target == $blocked {
+                error make {msg: "This T3 Code generation failed or was rolled back; leaving the working release installed."}
+            }
             # Keep downloaded generations GC-rooted without changing active launches.
             ^nix-env --profile $settings.staged --set $target
         }
@@ -211,10 +316,12 @@ def main [settings_file: path, action: string, ...args: string] {
                 ^nix-env --profile $settings.profile --set $target
             }
         }
-        request => { request $settings }
-        activate | launch => {
+        request => { request $settings false }
+        request-rollback => { request $settings true }
+        activate | rollback | launch => {
             try {
-                if $action == activate { activate $settings } else { launch $settings $args }
+                if ($settings.state | path join activation.json | path exists) { recover $settings }
+                if $action == launch { launch $settings $args } else { activate $settings ($action == rollback) }
             } catch {|error|
                 let message = $"T3 Code: ($error.msg)"
                 let log = if $action == launch { "desktop.log" } else { "activation.log" }
