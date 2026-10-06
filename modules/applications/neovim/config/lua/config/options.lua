@@ -20,6 +20,6 @@ vim.opt.fileformats = "unix"
 
 vim.g.snacks_scroll = false
 
-vim.g.lazyvim_ts_lsp = "tsgo"
+vim.g.lazyvim_ts_lsp = "tsc"
 
 vim.g.lazyvim_prettier_needs_config = true
