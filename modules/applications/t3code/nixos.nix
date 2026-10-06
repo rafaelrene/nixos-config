@@ -16,6 +16,7 @@ in
       user = config.workstation.user;
       home = config.users.users.${user}.home;
       group = config.users.users.${user}.group;
+      terminalShell = features.t3code.terminalShell { inherit pkgs; };
       codeRoot = config.workstation.codeRoot;
       baseDir = "${home}/.local/share/t3code";
       settings = features.t3code.settings {
@@ -193,9 +194,8 @@ in
                   ]
                 )
               }:/run/current-system/sw/bin:${home}/.local/bin";
-              # SHELL also selects the integrated terminal. Supply PATH above because
-              # T3's POSIX login-shell probe can fail with Nushell.
-              SHELL = lib.getExe pkgs.nushell;
+              # Keep the terminal shell and its startup configuration private to T3.
+              SHELL = lib.getExe terminalShell;
               T3CODE_HOME = baseDir;
               T3CODE_TELEMETRY_ENABLED = "false";
               CODEX_HOME = "${home}/.local/share/codex";
