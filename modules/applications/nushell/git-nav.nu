@@ -16,18 +16,42 @@ export def --env "git nav" [
         $current.head | str substring 0..7
     }
 
+    let local_refs = (
+        git-output $root for-each-ref '--format=%(refname:strip=2)%09%(upstream)' refs/heads/
+        | lines
+        | split column "\t" name upstream
+    )
     let branches = (
-    git-output $root for-each-ref '--format=%(refname:strip=2)' refs/heads/
-    | lines
+    $local_refs
     | each {|branch|
-      let checked_out = $worktrees | where branch == $branch
+      let checked_out = $worktrees | where branch == $branch.name
       {
         kind: (if ($checked_out | is-empty) { "branch" } else { "worktree" })
-        name: $branch
+        name: $branch.name
+        branch: $branch.name
+        ref: "", 
         path: (if ($checked_out | is-empty) { $main } else { $checked_out.0.path })
       }
     }
   )
+    let remote_refs = (
+        git-output $root for-each-ref '--format=%(refname)%09%(refname:strip=3)%09%(symref)' refs/remotes/
+        | lines
+        | split column "\t" ref branch symbolic
+        | where symbolic == ""
+        # Local branches already represent these names and tracked refs.
+        | where {|remote| $remote.branch not-in $local_refs.name and $remote.ref not-in $local_refs.upstream }
+    )
+    let remotes = ($remote_refs | each {|remote|
+        let ambiguous = ($remote_refs | where branch == $remote.branch | length) > 1
+        {
+            kind: "branch", 
+            name: (if $ambiguous { $remote.ref | str replace 'refs/remotes/' '' } else { $remote.branch })
+            branch: $remote.branch
+            ref: $remote.ref
+            path: $main
+        }
+    })
     let detached = ($worktrees | where branch == "" | each {|tree|
     {
       kind: "detached", 
@@ -62,6 +86,7 @@ export def --env "git nav" [
     let destinations = (
     [{kind: "create", name: "+ Create worktree…", path: $main}]
     | append $branches
+    | append $remotes
     | append $detached
     | append $submodules
     | append $parents
@@ -133,9 +158,13 @@ export def --env "git nav" [
         $target
     } else if $destination.kind in [branch worktree] {
         # Refresh ownership: another terminal may have checked out this branch.
-        let owners = worktrees $root | where branch == $destination.name
+        let owners = worktrees $root | where branch == $destination.branch
         if ($owners | is-empty) {
-            git-output $main switch --no-guess $destination.name | ignore
+            if $destination.ref == "" {
+                git-output $main switch --no-guess $destination.branch | ignore
+            } else {
+                git-output $main switch --track -c $destination.branch $destination.ref | ignore
+            }
             $main
         } else {
             $owners.0.path
