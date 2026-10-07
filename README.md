@@ -48,6 +48,9 @@ mode, press Space followed by a key to open a picker:
 | Space g r   | `project-run`         | Find and run a `package.json` script.         |
 | Space g d   | `git delete-branches` | Pick branches and worktrees to delete.       |
 
+- **Branches:** `git nav` combines local and fetched remote branches, preferring
+  local checkouts. Remote names appear only to disambiguate branches. Selecting a
+  remote-only branch creates a tracking branch. Run `git fetch` to refresh the list.
 - **Project environments:** Devenv supplies project tools and language runtimes.
   Direnv loads them on entry, reloads configuration changes, and unloads on exit.
   T3 worktrees are trusted automatically; other checkouts require `direnv allow`.
