@@ -38,9 +38,9 @@ in
         modules.skhd
         modules.slack
         modules.standard-notes
-        modules.superwhisper
         modules.telegram
         modules.thaw
+        modules.typewhisper
         modules.ungoogled-chromium
         modules.viber
         modules.whatsapp

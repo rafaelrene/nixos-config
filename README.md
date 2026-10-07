@@ -25,6 +25,8 @@ across supported applications.
   Option + Enter opens a fresh Ghostty window. Homebrew is not required.
 - **Web apps:** Dedicated Helium launchers on Linux and Chromium launchers in
   Raycast on macOS.
+- **Dictation (macOS):** TypeWhisper uses local Parakeet v3 for English and Slovak
+  and inserts the result at the cursor. Models download through the app.
 
 Numbered navigation uses keys 1–9. Columns count from the left in the current workspace.
 
