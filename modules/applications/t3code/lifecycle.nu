@@ -8,10 +8,25 @@ def active [settings: record] {
     generation $settings.profile | default $settings.initial
 }
 
+def process-snapshot [] {
+
+    # Nushell can fail the whole long scan when an unrelated Linux process exits.
+    for attempt in 1..5 {
+        try {
+            return (ps --long)
+        } catch {|failure|
+            if $failure.msg != 'Error getting process stat' or $attempt == 5 {
+                error make {msg: $failure.msg}
+            }
+        }
+        sleep 50ms
+    }
+}
+
 def desktop-processes [settings: record] {
     let uid = ^id -u | str trim | into int
     let retained = $settings.home | path join Applications '.T3 Code.next.app'
-    ps --long | where {|p|
+    process-snapshot | where {|p|
         ($p.user_id == $uid
         and ($p.name =~ '^T3 Code \(' or $p.name in [t3code t3code-desktop])
         and ($p.command =~ '/nix/store/.*t3code-desktop' or $p.command =~ '/nix/profiles/t3code/'
