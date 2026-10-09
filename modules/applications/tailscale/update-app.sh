@@ -62,6 +62,16 @@ tailscale_before_app_copy() {
 	echo "Stopping Tailscale before updating its app and VPN extension..." >&2
 	"$tailscale_timeout" 15 env -u TAILSCALE_BE_CLI \
 		"$tailscale_app/Contents/MacOS/Tailscale" down-for-update
+	# down-for-update stops the VPN, but leaves the old GUI process running.
+	# It must exit before the bundle is replaced so reopening loads the new app.
+	pkill -TERM -x -u "$tailscale_uid" Tailscale || true
+	local attempt
+	for ((attempt = 0; attempt < 10; attempt++)); do
+		pgrep -x -u "$tailscale_uid" Tailscale >/dev/null || return 0
+		sleep 1
+	done
+	echo "Tailscale's GUI did not stop; refusing to replace its app." >&2
+	return 1
 }
 
 tailscale_after_app_copy() {
@@ -70,7 +80,9 @@ tailscale_after_app_copy() {
 	local status attempt
 	# On a failed copy, recover the version that is actually still installed.
 	tailscale_expected_version=$(defaults read "$tailscale_app/Contents/Info.plist" CFBundleShortVersionString)
-	if ! tailscale_user_command "$tailscale_app/Contents/MacOS/Tailscale" rungui; then
+	# rungui relies on Launch Services URL registration and can print CLIError 3
+	# while exiting successfully. Open the exact managed bundle instead.
+	if ! tailscale_user_command /usr/bin/open -g -a "$tailscale_app"; then
 		echo "Could not reopen Tailscale after its app update. Open Tailscale manually." >&2
 		return 1
 	fi
