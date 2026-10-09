@@ -52,17 +52,9 @@ let
     };
 in
 {
-  flake.modules.nixos.zsh =
-    { config, ... }:
-    {
-      imports = [ common ];
-      environment.localBinInPath = true;
-      # Retire the old system-managed shell configuration on the next switch.
-      systemd.tmpfiles.rules = [
-        "r ${config.users.users.${config.workstation.user}.home}/.config/nushell/config.nu - - - -"
-        "r ${config.users.users.${config.workstation.user}.home}/.config/nushell/env.nu - - - -"
-      ];
-    };
+  flake.modules.nixos.zsh = {
+    imports = [ common ];
+  };
   flake.modules.darwin.zsh =
     {
       config,
