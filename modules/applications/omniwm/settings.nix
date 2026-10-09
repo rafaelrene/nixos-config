@@ -86,6 +86,7 @@
           id = "69862ED8-4A20-4AC1-90D5-E96B66E867F4";
           bundleId = "net.imput.helium";
           assignToWorkspace = "1";
+          layout = "tile";
         }
         {
           id = "C0CC8269-974E-499D-A312-334F67477AD3";
