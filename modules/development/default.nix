@@ -10,8 +10,7 @@
         deadnix
 
         # Devenv supplies Bash; these support the repository's other config and tests.
-        nushell
-        nufmt
+        zsh
         lua
         python3
         shellcheck

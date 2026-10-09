@@ -46,7 +46,8 @@
         coreutils
         curl
         nix
-        nushell
+        jq
+        zsh
         (if darwin then flock else util-linux)
       ];
       text = ''
@@ -55,7 +56,7 @@
         exec 9>${lib.escapeShellArg "${state}/update.lock"}
         echo "T3 Code: waiting for any existing update to finish..."
         flock 9
-        exec nu --no-config-file ${./update.nu} ${settings} "$@"
+        exec ${pkgs.zsh}/bin/zsh -f ${./update.zsh} ${settings} "$@"
       '';
     };
 }

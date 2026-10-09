@@ -12,13 +12,18 @@
         pkgs.writeShellApplication {
           inherit name;
           runtimeInputs = [
-            pkgs.nushell
+            pkgs.zsh
             pkgs.git
             pkgs.fzf
+            pkgs.jq
+            pkgs.coreutils
+            pkgs.findutils
+            pkgs.gnugrep
+            pkgs.gawk
             pkgs.bash
           ];
           text = ''
-            exec nu --no-config-file ${./.}/${name}.nu "$@"
+            exec ${pkgs.zsh}/bin/zsh -f ${./.}/${name}.zsh "$@"
           '';
         };
     in

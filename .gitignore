@@ -13,7 +13,6 @@ __pycache__/
 
 # Local development state; devenv.lock is versioned.
 /.devenv/
-/.direnv/
 /devenv.local.nix
 /devenv.local.yaml
 .ruff_cache/
