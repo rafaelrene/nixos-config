@@ -24,6 +24,9 @@ across supported applications.
   native apps. Option + arrows navigates windows; Option + 1–9 switches workspaces;
   Option + Enter opens a fresh Ghostty window. Hold Caps for Hyper window actions;
   tap it to toggle Caps Lock. Homebrew is not required.
+- **Hotkeys (macOS):** skhd runs from `/var/lib/skhd/skhd` with a stable signing
+  identity, preserving Accessibility permission across updates. Grant access once
+  after migrating from the Nix store path.
 - **Web apps:** Dedicated Helium launchers on Linux and Chromium launchers in
   Raycast on macOS.
 - **Dictation (macOS):** TypeWhisper uses local Parakeet v3 for English and Slovak
