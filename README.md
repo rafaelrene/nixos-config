@@ -100,7 +100,8 @@ Agent launchers enter the project's Devenv environment when needed.
   Proserpina's T3 Code server listens only on localhost.
 - **Tailscale (macOS):** Rebuilds stop Tailscale's VPN and GUI before replacing
   its app, then reopen the managed bundle and restore an existing connection
-  after the VPN extension updates.
+  after the VPN extension updates. Rebuilds assess the signed installer and VPN
+  extension before stopping the VPN; macOS validates the copy before it opens.
   Competing app installations block the rebuild.
 - **Snapshots:** Othinus snapshots home hourly and replicates it to the data disk;
   the data filesystem gets daily local snapshots.

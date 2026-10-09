@@ -11,6 +11,16 @@ tailscale_status() {
 		"$tailscale_app/Contents/MacOS/Tailscale" status --json
 }
 
+tailscale_verify_app() {
+	local app=$1
+	/usr/bin/codesign --verify --deep --strict --all-architectures "$app" || return 1
+	/usr/sbin/spctl --assess --type execute "$app" || return 1
+	# A valid signature alone does not populate macOS's notarization ticket cache.
+	# Assess the extension before sysextd stages it, avoiding signature error 3.
+	/usr/sbin/spctl --assess --type install \
+		"$app/Contents/Library/SystemExtensions/io.tailscale.ipn.macsys.network-extension.systemextension" || return 1
+}
+
 tailscale_before_app_copy() {
 	local incoming=$1 home=$4 installed_version incoming_version status daemon_version
 	tailscale_app=$2
@@ -28,6 +38,12 @@ tailscale_before_app_copy() {
 			return 1
 		fi
 	done
+	# Nix extracts the app from the signed pkg without running Apple's installer.
+	# Assess the original pkg to register its stapled ticket, then the extracted app.
+	# Do this while the existing VPN and DNS are still available. Failure leaves
+	# the installed app and connection untouched.
+	/usr/sbin/spctl --assess --type install "$7" || return 1
+	tailscale_verify_app "$incoming" || return 1
 	[[ -x $tailscale_app/Contents/MacOS/Tailscale ]] || return 0
 
 	installed_version=$(defaults read "$tailscale_app/Contents/Info.plist" CFBundleVersion)
@@ -80,6 +96,7 @@ tailscale_after_app_copy() {
 	local status attempt
 	# On a failed copy, recover the version that is actually still installed.
 	tailscale_expected_version=$(defaults read "$tailscale_app/Contents/Info.plist" CFBundleShortVersionString)
+	tailscale_verify_app "$tailscale_app" || return 1
 	# rungui relies on Launch Services URL registration and can print CLIError 3
 	# while exiting successfully. Open the exact managed bundle instead.
 	if ! tailscale_user_command /usr/bin/open -g -a "$tailscale_app"; then
