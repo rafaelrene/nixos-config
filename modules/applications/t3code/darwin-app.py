@@ -33,7 +33,23 @@ def sync_directory(path):
 def writable_directories(path):
     for root, _, _ in os.walk(path):
         directory = Path(root)
-        directory.chmod(directory.stat().st_mode | stat.S_IWUSR)
+        mode = directory.lstat().st_mode
+        if stat.S_ISDIR(mode) and not mode & stat.S_IWUSR:
+            directory.chmod(mode | stat.S_IWUSR)
+
+
+def copy_contents(source, destination):
+    # Create writable directories ourselves. Preserve signed files and framework
+    # symlinks without inheriting the Nix store's read-only directory modes.
+    for item in source.iterdir():
+        copied = destination / item.name
+        if item.is_symlink():
+            copied.symlink_to(os.readlink(item))
+        elif item.is_dir():
+            copied.mkdir()
+            copy_contents(item, copied)
+        else:
+            shutil.copy2(item, copied)
 
 
 def identity(path):
@@ -53,6 +69,22 @@ def verify(app, target):
     subprocess.run(
         ["/usr/bin/codesign", "--verify", "--deep", "--strict", str(app)], check=True
     )
+    source = Path(target) / "Applications/T3 Code (Nightly).app"
+    if signature(app) != signature(source):
+        raise RuntimeError("The T3 Code desktop does not match its Nix release.")
+
+
+def signature(app):
+    result = subprocess.run(
+        ["/usr/bin/codesign", "--display", "--verbose=4", str(app)],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    for line in result.stderr.splitlines():
+        if line.startswith("CDHash="):
+            return line
+    raise RuntimeError(f"No code signature identity was found for {app}.")
 
 
 def exchange(source, destination):
@@ -70,6 +102,9 @@ class Desktop:
         self.app = Path(settings["home"]) / "Applications/T3 Code.app"
         self.candidate = self.app.with_name(".T3 Code.next.app")
         self.record = Path(settings["state"]) / "desktop-copies.json"
+        self.releases = [
+            settings.get(key) for key in ("initial", "profile", "previous", "staged")
+        ]
 
     def copies(self):
         copies = json.loads(self.record.read_text()) if self.record.exists() else {}
@@ -80,54 +115,104 @@ class Desktop:
         if not app.exists() or app.is_symlink():
             return False
         expected = json.loads((Path(target) / "share/t3code/release.json").read_text())
-        return (
-            self.copies().get(identity(app)) == target
-            and version(app) == expected["version"]
-        )
+        try:
+            return (
+                self.copies().get(identity(app)) == target
+                and version(app) == expected["version"]
+            )
+        except (OSError, ValueError, KeyError):
+            return False
 
     def current(self, target):
         return self.matches(self.app, target)
 
+    def known_release(self, app, copies):
+        # An older updater could leave a complete retained copy unrecorded.
+        # A name, bundle ID or version alone never authorizes deleting it.
+        for target in dict.fromkeys([*copies.values(), *self.releases]):
+            if target is None or not Path(target).exists():
+                continue
+            target = str(Path(target).resolve())
+            try:
+                verify(app, target)
+            except (
+                OSError,
+                ValueError,
+                KeyError,
+                RuntimeError,
+                subprocess.CalledProcessError,
+            ):
+                continue
+            return target
+        return None
+
     def prepare(self, target):
+        copies = self.copies()
+        if self.app.is_symlink() or self.app.exists():
+            managed = None if self.app.is_symlink() else copies.get(identity(self.app))
+            if managed is None:
+                raise RuntimeError(
+                    f"An unmanaged application already exists at {self.app}."
+                )
+            # Legacy device:inode records must still describe the signed release.
+            verify(self.app, managed)
         if self.current(target):
             return
+        if self.candidate.is_symlink():
+            raise RuntimeError(f"Refusing to replace a symlink at {self.candidate}.")
         if self.matches(self.candidate, target):
-            verify(self.candidate, target)
-            return
+            try:
+                verify(self.candidate, target)
+                return
+            except (
+                OSError,
+                ValueError,
+                KeyError,
+                RuntimeError,
+                subprocess.CalledProcessError,
+            ):
+                # A recorded copy may have been interrupted before verification.
+                pass
         self.app.parent.mkdir(parents=True, exist_ok=True)
-        if self.app.exists() and identity(self.app) not in self.copies():
-            raise RuntimeError(
-                f"An unmanaged application already exists at {self.app}."
-            )
-        # Record only the live copy before deleting the old candidate. Inode reuse
+        if self.candidate.exists():
+            if (
+                identity(self.candidate) not in copies
+                and self.known_release(self.candidate, copies) is None
+            ):
+                raise RuntimeError(
+                    f"An unmanaged application already exists at {self.candidate}."
+                )
+            writable_directories(self.candidate)
+            shutil.rmtree(self.candidate)
+        # Record only the live copy before creating the new candidate. Inode reuse
         # must never make an incomplete copy look like a previously verified one.
         copies = (
-            {identity(self.app): self.copies()[identity(self.app)]}
+            {identity(self.app): copies[identity(self.app)]}
             if self.app.exists()
             else {}
         )
         save_json(self.record, copies)
-        if self.candidate.is_symlink():
-            raise RuntimeError(f"Refusing to replace a symlink at {self.candidate}.")
-        if self.candidate.exists():
-            writable_directories(self.candidate)
-            shutil.rmtree(self.candidate)
         source = Path(target) / "Applications/T3 Code (Nightly).app"
+        self.candidate.mkdir()
+        sync_directory(self.app.parent)
+        # Record ownership before writing contents so interrupted copies can be
+        # removed safely. Only a verified copy may be exchanged into the live path.
+        copies[identity(self.candidate)] = target
+        save_json(self.record, copies)
         try:
-            subprocess.run(
-                ["/usr/bin/ditto", str(source), str(self.candidate)], check=True
-            )
-            # Nix directories are read-only. Make copied directories removable
-            # without changing signed contents or following framework symlinks.
-            writable_directories(self.candidate)
+            copy_contents(source, self.candidate)
             verify(self.candidate, target)
             subprocess.run(["/bin/sync"], check=True)
-            copies[identity(self.candidate)] = target
             save_json(self.record, copies)
-        except Exception:
-            if self.candidate.exists():
-                writable_directories(self.candidate)
-                shutil.rmtree(self.candidate)
+        except Exception as failure:
+            try:
+                if self.candidate.exists():
+                    writable_directories(self.candidate)
+                    shutil.rmtree(self.candidate)
+            except OSError as cleanup:
+                failure.add_note(
+                    f"The recorded candidate could not be removed: {cleanup}"
+                )
             raise
 
     def install(self, target):

@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ config, lib, ... }:
 {
   options.features.t3code.lifecycle = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -15,15 +15,21 @@
     }:
     let
       darwin = pkgs.stdenv.hostPlatform.isDarwin;
+      writeApplication =
+        args:
+        if darwin then
+          config.features.shell.darwinApplication (args // { inherit pkgs; })
+        else
+          pkgs.writeShellApplication args;
       state = "${home}/.local/state/t3code-bundle-updater";
-      desktopSupport = pkgs.writeShellApplication {
+      desktopSupport = writeApplication {
         name = "t3code-darwin-app";
         runtimeInputs = [ pkgs.python3 ];
         text = ''
           exec python3 ${./darwin-app.py} "$@"
         '';
       };
-      notify = pkgs.writeShellApplication {
+      notify = writeApplication {
         name = "notify-t3code-error";
         text =
           if darwin then
@@ -35,7 +41,7 @@
               exec ${pkgs.libnotify}/bin/notify-send "T3 Code" "$@"
             '';
       };
-      spawn = pkgs.writeShellApplication {
+      spawn = writeApplication {
         name = "spawn-t3code-client";
         text =
           if darwin then
@@ -69,7 +75,7 @@
         }
       );
     in
-    pkgs.writeShellApplication {
+    writeApplication {
       name = "t3-lifecycle";
       runtimeInputs = with pkgs; [
         coreutils
