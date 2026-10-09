@@ -17,8 +17,8 @@
         blue = lib.fromHexString (builtins.substring 4 2 hex) / 255.0;
         alpha = 1.0;
       };
-      # default.nix maps Caps Lock to F18, which OmniWM uses as Hyper. Exclude Shift
-      # so Caps+Shift actions stay distinct, and leave plain Control to apps.
+      # OmniWM maps Caps Lock itself: hold for Hyper, tap to toggle Caps Lock.
+      # Exclude Shift so Caps+Shift actions stay distinct, and leave Control to apps.
       caps = "Hyper";
       bindings = {
         "focus.left" = "Option+Left Arrow";
@@ -128,7 +128,7 @@
         animationsEnabled = false;
         updateChecksEnabled = false;
         ipcEnabled = true;
-        systemHyperTrigger = "F18";
+        systemHyperTrigger = "CapsLock";
         hyperKeyModifiers = "Control+Option+Command";
       };
       gaps = {

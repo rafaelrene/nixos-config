@@ -65,18 +65,6 @@ in
         StandardErrorPath = "${home}/.local/state/nix-darwin/omniwm.log";
       };
 
-      # F18 is a key trigger, so OmniWM suppresses taps and supplies Hyper while
-      # held. Plain Control remains available to apps. Reapply at every boot.
-      system.keyboard = {
-        enableKeyMapping = true;
-        userKeyMapping = [
-          {
-            HIDKeyboardModifierMappingSrc = lib.fromHexString "700000039"; # Caps Lock
-            HIDKeyboardModifierMappingDst = lib.fromHexString "70000006D"; # F18
-          }
-        ];
-      };
-
       system.defaults = {
         # Nix owns the whole list; unlisted shortcuts revert to macOS defaults.
         # macOS applies changes at the next login.

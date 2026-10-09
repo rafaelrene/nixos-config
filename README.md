@@ -22,7 +22,8 @@ across supported applications.
   Battery idle timers lock after 10 minutes and suspend after 15; AC disables both.
 - **Proserpina (macOS):** OmniWM with nine workspaces, Raycast, and Nix-managed
   native apps. Option + arrows navigates windows; Option + 1–9 switches workspaces;
-  Option + Enter opens a fresh Ghostty window. Homebrew is not required.
+  Option + Enter opens a fresh Ghostty window. Hold Caps for Hyper window actions;
+  tap it to toggle Caps Lock. Homebrew is not required.
 - **Web apps:** Dedicated Helium launchers on Linux and Chromium launchers in
   Raycast on macOS.
 - **Dictation (macOS):** TypeWhisper uses local Parakeet v3 for English and Slovak
