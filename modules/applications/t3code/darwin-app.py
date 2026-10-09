@@ -145,6 +145,18 @@ class Desktop:
     def process_current(self, target, pid):
         if not self.current(target):
             return False
+        # Version alone cannot identify a client restored without our updater flag.
+        environment = subprocess.run(
+            ["/bin/ps", "eww", "-p", pid, "-o", "command="],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if (
+            environment.returncode != 0
+            or "T3CODE_DISABLE_AUTO_UPDATE=true" not in environment.stdout.split()
+        ):
+            return False
         with (self.app / "Contents/Info.plist").open("rb") as source:
             executable = plistlib.load(source)["CFBundleExecutable"]
         binary = self.app / "Contents/MacOS" / executable

@@ -46,8 +46,7 @@ in
         text = ''
           umask 077
           mkdir -p "${base}/userdata/themes" "${codeRoot}"
-          # macOS restores the signed upstream app directly, before launchd's env.
-          # Its default home must resolve to the same client-only settings.
+          # Direct macOS launches must resolve to the same client-only settings.
           if ! test -e "${home}/.t3" && ! test -L "${home}/.t3"; then
             ln -s "${base}" "${home}/.t3"
           fi
@@ -67,6 +66,10 @@ in
             "${base}/userdata/settings.json"
           install -m600 ${settings.theme} "${base}/userdata/themes/othinus.json"
           mkdir -p "${state}"
+          reopen="$(${lib.getExe lifecycle} stop-clients)"
+          if [[ "$reopen" == true ]]; then
+            /bin/launchctl kickstart "gui/$(id -u)/org.nixos.t3code-reopen"
+          fi
           generation="${initial}"
           if test -x "${profile}/bin/t3"; then generation="$(readlink -f "${profile}")"; fi
           printf '{"generation":"%s","pid":%s}\n' "$generation" "$$" > "${state}/running.json.tmp"
@@ -130,7 +133,9 @@ in
           /bin/launchctl setenv T3CODE_HOME "${base}"
           /bin/launchctl setenv T3CODE_DISABLE_AUTO_UPDATE true
           # LaunchServices focuses an existing client rather than starting another.
-          exec /usr/bin/open -a "$client" --args "$@"
+          exec /usr/bin/open -a "$client" \
+            --env "T3CODE_HOME=${base}" \
+            --env T3CODE_DISABLE_AUTO_UPDATE=true --args "$@"
         '';
       };
     in
@@ -159,6 +164,15 @@ in
         T3CODE_DISABLE_AUTO_UPDATE = "true";
       };
       launchd.user.agents = {
+        t3code-reopen.serviceConfig = {
+          ProgramArguments = [
+            (lib.getExe lifecycle)
+            "reopen"
+          ];
+          RunAtLoad = false;
+          StandardOutPath = "${logs}/t3code-desktop.log";
+          StandardErrorPath = "${logs}/t3code-desktop.log";
+        };
         t3code = {
           environment = {
             HOME = home;

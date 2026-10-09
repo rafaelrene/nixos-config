@@ -85,9 +85,10 @@ def healthy [settings: record, target: string] {
     $descriptor.serverVersion? == (open ($target | path join share t3code release.json)).version
 }
 
-def wait-ready [settings: record, target: string] {
-    for attempt in 1..30 {
-        if (healthy $settings $target) { return }
+def wait-ready [settings: record, target?: string, --attempts: int = 30] {
+    for attempt in 1..$attempts {
+        let expected = $target | default (active $settings)
+        if $expected != null and (healthy $settings $expected) { return }
         sleep 1sec
     }
     error make {msg: "T3 Code did not become ready. The desktop stays closed; inspect the server logs before retrying t3-activate."}
@@ -159,7 +160,7 @@ def launch [settings: record, args: list<string>] {
 }
 
 def stop-desktops [processes: table] {
-    print "T3 Code: closing desktop clients..."
+    print --stderr "T3 Code: closing desktop clients..."
     # Let the main clients shut down their workers before forcing any survivors.
     for client in ($processes | where {|p| $p.ppid not-in $processes.pid }) {
         kill --quiet $client.pid
@@ -170,7 +171,7 @@ def stop-desktops [processes: table] {
     }
     let remaining = ps | where pid in $processes.pid
     if ($remaining | is-not-empty) {
-        print "T3 Code: force-stopping unresponsive desktop processes..."
+        print --stderr "T3 Code: force-stopping unresponsive desktop processes..."
         kill --force --quiet ...$remaining.pid
     }
     for attempt in 1..5 {
@@ -333,6 +334,15 @@ def main [settings_file: path, action: string, ...args: string] {
         }
         request => { request $settings false }
         request-rollback => { request $settings true }
+        stop-clients => {
+            let reopen = desktops $settings | is-not-empty
+            stop-desktops (desktop-processes $settings)
+            if (desktop-processes $settings | is-not-empty) {
+                error make {msg: "A T3 Code desktop appeared during shutdown. Server startup stopped."}
+            }
+            print $reopen
+        }
+        ready => { wait-ready $settings --attempts 120 }
         activate | rollback | launch => {
             try {
                 if ($settings.state | path join activation.json | path exists) { recover $settings }
