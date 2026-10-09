@@ -24,6 +24,8 @@ across supported applications.
   native apps. Option + arrows navigates windows; Option + 1–9 switches workspaces;
   Option + Enter opens a fresh Ghostty window. Hold Caps for Hyper window actions;
   tap it to toggle Caps Lock. Homebrew is not required.
+- **OmniWM settings:** Rebuilds install a writable copy of the declared settings.
+  Changes made in OmniWM last until the next rebuild.
 - **Web apps:** Dedicated Helium launchers on Linux and Chromium launchers in
   Raycast on macOS.
 - **Dictation (macOS):** TypeWhisper uses local Parakeet v3 for English and Slovak

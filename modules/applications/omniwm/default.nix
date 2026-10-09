@@ -25,6 +25,16 @@ in
       };
       home = config.users.users.${config.system.primaryUser}.home;
       settings = features.omniwm.settings { inherit lib pkgs; };
+      settingsFile = (pkgs.formats.toml { }).generate "omniwm-settings.toml" settings;
+      installSettings = pkgs.writeShellScript "install-omniwm-settings" ''
+        set -euo pipefail
+        directory=$1
+        ${pkgs.coreutils}/bin/mkdir -p "$directory"
+        temporary=$(${pkgs.coreutils}/bin/mktemp "$directory/settings.toml.XXXXXX")
+        trap '${pkgs.coreutils}/bin/rm -f "$temporary"' EXIT
+        ${pkgs.coreutils}/bin/install -m 600 ${settingsFile} "$temporary"
+        ${pkgs.coreutils}/bin/mv -fT "$temporary" "$directory/settings.toml"
+      '';
       # IDs in com.apple.symbolichotkeys.
       disabledSymbolicHotkeys =
         # Previous choices: accessibility zoom and contrast, Dock hiding, input
@@ -47,15 +57,14 @@ in
     {
       environment.systemPackages = [ package ];
 
-      workstation.links.".config/omniwm/settings.toml" = toString (
-        (pkgs.formats.toml { }).generate "omniwm-settings.toml" settings
-      );
-
       launchd.user.agents.omniwm.serviceConfig = {
         # Use the installed, signed copy so macOS permissions have a stable app path.
         ProgramArguments = [ "/Applications/Nix Apps/OmniWM.app/Contents/MacOS/OmniWM" ];
-        # A package change must change the plist so nix-darwin reloads the agent.
-        EnvironmentVariables.OMNIWM_PACKAGE = toString package;
+        # Reload the agent when either the package or declared settings change.
+        EnvironmentVariables = {
+          OMNIWM_PACKAGE = toString package;
+          OMNIWM_SETTINGS = toString settingsFile;
+        };
         RunAtLoad = true;
         KeepAlive.Crashed = true;
         ProcessType = "Interactive";
@@ -65,28 +74,44 @@ in
         StandardErrorPath = "${home}/.local/state/nix-darwin/omniwm.log";
       };
 
-      system.defaults = {
-        # Nix owns the whole list; unlisted shortcuts revert to macOS defaults.
-        # macOS applies changes at the next login.
-        CustomUserPreferences."com.apple.symbolichotkeys".AppleSymbolicHotKeys =
-          lib.genAttrs (map toString disabledSymbolicHotkeys)
-            (_: {
-              enabled = false;
-            });
-        spaces.spans-displays = false;
-        dock = {
-          autohide = true;
-          mru-spaces = false;
-          showMissionControlGestureEnabled = false;
-          showAppExposeGestureEnabled = false;
-        };
-        # OmniWM owns three-finger scrolling/workspaces and four-finger overview.
-        trackpad = {
-          TrackpadThreeFingerDrag = false;
-          TrackpadThreeFingerHorizSwipeGesture = 0;
-          TrackpadThreeFingerVertSwipeGesture = 0;
-          TrackpadFourFingerHorizSwipeGesture = 0;
-          TrackpadFourFingerVertSwipeGesture = 0;
+      system = {
+        # OmniWM rewrites settings during schema migrations and GUI edits. Reapply
+        # Nix settings as a writable copy after user-files removes the old symlink.
+        activationScripts.extraActivation.text = lib.mkAfter ''
+          ${lib.escapeShellArgs [
+            "/usr/bin/sudo"
+            "-H"
+            "-u"
+            config.system.primaryUser
+            "--"
+            (toString installSettings)
+            "${home}/.config/omniwm"
+          ]}
+        '';
+
+        defaults = {
+          # Nix owns the whole list; unlisted shortcuts revert to macOS defaults.
+          # macOS applies changes at the next login.
+          CustomUserPreferences."com.apple.symbolichotkeys".AppleSymbolicHotKeys =
+            lib.genAttrs (map toString disabledSymbolicHotkeys)
+              (_: {
+                enabled = false;
+              });
+          spaces.spans-displays = false;
+          dock = {
+            autohide = true;
+            mru-spaces = false;
+            showMissionControlGestureEnabled = false;
+            showAppExposeGestureEnabled = false;
+          };
+          # OmniWM owns three-finger scrolling/workspaces and four-finger overview.
+          trackpad = {
+            TrackpadThreeFingerDrag = false;
+            TrackpadThreeFingerHorizSwipeGesture = 0;
+            TrackpadThreeFingerVertSwipeGesture = 0;
+            TrackpadFourFingerHorizSwipeGesture = 0;
+            TrackpadFourFingerVertSwipeGesture = 0;
+          };
         };
       };
     };
