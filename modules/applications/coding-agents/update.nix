@@ -26,8 +26,11 @@
       name = "update-llm-agents";
       runtimeInputs = with pkgs; [
         coreutils
+        curl
+        gnused
         nix
-        nushell
+        jq
+        zsh
         (if stdenv.hostPlatform.isDarwin then flock else util-linux)
       ];
       text = ''
@@ -35,7 +38,7 @@
         exec 9>${lib.escapeShellArg "${state}/update.lock"}
         echo "Agent tools: waiting for any existing update to finish..."
         flock 9
-        exec nu --no-config-file ${./update.nu} ${settings} "$@"
+        exec ${pkgs.zsh}/bin/zsh -f ${./update.zsh} ${settings} "$@"
       '';
     };
 }

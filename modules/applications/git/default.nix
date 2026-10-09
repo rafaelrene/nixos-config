@@ -7,7 +7,10 @@ let
       theme = features.theme { inherit lib pkgs; };
     in
     pkgs.writeText "delta.gitconfig" (lib.generators.toGitINI { inherit (theme) delta; });
-  common = { pkgs, ... }: { environment.systemPackages = [ pkgs.git ]; };
+  common = { pkgs, ... }: {
+    environment.systemPackages = [ pkgs.git ];
+    environment.variables.GIT_CONFIG_GLOBAL = "$HOME/.config/git/config";
+  };
 in
 {
   flake.modules.nixos.git =
@@ -47,8 +50,6 @@ in
       imports = [ common ];
       workstation.links = {
         ".config/git/config" = "${checkout}/modules/applications/git/config";
-        # Preserve the legacy global config path for existing sessions.
-        ".config/git/.gitconfig" = "${checkout}/modules/applications/git/config";
         ".config/git/ignore" = "${checkout}/modules/applications/git/ignore";
         ".config/git/themes.gitconfig" = toString (deltaConfiguration {
           inherit lib pkgs;

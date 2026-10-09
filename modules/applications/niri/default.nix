@@ -20,12 +20,13 @@ in
         runtimeInputs = [
           config.programs.niri.package
           pkgs.coreutils
-          pkgs.nushell
+          pkgs.zsh
+          pkgs.jq
           pkgs.systemd
           pkgs.upower
         ];
         text = ''
-          exec nu --no-config-file ${./battery-refresh-rate.nu} "$@"
+          exec ${lib.getExe pkgs.zsh} -f ${./battery-refresh-rate.zsh} "$@"
         '';
       };
       wallpaperSource = ../../../wallpapers;

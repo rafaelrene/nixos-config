@@ -16,7 +16,6 @@ in
       user = config.workstation.user;
       home = config.users.users.${user}.home;
       group = config.users.users.${user}.group;
-      terminalShell = features.t3code.terminalShell { inherit pkgs; };
       browserLibraries = with pkgs; [
         alsa-lib
         at-spi2-core
@@ -224,8 +223,7 @@ in
                   ]
                 )
               }:/run/current-system/sw/bin:${home}/.local/bin";
-              # Keep the terminal shell and its startup configuration private to T3.
-              SHELL = lib.getExe terminalShell;
+              SHELL = lib.getExe pkgs.zsh;
               # Keep browser libraries private to T3 and its ldd diagnostics.
               LD_LIBRARY_PATH = lib.makeLibraryPath browserLibraries;
               T3CODE_HOME = baseDir;

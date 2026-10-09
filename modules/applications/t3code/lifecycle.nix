@@ -69,6 +69,7 @@
           desktopCommand = if darwin then lib.getExe desktopSupport else null;
           spawn = lib.getExe spawn;
           notifyCommand = lib.getExe notify;
+          processCommand = if darwin then "/bin/ps" else "${pkgs.procps}/bin/ps";
           serviceCommand = if darwin then "/bin/launchctl" else "${pkgs.systemd}/bin/systemctl";
           serviceFile = "${home}/Library/LaunchAgents/org.nixos.t3code.plist";
           healthUrl = "http://127.0.0.1:3773/.well-known/t3/environment";
@@ -82,7 +83,8 @@
         curl
         lsof
         nix
-        nushell
+        jq
+        zsh
         (if darwin then flock else util-linux)
       ];
       text = ''
@@ -90,15 +92,15 @@
         # Server startup closes clients while activation holds the lock and waits
         # for that server. Requests also wait for the independent coordinator.
         if [[ "''${1-}" == request || "''${1-}" == request-rollback || "''${1-}" == stop-clients ]]; then
-          exec nu --no-config-file ${./lifecycle.nu} ${settings} "$@"
+          exec ${pkgs.zsh}/bin/zsh -f ${./lifecycle.zsh} ${settings} "$@"
         fi
         if [[ "''${1-}" == reopen ]]; then
-          nu --no-config-file ${./lifecycle.nu} ${settings} ready
+          ${pkgs.zsh}/bin/zsh -f ${./lifecycle.zsh} ${settings} ready
           set -- launch
         fi
         # The child does not inherit the lock descriptor, including detached clients.
         exec flock --close ${lib.escapeShellArg "${state}/activation.lock"} \
-          nu --no-config-file ${./lifecycle.nu} ${settings} "$@"
+          ${pkgs.zsh}/bin/zsh -f ${./lifecycle.zsh} ${settings} "$@"
       '';
     };
 }

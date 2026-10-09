@@ -9,7 +9,6 @@ let
     "curl"
     "delta"
     "devenv"
-    "direnv"
     "eza"
     "fd"
     "forgejo-cli"
@@ -25,7 +24,6 @@ let
     "mongodb-compass"
     "mpv"
     "neovim"
-    "nushell"
     "openssh"
     "project-run"
     "ripgrep"
@@ -40,6 +38,7 @@ let
     "yazi"
     "yq-go"
     "zip"
+    "zsh"
     "zoxide"
     "zen"
   ];

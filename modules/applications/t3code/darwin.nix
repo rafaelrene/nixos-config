@@ -37,7 +37,6 @@ in
           ;
       };
       settings = features.t3code.settings { inherit lib pkgs home; };
-      terminalShell = features.t3code.terminalShell { inherit pkgs; };
       run = writeApplication {
         name = "run-t3code";
         runtimeInputs = [
@@ -178,7 +177,7 @@ in
           environment = {
             HOME = home;
             PATH = "/nix/var/nix/profiles/system/sw/bin:${home}/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
-            SHELL = lib.getExe terminalShell;
+            SHELL = lib.getExe pkgs.zsh;
             T3CODE_HOME = base;
             T3CODE_TELEMETRY_ENABLED = "false";
             CODEX_HOME = "${home}/.local/share/codex";

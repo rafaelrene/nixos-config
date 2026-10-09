@@ -15,7 +15,13 @@ let
       );
     in
     starshipConfig;
-  common = { pkgs, ... }: { environment.systemPackages = [ pkgs.starship ]; };
+  common = { lib, pkgs, ... }: {
+    environment.systemPackages = [ pkgs.starship ];
+    environment.variables.STARSHIP_CONFIG = "$HOME/.config/starship/starship.toml";
+    programs.zsh.promptInit = ''
+      eval "$(${lib.getExe pkgs.starship} init zsh)"
+    '';
+  };
 in
 {
   flake.modules.nixos.starship =
@@ -40,17 +46,12 @@ in
     };
   flake.modules.darwin.starship =
     {
-      config,
       lib,
       pkgs,
       ...
     }:
-    let
-      home = config.users.users.${config.workstation.user}.home;
-    in
     {
       imports = [ common ];
-      environment.variables.STARSHIP_CONFIG = "${home}/.config/starship/starship.toml";
       workstation.links.".config/starship/starship.toml" = toString (configuration {
         inherit lib pkgs;
       });

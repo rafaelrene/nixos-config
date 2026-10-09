@@ -1,6 +1,9 @@
 let
-  common = { pkgs, ... }: {
+  common = { lib, pkgs, ... }: {
     environment.systemPackages = [ pkgs.zoxide ];
+    programs.zsh.interactiveShellInit = ''
+      eval "$(${lib.getExe pkgs.zoxide} init zsh --cmd cd)"
+    '';
   };
 in
 {

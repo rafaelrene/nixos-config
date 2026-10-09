@@ -44,7 +44,8 @@ Numbered navigation uses keys 1–9. Columns count from the left in the current 
 
 ### Shell and development
 
-Ghostty runs Nushell with Vi editing, Starship, and fuzzy navigation. In normal
+Zsh is the Nix-managed login shell on both machines. Ghostty and T3 Code terminals
+share its Vi editing, Starship prompt, environment, and aliases. In normal
 mode, press Space followed by a key to open a picker:
 
 | Keys        | Command               | Purpose                                      |
@@ -58,8 +59,10 @@ mode, press Space followed by a key to open a picker:
   local checkouts. Remote names appear only to disambiguate branches. Selecting a
   remote-only branch creates a tracking branch. Run `git fetch` to refresh the list.
 - **Project environments:** Devenv supplies project tools and language runtimes.
-  Direnv loads them on entry, reloads configuration changes, and unloads on exit.
-  T3 worktrees are trusted automatically; other checkouts require `direnv allow`.
+  Its native zsh hook activates projects with `devenv.nix` and reloads changes.
+  T3 worktrees are trusted automatically; other checkouts require `devenv allow`.
+  Activation opens a zsh subshell; leaving the project returns to the parent shell.
+  No `.envrc` is needed. Use `devenv revoke` to stop automatic activation.
 - **Editor:** Shared LazyVim configuration, theme, language tooling, Git
   integration, and image previews. Project tools take precedence over Neovim's
   bundled helper runtimes.
@@ -71,7 +74,7 @@ T3 Code, Codex, Claude Code, and OpenCode share instructions, skills, and themes
 Agent launchers enter the project's Devenv environment when needed.
 
 - T3 Code keeps its nightly server and desktop on the same release.
-  Its terminals use a private zsh with direnv; the server uses the unpatched release.
+  Its terminals use the shared zsh configuration; the server uses the unpatched release.
   On NixOS, preview browser libraries are scoped to the T3 service environment.
 - Codex and Claude Code follow stable publisher releases; OpenCode follows Numtide.
 - Updates stage every three hours and activate at 04:00, independently of system

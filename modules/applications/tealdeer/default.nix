@@ -1,6 +1,7 @@
 let
   common = { pkgs, ... }: {
     environment.systemPackages = [ pkgs.tealdeer ];
+    environment.variables.TEALDEER_CONFIG_DIR = "$HOME/.config/tealdeer";
   };
 in
 {

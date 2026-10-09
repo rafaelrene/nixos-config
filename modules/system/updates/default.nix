@@ -13,13 +13,16 @@
           runtimeInputs = with pkgs; [
             coreutils
             nix
-            nushell
+            zsh
+            curl
+            jq
+            libxml2
             _7zz
             unzip
             libarchive
           ];
           text = ''
-            exec nu --no-config-file ${./updates.nu} ${lib.escapeShellArg config.workstation.checkout} ${./update-vendor-sources.nu} "$@"
+            exec ${lib.getExe pkgs.zsh} -f ${./updates.zsh} ${lib.escapeShellArg config.workstation.checkout} ${./update-vendor-sources.zsh} "$@"
           '';
         })
       ];
