@@ -81,9 +81,14 @@
       ];
       text = ''
         install -d -m 0700 ${lib.escapeShellArg state}
-        # Requests wait for the independent coordinator, which takes this lock itself.
-        if [[ "''${1-}" == request || "''${1-}" == request-rollback ]]; then
+        # Server startup closes clients while activation holds the lock and waits
+        # for that server. Requests also wait for the independent coordinator.
+        if [[ "''${1-}" == request || "''${1-}" == request-rollback || "''${1-}" == stop-clients ]]; then
           exec nu --no-config-file ${./lifecycle.nu} ${settings} "$@"
+        fi
+        if [[ "''${1-}" == reopen ]]; then
+          nu --no-config-file ${./lifecycle.nu} ${settings} ready
+          set -- launch
         fi
         # The child does not inherit the lock descriptor, including detached clients.
         exec flock --close ${lib.escapeShellArg "${state}/activation.lock"} \

@@ -37,8 +37,8 @@ def writable_directories(path):
 
 
 def identity(path):
-    info = path.stat()
-    return f"{info.st_dev}:{info.st_ino}"
+    # Both copies stay in one directory. macOS device numbers change on reboot.
+    return str(path.stat().st_ino)
 
 
 def version(app):
@@ -72,7 +72,9 @@ class Desktop:
         self.record = Path(settings["state"]) / "desktop-copies.json"
 
     def copies(self):
-        return json.loads(self.record.read_text()) if self.record.exists() else {}
+        copies = json.loads(self.record.read_text()) if self.record.exists() else {}
+        # Read legacy device:inode records even after the device is renumbered.
+        return {key.rsplit(":", 1)[-1]: target for key, target in copies.items()}
 
     def matches(self, app, target):
         if not app.exists() or app.is_symlink():
@@ -142,6 +144,18 @@ class Desktop:
 
     def process_current(self, target, pid):
         if not self.current(target):
+            return False
+        # Version alone cannot identify a client restored without our updater flag.
+        environment = subprocess.run(
+            ["/bin/ps", "eww", "-p", pid, "-o", "command="],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if (
+            environment.returncode != 0
+            or "T3CODE_DISABLE_AUTO_UPDATE=true" not in environment.stdout.split()
+        ):
             return False
         with (self.app / "Contents/Info.plist").open("rb") as source:
             executable = plistlib.load(source)["CFBundleExecutable"]

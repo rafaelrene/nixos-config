@@ -76,11 +76,13 @@ Agent launchers enter the project's Devenv environment when needed.
 - Codex and Claude Code follow stable publisher releases; OpenCode follows Numtide.
 - Updates stage every three hours and activate at 04:00, independently of system
   rebuilds. Failed downloads or builds preserve the installed versions.
-- Agent updates apply to new sessions. T3 Code activation restarts its server and
-  reopens the desktop if it was running, force-stopping unresponsive clients and
-  leftover workers after five seconds. Activation can interrupt active work.
+- Agent updates apply to new sessions. Every T3 Code server start closes local
+  clients and helpers, forcing survivors after five seconds. Previously running
+  clients reopen once the matching server is ready. Restarts can interrupt work.
 - On macOS, T3 Code uses a signed app at `~/Applications/T3 Code.app`;
   existing Dock pins migrate to that path and stay in their original position.
+  The server starts at login; the desktop opens manually with its built-in
+  updater disabled.
 - T3 Code retains its previous Nix release. Failed activation restores it;
   interrupted activation recovers on the next `t3-activate` or managed launch.
   `t3-rollback` restores the previous server and desktop together. The failed or

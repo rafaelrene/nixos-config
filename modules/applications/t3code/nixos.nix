@@ -95,6 +95,10 @@ in
         text = ''
           umask 077
           mkdir -p "${state}"
+          reopen="$(${lib.getExe lifecycle} stop-clients)"
+          if [[ "$reopen" == true ]]; then
+            ${pkgs.systemd}/bin/systemctl --user start --no-block t3code-reopen.service
+          fi
           printf '{"generation":"%s","pid":%s}\n' "$(readlink -f "${profile}")" "$$" > "${state}/running.json.tmp"
           mv "${state}/running.json.tmp" "${state}/running.json"
           exec "${profile}/bin/t3" serve \
@@ -264,6 +268,15 @@ in
             serviceConfig = {
               Type = "oneshot";
               ExecStart = "${lib.getExe lifecycle} activate";
+              TimeoutStartSec = "5min";
+            };
+          };
+          t3code-reopen = {
+            description = "Reopen the T3 Code desktop after server startup";
+            unitConfig.ConditionUser = user;
+            serviceConfig = {
+              Type = "oneshot";
+              ExecStart = "${lib.getExe lifecycle} reopen";
               TimeoutStartSec = "5min";
             };
           };
