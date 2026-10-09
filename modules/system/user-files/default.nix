@@ -1,3 +1,7 @@
+{ config, ... }:
+let
+  inherit (config) features;
+in
 {
   flake.modules.darwin.user-files =
     {
@@ -7,6 +11,7 @@
       ...
     }:
     let
+      runtimes = features.shell.runtimes { inherit pkgs; };
       cfg = config.workstation;
       user = config.workstation.user;
       home = config.users.users.${user}.home;
@@ -33,7 +38,7 @@
               pkgs.jq
             ]
           }"
-          "${pkgs.bash}/bin/bash"
+          runtimes.bash
           "${./install-files.sh}"
           home
           (toString manifest)

@@ -16,6 +16,7 @@ in
         inherit (packaged) version;
       }
       // packaged.${pkgs.stdenv.hostPlatform.system},
+      profile ? release.profile or null,
     }:
     let
       server = pkgs.callPackage t3code.serverPackage {
@@ -34,15 +35,29 @@ in
             inherit (release) version;
             hash = release.desktopHash;
           };
+      package = pkgs.buildEnv {
+        name = "t3code-${release.version}";
+        passthru = { inherit server desktop; };
+        paths = [
+          server
+          desktop
+          # Keep release metadata with the generation, without mutable version state.
+          (pkgs.writeTextDir "share/t3code/release.json" (
+            builtins.toJSON (removeAttrs release [ "profile" ])
+          ))
+        ];
+      };
     in
-    pkgs.buildEnv {
-      name = "t3code-${release.version}";
-      passthru = { inherit server desktop; };
-      paths = [
-        server
-        desktop
-        # Keep release metadata with the generation, without mutable version state.
-        (pkgs.writeTextDir "share/t3code/release.json" (builtins.toJSON release))
-      ];
-    };
+    if pkgs.stdenv.hostPlatform.isDarwin && profile != null then
+      config.features.shell.darwinUserIdentity {
+        inherit pkgs package;
+        bin = "${profile}-executables/bin";
+        state = "${profile}-identity";
+        installedApplications = "${builtins.dirOf (builtins.dirOf (builtins.dirOf (builtins.dirOf (builtins.dirOf profile))))}/Applications";
+        resourceTrees = lib.genAttrs [ "client" "node_modules" "resource-monitor" ] (
+          name: "${server}/libexec/t3code/${name}"
+        );
+      }
+    else
+      package;
 }

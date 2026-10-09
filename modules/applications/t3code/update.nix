@@ -19,6 +19,7 @@
       project ? null,
     }:
     let
+      runtimes = config.features.shell.runtimes { inherit pkgs; };
       darwin = pkgs.stdenv.hostPlatform.isDarwin;
       writeApplication =
         args:
@@ -56,7 +57,7 @@
         exec 9>${lib.escapeShellArg "${state}/update.lock"}
         echo "T3 Code: waiting for any existing update to finish..."
         flock 9
-        exec ${pkgs.zsh}/bin/zsh -f ${./update.zsh} ${settings} "$@"
+        exec ${runtimes.zsh} -f ${./update.zsh} ${settings} "$@"
       '';
     };
 }

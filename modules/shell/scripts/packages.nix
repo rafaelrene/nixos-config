@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ config, lib, ... }:
 {
   options.features.shell.packages = lib.mkOption {
     type = lib.types.functionTo (lib.types.attrsOf lib.types.package);
@@ -7,9 +7,11 @@
   config.features.shell.packages =
     { pkgs, ... }:
     let
+      runtimes = config.features.shell.runtimes { inherit pkgs; };
       command =
         name:
-        pkgs.writeShellApplication {
+        config.features.shell.application {
+          inherit pkgs;
           inherit name;
           runtimeInputs = [
             pkgs.zsh
@@ -23,7 +25,7 @@
             pkgs.bash
           ];
           text = ''
-            exec ${pkgs.zsh}/bin/zsh -f ${./.}/${name}.zsh "$@"
+            exec ${runtimes.zsh} -f ${./.}/${name}.zsh "$@"
           '';
         };
     in

@@ -1,5 +1,6 @@
-{ inputs, ... }:
+{ inputs, config, ... }:
 let
+  inherit (config) features;
   common =
     {
       config,
@@ -9,6 +10,12 @@ let
     }:
     let
       home = config.users.users.${config.workstation.user}.home;
+      runtimes = features.shell.runtimes { inherit pkgs; };
+      executable =
+        if pkgs.stdenv.hostPlatform.isDarwin then
+          "${runtimes.directory}/devenv"
+        else
+          lib.getExe pkgs.devenv;
       trustedRoots = [
         "${home}/.local/share/t3code/worktrees"
       ]
@@ -24,7 +31,7 @@ let
     {
       environment.systemPackages = [ pkgs.devenv ];
       programs.zsh.interactiveShellInit = lib.mkAfter ''
-        eval "$(${lib.getExe pkgs.devenv} hook zsh)"
+        eval "$(${executable} hook zsh)"
         source ${trustHook}
       '';
       # Share the release across hosts while preserving upstream cache identity.

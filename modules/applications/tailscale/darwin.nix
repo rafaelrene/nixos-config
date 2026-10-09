@@ -35,7 +35,7 @@
         # Register the signed installer's notarization ticket before stopping
         # Tailscale and replacing its bundle. The app and extension are assessed
         # again after copying, before the GUI asks macOS to activate the extension.
-        # Activation uses Apple's stable Bash; isolate the copy and recovery trap.
+        # Activation uses the stable Nix Bash; isolate the copy and recovery trap.
         # https://tailscale.com/docs/integrations/mdm/mac#mdm-based-upgrades
         activationScripts.applications.text = lib.mkMerge [
           (lib.mkBefore ''

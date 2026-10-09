@@ -146,10 +146,14 @@ Linux and macOS have separate Nixpkgs pins.
 Pass a checkout path, such as `ns .`, to use a worktree. Without one, these commands
 use the configured main checkout. Development checks live in [AGENTS.md](AGENTS.md).
 
-On macOS, rebuilds and T3 launchers use Apple's `/bin/bash`, keeping App Management
-permission independent of Nix Bash updates. Grant `/bin/bash` access once in
-System Settings > Privacy & Security > App Management. Older Nix-store Bash
-entries can then be removed from that list; Nix still needs its own Bash packages.
+On macOS, Nix-managed commands run from real executables in
+`/var/lib/nix-darwin/bin`; rolling tools use fixed paths beside their profiles.
+Activation preserves vendor signatures and signs local builds with persistent
+certificates. Private signing keys stay outside the Nix store, under
+`/var/lib/nix-darwin/code-signing` or beside the user's rolling profiles.
+Grant access to the fixed installation once and remove obsolete store-path
+entries in System Settings. Subsequent switches retain the same executable paths
+and signing identities. Keep the signing state when restoring the machine.
 
 ## TODO
 

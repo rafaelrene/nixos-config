@@ -26,15 +26,18 @@ in
       home = config.users.users.${config.system.primaryUser}.home;
       settings = features.omniwm.settings { inherit lib pkgs; };
       settingsFile = (pkgs.formats.toml { }).generate "omniwm-settings.toml" settings;
-      installSettings = pkgs.writeShellScript "install-omniwm-settings" ''
-        set -euo pipefail
-        directory=$1
-        ${pkgs.coreutils}/bin/mkdir -p "$directory"
-        temporary=$(${pkgs.coreutils}/bin/mktemp "$directory/settings.toml.XXXXXX")
-        trap '${pkgs.coreutils}/bin/rm -f "$temporary"' EXIT
-        ${pkgs.coreutils}/bin/install -m 600 ${settingsFile} "$temporary"
-        ${pkgs.coreutils}/bin/mv -fT "$temporary" "$directory/settings.toml"
-      '';
+      installSettings = features.shell.darwinApplication {
+        inherit pkgs;
+        name = "install-omniwm-settings";
+        text = ''
+          directory=$1
+          ${pkgs.coreutils}/bin/mkdir -p "$directory"
+          temporary=$(${pkgs.coreutils}/bin/mktemp "$directory/settings.toml.XXXXXX")
+          trap '${pkgs.coreutils}/bin/rm -f "$temporary"' EXIT
+          ${pkgs.coreutils}/bin/install -m 600 ${settingsFile} "$temporary"
+          ${pkgs.coreutils}/bin/mv -fT "$temporary" "$directory/settings.toml"
+        '';
+      };
       # IDs in com.apple.symbolichotkeys.
       disabledSymbolicHotkeys =
         # Previous choices: accessibility zoom and contrast, Dock hiding, input
@@ -84,7 +87,7 @@ in
             "-u"
             config.system.primaryUser
             "--"
-            (toString installSettings)
+            (lib.getExe installSettings)
             "${home}/.config/omniwm"
           ]}
         '';

@@ -12,7 +12,11 @@
 
   config = {
     features.coding-agents.bundle =
-      { pkgs, source }:
+      {
+        pkgs,
+        source,
+        profile ? null,
+      }:
       let
         # getFlake loads package definitions without applying upstream nixConfig.
         agents = builtins.getFlake "path:${source.path}?narHash=${lib.escapeURL source.hash}";
@@ -54,13 +58,29 @@
           };
           versions = lib.genAttrs [ "codex" "claude-code" "opencode" ] (name: packages.${name}.version);
         };
+        package = pkgs.buildEnv {
+          name = "llm-agents";
+          paths = selected ++ [
+            (pkgs.writeTextDir "share/llm-agents/release.json" (builtins.toJSON release))
+          ];
+        };
       in
-      pkgs.buildEnv {
-        name = "llm-agents";
-        paths = selected ++ [
-          (pkgs.writeTextDir "share/llm-agents/release.json" (builtins.toJSON release))
-        ];
-      };
+      if pkgs.stdenv.hostPlatform.isDarwin && profile != null then
+        config.features.shell.darwinUserIdentity {
+          inherit pkgs package;
+          bin = "${profile}-executables/bin";
+          state = "${profile}-identity";
+          resourceTrees = {
+            "${profile}-executables/codex-path" = "${packages.codex}/libexec/codex/codex-path";
+            "${profile}-executables/codex-resources" = "${packages.codex}/libexec/codex/codex-resources";
+          };
+          resourceFiles."${profile}-executables/codex-package.json" =
+            "${packages.codex}/libexec/codex/codex-package.json";
+          resourceExecutableAliases."${profile}-executables/codex-resources/zsh/bin/zsh" =
+            (config.features.shell.runtimes { inherit pkgs; }).zsh;
+        }
+      else
+        package;
 
     perSystem =
       { pkgs, system, ... }:
@@ -74,6 +94,7 @@
           config.features.coding-agents.bundle {
             pkgs = agentPkgs;
             inherit source;
+            profile = source.profile or null;
           };
       };
   };

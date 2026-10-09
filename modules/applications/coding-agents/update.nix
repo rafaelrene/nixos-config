@@ -1,4 +1,9 @@
-{ inputs, lib, ... }:
+{
+  inputs,
+  config,
+  lib,
+  ...
+}:
 {
   options.features.coding-agents.update = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -12,17 +17,20 @@
       flake ? "github:numtide/llm-agents.nix",
     }:
     let
+      runtimes = config.features.shell.runtimes { inherit pkgs; };
       state = "${profile}-updater";
       source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
       settings = pkgs.writeText "llm-agents-updater.json" (
         builtins.toJSON {
           inherit flake profile;
+          darwin = pkgs.stdenv.hostPlatform.isDarwin;
           staged = "${profile}-staged";
           bundle = "(builtins.getFlake ${builtins.toJSON source}).legacyPackages.${pkgs.stdenv.hostPlatform.system}.llmAgentsForSource";
         }
       );
     in
-    pkgs.writeShellApplication {
+    config.features.shell.application {
+      inherit pkgs;
       name = "update-llm-agents";
       runtimeInputs = with pkgs; [
         coreutils
@@ -38,7 +46,7 @@
         exec 9>${lib.escapeShellArg "${state}/update.lock"}
         echo "Agent tools: waiting for any existing update to finish..."
         flock 9
-        exec ${pkgs.zsh}/bin/zsh -f ${./update.zsh} ${settings} "$@"
+        exec ${runtimes.zsh} -f ${./update.zsh} ${settings} "$@"
       '';
     };
 }

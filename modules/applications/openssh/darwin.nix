@@ -1,3 +1,7 @@
+{ config, ... }:
+let
+  inherit (config) features;
+in
 {
   flake.modules.darwin.openssh =
     {
@@ -7,6 +11,7 @@
       ...
     }:
     let
+      runtimes = features.shell.runtimes { inherit pkgs; };
       user = config.workstation.user;
       home = config.users.users.${user}.home;
       provision = lib.escapeShellArgs [
@@ -15,7 +20,7 @@
         "-u"
         user
         "--"
-        "${pkgs.python3}/bin/python3"
+        runtimes.python3
         "${./ssh-keys.py}"
         "--repo"
         "${config.workstation.checkout}/modules/applications/openssh"
