@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  inputs,
+  lib,
+  ...
+}:
 {
   options.features.t3code.lifecycle = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -14,6 +19,7 @@
       initial ? null,
     }:
     let
+      runtimes = config.features.shell.runtimes { inherit pkgs; };
       darwin = pkgs.stdenv.hostPlatform.isDarwin;
       writeApplication =
         args:
@@ -22,11 +28,12 @@
         else
           pkgs.writeShellApplication args;
       state = "${home}/.local/state/t3code-bundle-updater";
+      source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
       desktopSupport = writeApplication {
         name = "t3code-darwin-app";
         runtimeInputs = [ pkgs.python3 ];
         text = ''
-          exec python3 ${./darwin-app.py} "$@"
+          exec ${runtimes.python3} ${./darwin-app.py} "$@"
         '';
       };
       notify = writeApplication {
@@ -61,6 +68,7 @@
       settings = pkgs.writeText "t3code-lifecycle.json" (
         builtins.toJSON {
           inherit home darwin state;
+          bundle = "(builtins.getFlake ${builtins.toJSON source}).legacyPackages.${pkgs.stdenv.hostPlatform.system}.t3codeForRelease";
           initial = if initial == null then null else toString initial;
           profile = "${home}/.local/state/nix/profiles/t3code";
           staged = "${home}/.local/state/nix/profiles/t3code-staged";
@@ -92,15 +100,15 @@
         # Server startup closes clients while activation holds the lock and waits
         # for that server. Requests also wait for the independent coordinator.
         if [[ "''${1-}" == request || "''${1-}" == request-rollback || "''${1-}" == stop-clients ]]; then
-          exec ${pkgs.zsh}/bin/zsh -f ${./lifecycle.zsh} ${settings} "$@"
+          exec ${runtimes.zsh} -f ${./lifecycle.zsh} ${settings} "$@"
         fi
         if [[ "''${1-}" == reopen ]]; then
-          ${pkgs.zsh}/bin/zsh -f ${./lifecycle.zsh} ${settings} ready
+          ${runtimes.zsh} -f ${./lifecycle.zsh} ${settings} ready
           set -- launch
         fi
         # The child does not inherit the lock descriptor, including detached clients.
         exec flock --close ${lib.escapeShellArg "${state}/activation.lock"} \
-          ${pkgs.zsh}/bin/zsh -f ${./lifecycle.zsh} ${settings} "$@"
+          ${runtimes.zsh} -f ${./lifecycle.zsh} ${settings} "$@"
       '';
     };
 }

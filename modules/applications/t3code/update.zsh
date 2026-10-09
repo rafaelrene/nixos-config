@@ -61,7 +61,9 @@ update() {
       return 1
     fi
   done
-  expression="$bundle { version = \"$version\"; serverHash = \"$server_hash\"; desktopHash = \"$desktop_hash\"; }"
+  local identity=''
+  if [[ "$darwin" == true ]]; then identity="profile = $(jq -Rn --arg profile "$profile" '$profile' | sed 's/\${/\\${/g');"; fi
+  expression="$bundle { version = \"$version\"; serverHash = \"$server_hash\"; desktopHash = \"$desktop_hash\"; $identity }"
   previous=$(readlink -f "$staged" 2>/dev/null) || previous=''
   expected=$(nix eval --raw --expr "($expression).outPath") || return
   if [[ "$expected" == "$previous" ]]; then
@@ -78,6 +80,7 @@ update() {
 }
 
 server="$profile/bin/t3"
+if [[ "$darwin" == true ]]; then server="${profile}-executables/bin/t3"; fi
 changed=false
 if [[ "$bootstrap" != true || ! -e "$server" ]]; then
   if ! update; then

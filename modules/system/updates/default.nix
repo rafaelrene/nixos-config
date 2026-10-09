@@ -1,3 +1,7 @@
+{ config, ... }:
+let
+  inherit (config) features;
+in
 {
   flake.modules.darwin.updates =
     {
@@ -6,9 +10,13 @@
       pkgs,
       ...
     }:
+    let
+      runtimes = features.shell.runtimes { inherit pkgs; };
+    in
     {
       environment.systemPackages = [
-        (pkgs.writeShellApplication {
+        (features.shell.darwinApplication {
+          inherit pkgs;
           name = "nix-update-packages";
           runtimeInputs = with pkgs; [
             coreutils
@@ -22,7 +30,7 @@
             libarchive
           ];
           text = ''
-            exec ${lib.getExe pkgs.zsh} -f ${./updates.zsh} ${lib.escapeShellArg config.workstation.checkout} ${./update-vendor-sources.zsh} "$@"
+            exec ${runtimes.zsh} -f ${./updates.zsh} ${lib.escapeShellArg config.workstation.checkout} ${./update-vendor-sources.zsh} "$@"
           '';
         })
       ];

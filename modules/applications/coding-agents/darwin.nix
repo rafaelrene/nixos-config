@@ -31,8 +31,16 @@ in
     in
     {
       environment = {
-        systemPath = [ "${profile}/bin" ];
+        systemPath = [ "${profile}-executables/bin" ];
       };
+
+      # The daemon is ready here; retain installed versions on the first switch.
+      system.activationScripts.postActivation.text = ''
+        if test -e ${lib.escapeShellArg profile} && ! test -x ${lib.escapeShellArg "${profile}-executables/bin/codex"}; then
+          /usr/bin/sudo -H -u ${lib.escapeShellArg config.workstation.user} -- \
+            ${agents.updater}/bin/update-llm-agents --migrate
+        fi
+      '';
 
       # XDG paths alias existing application homes. No credentials,
       # sessions, or local settings are copied, moved, or put in the Nix store.

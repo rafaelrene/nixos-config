@@ -8,6 +8,9 @@ let
       pkgs,
       ...
     }:
+    let
+      runtimes = features.shell.runtimes { inherit pkgs; };
+    in
     {
       programs.zsh = {
         enable = true;
@@ -27,7 +30,8 @@ let
           }
         '';
       };
-      users.users.${config.workstation.user}.shell = pkgs.zsh;
+      users.users.${config.workstation.user}.shell =
+        if pkgs.stdenv.hostPlatform.isDarwin then runtimes.zsh else pkgs.zsh;
       environment = {
         variables = {
           EDITOR = "nvim";
@@ -66,15 +70,19 @@ in
       pkgs,
       ...
     }:
+    let
+      runtimes = features.shell.runtimes { inherit pkgs; };
+    in
     {
       imports = [ common ];
       environment = {
-        shells = [ pkgs.zsh ];
+        shells = [ runtimes.zsh ];
         systemPath = lib.mkBefore [
           "$HOME/.local/bin"
           "$HOME/.orbstack/bin"
         ];
         variables = {
+          SHELL = runtimes.zsh;
           LANG = "en_US.UTF-8";
           LC_ALL = "en_US.UTF-8";
         };
@@ -85,7 +93,7 @@ in
       system.activationScripts.postActivation.text =
         lib.mkIf (!(builtins.elem config.workstation.user config.users.knownUsers))
           ''
-            /usr/bin/dscl . -create ${lib.escapeShellArg "/Users/${config.workstation.user}"} UserShell /run/current-system/sw/bin/zsh
+            /usr/bin/dscl . -create ${lib.escapeShellArg "/Users/${config.workstation.user}"} UserShell ${lib.escapeShellArg runtimes.zsh}
           '';
     };
 }

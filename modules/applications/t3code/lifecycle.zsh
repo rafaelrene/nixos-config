@@ -8,7 +8,7 @@ if [[ "$action" == --help || "$action" == -h ]]; then
   exit 0
 fi
 settings=$(cat "$settings_file") || exit
-for key in state profile staged previous desktopApp desktopCommand spawn notifyCommand serviceCommand serviceFile healthUrl initial darwin processCommand; do
+for key in state profile staged previous desktopApp desktopCommand spawn notifyCommand serviceCommand serviceFile healthUrl initial darwin processCommand bundle; do
   value=$(jq -r --arg key "$key" '.[$key] // empty' <<<"$settings") || exit
   typeset "$key=$value"
 done
@@ -31,6 +31,24 @@ active() {
   local target
   target=$(generation "$profile") || return
   print -r -- "${target:-$initial}"
+}
+install_executables() {
+  [[ "$darwin" == true ]] || return 0
+  local target=$1 installer="$1/share/darwin-identity/install" metadata literal identity_generation
+  if [[ ! -x "$installer" ]]; then
+    # Rebuild the existing release recipe without changing its version or hashes.
+    metadata=$(jq -ce --arg profile "$profile" '
+      . + {profile: $profile} |
+      select(.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+-nightly\\.[0-9.]+$")) |
+      select([.serverHash, .desktopHash] | all(test("^sha256-[A-Za-z0-9+/]{43}=$")))
+    ' "$target/share/t3code/release.json") || { fail 'Cannot read the existing T3 Code release metadata.'; return; }
+    literal=$(jq -Rn --arg metadata "$metadata" '$metadata' | sed 's/\${/\\${/g') || return
+    identity_generation=$(nix build --print-build-logs --no-link --print-out-paths \
+      --expr "$bundle (builtins.fromJSON $literal)") || { fail 'Cannot build stable identities for the existing T3 Code release.'; return; }
+    run nix-env --profile "${profile}-identity-generation" --set "$identity_generation" || return
+    installer="$identity_generation/share/darwin-identity/install"
+  fi
+  run "$installer"
 }
 
 # Read process names and arguments separately because executable names may contain
@@ -78,10 +96,14 @@ server_pid() {
   fi
 }
 healthy() {
-  local target=$1 running pid listener descriptor version
+  local target=$1 running pid listener descriptor version executable
   running=$(cat "$state/running.json" 2>/dev/null) || return 1
   pid=$(server_pid) || return 1
   jq -e --arg generation "$target" --arg pid "$pid" '.generation == $generation and (.pid | tostring) == $pid' <<<"$running" >/dev/null || return 1
+  if [[ "$darwin" == true ]]; then
+    executable=$("$processCommand" -p "$pid" -o comm=) || return 1
+    [[ "$executable" == "${profile}-executables/bin/"* ]] || return 1
+  fi
   listener=$(lsof -nP -a -p "$pid" -iTCP:3773 -sTCP:LISTEN -t) || return 1
   [[ "$listener" == "$pid" ]] || return 1
   descriptor=$(curl --fail --silent --max-time 2 "$healthUrl") || return 1
@@ -232,6 +254,7 @@ recover() {
   processes=$(desktop_processes) || return
   stop_desktops "$processes" || return
   stop_server || return
+  install_executables "$old" || return
   run nix-env --profile "$profile" --set "$old" || return
   desktop_action install "$old" || return
   start_server || return
@@ -250,6 +273,7 @@ promote() {
   if [[ "$remaining" != '[]' ]]; then fail 'A T3 Code desktop appeared during shutdown.'; return; fi
   print -- 'T3 Code: stopping the managed server...'
   stop_server || return
+  install_executables "$target" || return
   run nix-env --profile "$profile" --set "$target" || return
   desktop_action install "$target" || return
   start_server || return
@@ -277,6 +301,7 @@ activate() {
     elif ! desktop_current "$(jq -r '.[0].pid' <<<"$clients")" "$target"; then clients_current=false; fi
   fi
   if [[ "$old" == "$target" && "$clients_current" == true ]] && healthy "$target" && app_current "$target"; then
+    install_executables "$target" || return
     desktop_action dock "$target" || return
     print -- 'T3 Code: the active server and desktop are current.'
     return
@@ -312,7 +337,10 @@ perform() {
         target=$(generation "$staged") || return
         target=${target:-$initial}
         if [[ -z "$target" ]]; then fail 'No T3 Code bootstrap release is available.'; return; fi
+        install_executables "$target" || return
         run nix-env --profile "$profile" --set "$target" || return
+      else
+        install_executables "$target" || return
       fi
       ;;
     request) request false ;;

@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ config, lib, ... }:
 {
   options.features.coding-agents.wrapper = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -12,14 +12,19 @@
       name,
       installCommand ? "update-llm-agents",
     }:
-    pkgs.writeShellApplication {
+    let
+      executableDirectory =
+        if pkgs.stdenv.hostPlatform.isDarwin then "${profile}-executables/bin" else "${profile}/bin";
+    in
+    config.features.shell.application {
+      inherit pkgs;
       inherit name;
       runtimeInputs = [
         pkgs.coreutils
         pkgs.devenv
       ];
       text = ''
-        real="${profile}/bin/${name}"
+        real="${executableDirectory}/${name}"
         if ! test -x "$real"; then
           echo "${name} is not installed yet. Run: ${installCommand}" >&2
           exit 1

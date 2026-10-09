@@ -44,7 +44,11 @@ let
         (if pkgs.stdenv.hostPlatform.isDarwin then pkgs.ghostty-bin else pkgs.ghostty)
       ];
       etc = {
-        "xdg/ghostty/common".source = "${./config-common}";
+        "xdg/ghostty/common".text =
+          builtins.readFile ./config-common
+          + lib.optionalString pkgs.stdenv.hostPlatform.isDarwin ''
+            command = ${(features.shell.runtimes { inherit pkgs; }).zsh} --login
+          '';
         "xdg/ghostty/theme".text = renderTheme { inherit lib pkgs; };
       };
     };

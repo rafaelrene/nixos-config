@@ -11,6 +11,7 @@ in
       ...
     }:
     let
+      runtimes = features.shell.runtimes { inherit pkgs; };
       home = config.users.users.${config.workstation.user}.home;
       codeRoot = config.workstation.codeRoot;
       base = "${home}/.local/share/t3code";
@@ -18,7 +19,7 @@ in
       logs = "${home}/.local/state/nix-darwin";
       state = "${home}/.local/state/t3code-bundle-updater";
       writeApplication = args: features.shell.darwinApplication (args // { inherit pkgs; });
-      initial = features.t3code.bundle { inherit pkgs; };
+      initial = features.t3code.bundle { inherit pkgs profile; };
       lifecycle = features.t3code.lifecycle {
         inherit
           lib
@@ -56,8 +57,11 @@ in
           clientSettings="${base}/userdata/desktop-settings.json"
           if ! test -e "$clientSettings"; then printf '{}\n' > "$clientSettings"; fi
           yq --inplace --output-format=json '.localEnvironmentEnabled = false' "$clientSettings"
-          server="${profile}/bin/t3"
-          if ! test -x "$server"; then server="${initial}/bin/t3"; fi
+          server="${profile}-executables/bin/t3"
+          if ! test -x "$server"; then
+            echo "T3 Code's stable executable has not been installed." >&2
+            exit 1
+          fi
           if ! test -e "${base}/userdata/settings.json"; then
             cp ${settings.server} "${base}/userdata/settings.json"
           fi
@@ -103,8 +107,11 @@ in
             "") /bin/launchctl print "gui/$(id -u)/org.nixos.t3code"; exit 0 ;;
             start|serve) echo "T3 Code is managed by launchd. Use t3-update-now to update and restart it." >&2; exit 2 ;;
           esac
-          server="${profile}/bin/t3"
-          if ! test -x "$server"; then server="${initial}/bin/t3"; fi
+          server="${profile}-executables/bin/t3"
+          if ! test -x "$server"; then
+            echo "T3 Code's stable executable has not been installed." >&2
+            exit 1
+          fi
           exec "$server" "$@"
         '';
       };
@@ -176,8 +183,8 @@ in
         t3code = {
           environment = {
             HOME = home;
-            PATH = "/nix/var/nix/profiles/system/sw/bin:${home}/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
-            SHELL = lib.getExe pkgs.zsh;
+            PATH = "${runtimes.directory}:/nix/var/nix/profiles/system/sw/bin:${home}/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
+            SHELL = runtimes.zsh;
             T3CODE_HOME = base;
             T3CODE_TELEMETRY_ENABLED = "false";
             CODEX_HOME = "${home}/.local/share/codex";

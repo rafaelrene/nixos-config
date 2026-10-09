@@ -19,7 +19,12 @@ let
     environment.systemPackages = [ pkgs.starship ];
     environment.variables.STARSHIP_CONFIG = "$HOME/.config/starship/starship.toml";
     programs.zsh.promptInit = ''
-      eval "$(${lib.getExe pkgs.starship} init zsh)"
+      eval "$(${
+        if pkgs.stdenv.hostPlatform.isDarwin then
+          "${(features.shell.runtimes { inherit pkgs; }).directory}/starship"
+        else
+          lib.getExe pkgs.starship
+      } init zsh)"
     '';
   };
 in

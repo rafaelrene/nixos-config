@@ -7,18 +7,22 @@ profile=$(jq -er '.profile' <<<"$settings")
 staged=$(jq -er '.staged' <<<"$settings")
 bundle=$(jq -er '.bundle' <<<"$settings")
 flake=$(jq -er '.flake' <<<"$settings")
+darwin=$(jq -r '.darwin // false | tostring' <<<"$settings")
 stage=false
 activate_only=false
+migrate_only=false
 for argument in "$@"; do
   case "$argument" in
-    --help|-h) print -- "Usage: update-llm-agents [--stage | --activate]"; exit 0 ;;
+    --help|-h) print -- "Usage: update-llm-agents [--stage | --activate | --migrate]"; exit 0 ;;
     --stage) stage=true ;;
     --activate) activate_only=true ;;
+    --migrate) migrate_only=true ;;
     *) print -u2 -- "Unknown option: $argument"; exit 1 ;;
   esac
 done
-if [[ "$stage" == true && "$activate_only" == true ]]; then
-  print -u2 -- 'Use either --stage or --activate.'
+if [[ "$stage" == true && "$activate_only" == true ||
+  "$migrate_only" == true && ( "$stage" == true || "$activate_only" == true ) ]]; then
+  print -u2 -- 'Use only one of --stage, --activate, or --migrate.'
   exit 1
 fi
 
@@ -42,19 +46,63 @@ checksum() {
 resolved() {
   readlink -f "$1" 2>/dev/null || true
 }
+install_executables() {
+  [[ "$darwin" == true ]] || return 0
+  local generation=$1 installer="$1/share/darwin-identity/install" metadata literal identity_generation
+  if [[ ! -x "$installer" ]]; then
+    # Keep installed versions while adding identities to pre-migration profiles.
+    metadata=$(jq -ce --arg profile "$profile" '
+      {path: .source.path, hash: .source.hash, releases: .releases, profile: $profile} |
+      select(.path | test("^/nix/store/[a-z0-9]{32}-[A-Za-z0-9+._=-]+$")) |
+      select(.hash | test("^sha256-[A-Za-z0-9+/]{43}=$")) |
+      select(.releases | [.codex, .["claude-code"]] | all(
+        (.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) and
+        (.hashes | [."aarch64-darwin", ."x86_64-linux"] | all(test("^[a-f0-9]{64}$")))))
+    ' "$generation/share/llm-agents/release.json") || return
+    literal=$(jq -Rn --arg metadata "$metadata" '$metadata' | sed 's/\${/\\${/g') || return
+    identity_generation=$(nix build --print-build-logs --no-link --print-out-paths \
+      --expr "$bundle (builtins.fromJSON $literal)") || return
+    nix-env --profile "${profile}-identity-generation" --set "$identity_generation" || return
+    installer="$identity_generation/share/darwin-identity/install"
+  fi
+  "$installer"
+}
 activate() {
   if [[ ! -e "$staged" ]]; then
+    if [[ -e "$profile" ]]; then install_executables "$(resolved "$profile")"; fi
     print -- 'Agent tools: no staged release.'
     return
   fi
-  local generation=$(resolved "$staged")
-  if [[ "$generation" == "$(resolved "$profile")" ]]; then
+  local generation=$(resolved "$staged") old=$(resolved "$profile") code
+  if install_executables "$generation"; then
+    :
+  else
+    code=$?
+    if [[ -n "$old" && "$old" != "$generation" ]]; then
+      if install_executables "$old"; then
+        print -u2 -- 'Agent tools: activation failed; the previous executable versions were restored.'
+      else
+        print -u2 -- 'Agent tools: activation and executable recovery failed. The previous profile is retained; retry update-llm-agents --activate.'
+      fi
+    fi
+    return "$code"
+  fi
+  if [[ "$generation" == "$old" ]]; then
     print -- 'Agent tools: already active.'
     return
   fi
   nix-env --profile "$profile" --set "$generation"
   print -- 'Agent tools: activated for new sessions.'
 }
+if [[ "$migrate_only" == true ]]; then
+  if [[ -e "$profile" ]]; then
+    install_executables "$(resolved "$profile")"
+    print -- 'Agent tools: current executable identities prepared.'
+  else
+    print -- 'Agent tools: no active release to migrate.'
+  fi
+  exit
+fi
 if [[ "$activate_only" == true ]]; then
   activate
   exit
@@ -89,7 +137,9 @@ if [[ ! "$store_path" =~ '^/nix/store/[a-z0-9]{32}-[A-Za-z0-9+._=-]+$' || ! "$so
   exit 1
 fi
 # Release values contain only validated versions and hex checksums.
-expression="$bundle { path = \"$store_path\"; hash = \"$source_hash\"; releases = builtins.fromJSON ''$releases''; }"
+identity=''
+if [[ "$darwin" == true ]]; then identity="profile = $(jq -Rn --arg profile "$profile" '$profile' | sed 's/\${/\\${/g');"; fi
+expression="$bundle { path = \"$store_path\"; hash = \"$source_hash\"; releases = builtins.fromJSON ''$releases''; $identity }"
 expected=$(nix eval --raw --expr "($expression).outPath")
 if [[ "$expected" != "$(resolved "$staged")" ]]; then
   print -- 'Agent tools: building Codex, Claude Code and OpenCode...'

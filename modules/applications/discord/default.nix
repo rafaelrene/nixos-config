@@ -1,4 +1,7 @@
-{ inputs, ... }:
+{ inputs, config, ... }:
+let
+  inherit (config) features;
+in
 {
   flake.modules.darwin.discord =
     {
@@ -48,7 +51,8 @@
             required_update = true;
           }
         );
-      discordUpdateSettings = pkgs.writeShellApplication {
+      discordUpdateSettings = features.shell.darwinApplication {
+        inherit pkgs;
         name = "configure-discord-updates";
         runtimeInputs = [ pkgs.jq ];
         text = ''
