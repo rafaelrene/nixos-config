@@ -27,6 +27,31 @@
       });
       activation = config.system.activationScripts.script.text;
       activationShebang = "#!/usr/bin/env -i ${pkgs.stdenv.shell}\n";
+      etcFiles = lib.filter (file: file.enable) (lib.attrValues config.environment.etc);
+      # Apple's Bash 3.2 has no associative arrays. Keep upstream's /etc checks,
+      # replacing only their hash table and lookup with a generated case function.
+      etcHashArray = ''
+        declare -A etcSha256Hashes=(
+          ${lib.concatMapStringsSep "\n  " (
+            file:
+            "[${lib.escapeShellArg file.target}]="
+            + lib.escapeShellArg (lib.concatStringsSep " " file.knownSha256Hashes)
+          ) etcFiles}
+        )
+      '';
+      etcHashLookup = "\${etcSha256Hashes[$subPath]}";
+      etcHashFunction = ''
+        etcSha256Hashes() {
+          case "$1" in
+            ${lib.concatMapStringsSep "\n    " (
+              file:
+              "${lib.escapeShellArg file.target}) printf '%s\\n' "
+              + lib.escapeShellArg (lib.concatStringsSep " " file.knownSha256Hashes)
+              + " ;;"
+            ) etcFiles}
+          esac
+        }
+      '';
     in
     {
       environment.systemPackages = [ rebuild ];
@@ -39,7 +64,14 @@
         # Nix Bash would still identify the changing store executable in macOS TCC.
         systemBuilderArgs.activationScript =
           assert lib.hasPrefix activationShebang activation;
-          "#!/usr/bin/env -i /bin/bash\n" + lib.removePrefix activationShebang activation;
+          assert lib.hasInfix etcHashArray activation;
+          assert lib.hasInfix etcHashLookup activation;
+          "#!/usr/bin/env -i /bin/bash\n"
+          +
+            lib.replaceStrings
+              [ etcHashArray etcHashLookup ]
+              [ etcHashFunction ''$(etcSha256Hashes "$subPath")'' ]
+              (lib.removePrefix activationShebang activation);
         systemBuilderCommands = ''
           /bin/bash -n "$out/activate"
         '';

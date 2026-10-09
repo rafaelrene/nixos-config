@@ -98,8 +98,9 @@ Agent launchers enter the project's Devenv environment when needed.
   keys during rebuilds. Plaintext keys stay outside the repository and Nix store.
 - **Private access:** Othinus exposes SSH and T3 Code over the LAN and Tailscale.
   Proserpina's T3 Code server listens only on localhost.
-- **Tailscale (macOS):** Rebuilds stop Tailscale before replacing its app, then
-  reopen it and restore an existing connection after the VPN extension updates.
+- **Tailscale (macOS):** Rebuilds stop Tailscale's VPN and GUI before replacing
+  its app, then reopen the managed bundle and restore an existing connection
+  after the VPN extension updates.
   Competing app installations block the rebuild.
 - **Snapshots:** Othinus snapshots home hourly and replicates it to the data disk;
   the data filesystem gets daily local snapshots.
