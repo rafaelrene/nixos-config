@@ -29,10 +29,11 @@ def desktop-processes [settings: record] {
     process-snapshot | where {|p|
         ($p.user_id == $uid
         and ($p.name =~ '^T3 Code \(' or $p.name in [t3code t3code-desktop])
-        and ($p.command =~ '/nix/store/.*t3code-desktop' or $p.command =~ '/nix/profiles/t3code/'
+        and ($p.command =~ '^/nix/store/[^/]+-t3code-desktop[^/]*/'
+            or ($p.command | str starts-with $"($settings.profile)/")
             or ($settings.darwin and (
-                ($p.command | str contains $settings.desktopApp)
-                or ($p.command | str contains $retained)
+                ($p.command | str starts-with $"($settings.desktopApp)/Contents/")
+                or ($p.command | str starts-with $"($retained)/Contents/")
             ))))
     }
 }
@@ -159,23 +160,25 @@ def launch [settings: record, args: list<string>] {
     error make {msg: $"T3 Code desktop did not start. See ($settings.state)/desktop.log."}
 }
 
-def stop-desktops [processes: table] {
+def stop-desktops [settings: record, processes: table] {
     print --stderr "T3 Code: closing desktop clients..."
     # Let the main clients shut down their workers before forcing any survivors.
-    for client in ($processes | where {|p| $p.ppid not-in $processes.pid }) {
+    let current = desktop-processes $settings | where pid in $processes.pid
+    for client in ($current | where {|p| $p.ppid not-in $current.pid }) {
         kill --quiet $client.pid
     }
     for attempt in 1..5 {
-        if (ps | where pid in $processes.pid | is-empty) { return }
+        if (desktop-processes $settings | where pid in $processes.pid | is-empty) { return }
         sleep 1sec
     }
-    let remaining = ps | where pid in $processes.pid
+    # Recheck ownership before signalling: a PID may have been reused while waiting.
+    let remaining = desktop-processes $settings | where pid in $processes.pid
     if ($remaining | is-not-empty) {
         print --stderr "T3 Code: force-stopping unresponsive desktop processes..."
         kill --force --quiet ...$remaining.pid
     }
     for attempt in 1..5 {
-        if (ps | where pid in $processes.pid | is-empty) { return }
+        if (desktop-processes $settings | where pid in $processes.pid | is-empty) { return }
         sleep 1sec
     }
     error make {msg: "T3 Code desktop did not quit. Activation stopped before changing the server."}
@@ -234,7 +237,7 @@ def recover [settings: record] {
     # Reuse the retained complete desktop when possible. Never start an older
     # server alongside a newer desktop, or erase a journal before recovery works.
     desktop-action $settings prepare $journal.previous
-    stop-desktops (desktop-processes $settings)
+    stop-desktops $settings (desktop-processes $settings)
     stop-server $settings
     ^nix-env --profile $settings.profile --set $journal.previous
     desktop-action $settings install $journal.previous
@@ -286,7 +289,7 @@ def activate [settings: record, rollback: bool] {
         reopen: ($clients | is-not-empty)
     }
     try {
-        stop-desktops $processes
+        stop-desktops $settings $processes
         if (desktop-processes $settings | is-not-empty) {
             error make {msg: "A T3 Code desktop appeared during shutdown."}
         }
@@ -336,7 +339,7 @@ def main [settings_file: path, action: string, ...args: string] {
         request-rollback => { request $settings true }
         stop-clients => {
             let reopen = desktops $settings | is-not-empty
-            stop-desktops (desktop-processes $settings)
+            stop-desktops $settings (desktop-processes $settings)
             if (desktop-processes $settings | is-not-empty) {
                 error make {msg: "A T3 Code desktop appeared during shutdown. Server startup stopped."}
             }

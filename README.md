@@ -76,9 +76,10 @@ Agent launchers enter the project's Devenv environment when needed.
 - Codex and Claude Code follow stable publisher releases; OpenCode follows Numtide.
 - Updates stage every three hours and activate at 04:00, independently of system
   rebuilds. Failed downloads or builds preserve the installed versions.
-- Agent updates apply to new sessions. Every T3 Code server start closes local
-  clients and helpers, forcing survivors after five seconds. Previously running
-  clients reopen once the matching server is ready. Restarts can interrupt work.
+- Agent updates apply to new sessions. Every T3 Code server start closes its
+  managed local clients and helpers, forcing survivors after five seconds.
+  Previously running clients reopen once the matching server is ready.
+  Restarts can interrupt work.
 - On macOS, T3 Code uses a signed app at `~/Applications/T3 Code.app`;
   existing Dock pins migrate to that path and stay in their original position.
   The server starts at login; the desktop opens manually with its built-in
@@ -97,6 +98,9 @@ Agent launchers enter the project's Devenv environment when needed.
   keys during rebuilds. Plaintext keys stay outside the repository and Nix store.
 - **Private access:** Othinus exposes SSH and T3 Code over the LAN and Tailscale.
   Proserpina's T3 Code server listens only on localhost.
+- **Tailscale (macOS):** Rebuilds stop Tailscale before replacing its app, then
+  reopen it and restore an existing connection after the VPN extension updates.
+  Competing app installations block the rebuild.
 - **Snapshots:** Othinus snapshots home hourly and replicates it to the data disk;
   the data filesystem gets daily local snapshots.
 
@@ -136,6 +140,11 @@ Linux and macOS have separate Nixpkgs pins.
 
 Pass a checkout path, such as `ns .`, to use a worktree. Without one, these commands
 use the configured main checkout. Development checks live in [AGENTS.md](AGENTS.md).
+
+On macOS, rebuilds and T3 launchers use Apple's `/bin/bash`, keeping App Management
+permission independent of Nix Bash updates. Grant `/bin/bash` access once in
+System Settings > Privacy & Security > App Management. Older Nix-store Bash
+entries can then be removed from that list; Nix still needs its own Bash packages.
 
 ## TODO
 

@@ -1,4 +1,9 @@
-{ inputs, lib, ... }:
+{
+  config,
+  inputs,
+  lib,
+  ...
+}:
 {
   options.features.t3code.update = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -15,6 +20,12 @@
     }:
     let
       darwin = pkgs.stdenv.hostPlatform.isDarwin;
+      writeApplication =
+        args:
+        if darwin then
+          config.features.shell.darwinApplication (args // { inherit pkgs; })
+        else
+          pkgs.writeShellApplication args;
       state = "${home}/.local/state/t3code-bundle-updater";
       source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
       settings = pkgs.writeText "t3code-updater.json" (
@@ -29,7 +40,7 @@
         }
       );
     in
-    pkgs.writeShellApplication {
+    writeApplication {
       name = "update-t3code";
       runtimeInputs = with pkgs; [
         coreutils

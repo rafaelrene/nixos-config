@@ -17,6 +17,7 @@ in
       profile = "${home}/.local/state/nix/profiles/t3code";
       logs = "${home}/.local/state/nix-darwin";
       state = "${home}/.local/state/t3code-bundle-updater";
+      writeApplication = args: features.shell.darwinApplication (args // { inherit pkgs; });
       initial = features.t3code.bundle { inherit pkgs; };
       lifecycle = features.t3code.lifecycle {
         inherit
@@ -37,7 +38,7 @@ in
       };
       settings = features.t3code.settings { inherit lib pkgs home; };
       terminalShell = features.t3code.terminalShell { inherit pkgs; };
-      run = pkgs.writeShellApplication {
+      run = writeApplication {
         name = "run-t3code";
         runtimeInputs = [
           pkgs.coreutils
@@ -78,25 +79,25 @@ in
             --host 127.0.0.1 --port 3773 --no-browser "${codeRoot}"
         '';
       };
-      updateNow = pkgs.writeShellApplication {
+      updateNow = writeApplication {
         name = "t3-update-now";
         text = ''
           exec ${lib.getExe updater} --restart
         '';
       };
-      activate = pkgs.writeShellApplication {
+      activate = writeApplication {
         name = "t3-activate";
         text = ''
           exec ${lib.getExe lifecycle} request
         '';
       };
-      rollback = pkgs.writeShellApplication {
+      rollback = writeApplication {
         name = "t3-rollback";
         text = ''
           exec ${lib.getExe lifecycle} request-rollback
         '';
       };
-      command = pkgs.writeShellApplication {
+      command = writeApplication {
         name = "t3";
         text = ''
           case "''${1-}" in
@@ -108,13 +109,13 @@ in
           exec "$server" "$@"
         '';
       };
-      desktop = pkgs.writeShellApplication {
+      desktop = writeApplication {
         name = "t3code-desktop";
         text = ''
           exec ${lib.getExe lifecycle} launch "$@"
         '';
       };
-      client = pkgs.writeShellApplication {
+      client = writeApplication {
         name = "t3code-client";
         runtimeInputs = [
           pkgs.coreutils
