@@ -46,28 +46,29 @@ nups() {
 	ns "$checkout"
 }
 
-shell_leader() {
+# Read menu keys while ZLE owns the terminal; suspend it only for the picker.
+workstation_leader_widget() {
 	local key
-	print -- 'Space: nav   g: git   Esc: cancel'
+	local -a action
+	zle -R 'Space: nav   g: git   Esc: cancel'
 	read -rk1 key || return
 	case $key in
-		' ') nav ;;
+		' ') action=(nav) ;;
 		g)
-			print -- 'n: git nav   r: project-run   d: delete branches   Esc: cancel'
+			zle -R 'n: git nav   r: project-run   d: delete branches   Esc: cancel'
 			read -rk1 key || return
 			case $key in
-				n) git_nav ;;
-				r) command project-run ;;
-				d) command git-delete-branches ;;
+				n) action=(git_nav) ;;
+				r) action=(command project-run) ;;
+				d) action=(command git-delete-branches) ;;
 			esac
 			;;
 	esac
-}
+	(( ${#action} )) || return 0
 
-# ZLE retains the buffer while a picker runs directly in the current shell.
-workstation_leader_widget() {
 	zle -I
-	shell_leader
+	# Widgets inherit /dev/null as stdin; interactive commands need the terminal.
+	"${action[@]}" </dev/tty
 	# A picker changes directories without starting a new prompt cycle.
 	if (( $+functions[_devenv_trust_t3] )); then
 		_devenv_trust_t3
