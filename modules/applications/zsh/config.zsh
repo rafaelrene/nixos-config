@@ -69,14 +69,9 @@ workstation_leader_widget() {
 	zle -I
 	# Widgets inherit /dev/null as stdin; interactive commands need the terminal.
 	"${action[@]}" </dev/tty
-	# A picker changes directories without starting a new prompt cycle.
-	if (( $+functions[_devenv_trust_t3] )); then
-		_devenv_trust_t3
-	fi
-	if (( $+functions[_devenv_hook] )); then
-		_devenv_hook
-	fi
-	zle reset-prompt
+	# Run prompt hooks after ZLE releases the terminal, preserving pending text.
+	zle .push-line
+	zle .accept-line
 }
 zle -N workstation-leader workstation_leader_widget
 bindkey -M vicmd ' ' workstation-leader
