@@ -146,6 +146,43 @@ Linux and macOS have separate Nixpkgs pins.
 Pass a checkout path, such as `ns .`, to use a worktree. Without one, these commands
 use the configured main checkout. Development checks live in [AGENTS.md](AGENTS.md).
 
+Built-in application updates are disabled where verified controls exist. Coding
+agents and T3 Code retain their three-hour Nix update schedule; other applications
+update through `nup`. Plugins, extensions, tools, and content remain app-managed.
+
+- Shared application modules apply controls to both Othinus and Proserpina.
+  Codex, GitHub CLI, Compass, Zen, and T3 Code use shared policy or equivalent
+  platform controls. Tailscale uses Linux service flags and macOS preferences.
+  Ghostty has an updater only on macOS. Apps installed only on macOS keep their
+  controls there; they are not added to Othinus by this policy.
+- macOS supplies `DISABLE_UPDATE_CHECK=1` to GUI and shell launches. This disables
+  Squirrel's native installer, including Proton Pass and Mailspring. It does not
+  disable every Electron app's own update checks or downloads.
+- App modules configure Codex, GitHub CLI, Ghostty, MongoDB Compass, ONLYOFFICE,
+  Tailscale, Zen, and Zentty alongside the existing app-specific controls.
+- Rebuilds merge native preferences for Anytype, FreeTube, RustDesk, Standard
+  Notes, and initialized Yaak installations. If a preference needs changing,
+  close that app before rebuilding. Other settings are preserved. These writable
+  preferences can be changed in the app and are reapplied on the next rebuild.
+- Yaak's first launch remains uncovered until it creates its settings database;
+  disable its updater in Settings, close it, then rebuild. RustDesk's user
+  preferences do not cover a previously enabled updater in a root service.
+- Unresolved controls: Ente Auth, Ente Photos, Filen, Gifox, Helium, Microsoft
+  Teams, OrbStack, Proton Drive, Raycast, Shottr, Signal, Telegram, Viber, and
+  WhatsApp. Proton Pass still checks release metadata. Helium's available toggle
+  also disables component updates, so it is left unchanged.
+
+For an already-running Proton Pass update helper, stop it **before quitting
+Proton Pass**:
+
+```sh
+sudo launchctl bootout system/me.proton.pass.electron.ShipIt
+```
+
+Then quit Proton Pass, run `ns .` from this checkout, and reopen the app. If the
+helper is absent, the stop command is unnecessary. New GUI launches inherit the
+environment; running apps do not.
+
 On macOS, Nix-managed commands run from real executables in
 `/var/lib/nix-darwin/bin`; rolling tools use fixed paths beside their profiles.
 Activation preserves vendor signatures and signs local builds with persistent

@@ -13,10 +13,15 @@ in
         environmentHome = if pkgs.stdenv.hostPlatform.isDarwin then home else "$HOME";
       in
       {
-        environment.systemPackages = agents.packages;
-        environment.variables = {
-          CODEX_HOME = "${environmentHome}/.local/share/codex";
-          CLAUDE_CONFIG_DIR = "${environmentHome}/.local/share/claude";
+        environment = {
+          systemPackages = agents.packages;
+          etc."codex/requirements.toml".text = ''
+            check_for_update_on_startup = false
+          '';
+          variables = {
+            CODEX_HOME = "${environmentHome}/.local/share/codex";
+            CLAUDE_CONFIG_DIR = "${environmentHome}/.local/share/claude";
+          };
         };
       };
   });

@@ -4,7 +4,10 @@
       enable = true;
       openFirewall = true;
       useRoutingFeatures = "none";
-      extraSetFlags = [ "--accept-dns=true" ];
+      extraSetFlags = [
+        "--accept-dns=true"
+        "--update-check=false"
+      ];
     };
 
     # Keep the existing LAN rules; allow OpenSSH and T3Code over the tailnet too.

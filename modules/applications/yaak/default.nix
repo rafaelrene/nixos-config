@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, config, ... }:
 {
   flake.modules.darwin.yaak =
     { pkgs, ... }:
@@ -9,6 +9,7 @@
       };
     in
     {
+      imports = [ (config.features.updates.darwinAppSettings "yaak") ];
       environment.systemPackages = [ unstable.yaak ];
     };
 }
