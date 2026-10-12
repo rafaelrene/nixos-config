@@ -55,6 +55,22 @@ let
     };
 in
 {
-  flake.modules.nixos.devenv = common;
-  flake.modules.darwin.devenv = common;
+  flake.modules.nixos.devenv =
+    { config, ... }:
+    let
+      user = config.workstation.user;
+      home = config.users.users.${user}.home;
+      group = config.users.users.${user}.group;
+    in
+    {
+      imports = [ common ];
+      systemd.tmpfiles.rules = [
+        "d ${home}/.config/devenv 0755 ${user} ${group} - -"
+        "L+ ${home}/.config/devenv/config.yaml - - - - ${./config.yaml}"
+      ];
+    };
+  flake.modules.darwin.devenv = {
+    imports = [ common ];
+    workstation.links.".config/devenv/config.yaml" = "${./config.yaml}";
+  };
 }
