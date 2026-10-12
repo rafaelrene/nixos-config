@@ -15,6 +15,12 @@ only fallback to scripts when needed
 common parts reusable
 - Avoid scope creep, ask about unrelated changes
 
+## Application updates
+
+- Disable built-in auto-updates by default for every app; document unsupported cases.
+- Keep scheduled Nix updates for coding agents and T3 Code; update other apps manually through Nix.
+- Apps may update their plugins, extensions, tools, and content.
+
 ## Documentation
 
 - Keep repository overview in [README.md](README.md)
