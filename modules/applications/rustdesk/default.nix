@@ -1,6 +1,7 @@
-{ inputs, ... }:
+{ inputs, config, ... }:
 {
   flake.modules.darwin.rustdesk = { lib, pkgs, ... }: {
+    imports = [ (config.features.updates.darwinAppSettings "rustdesk") ];
     environment.systemPackages = [
       (inputs.brew-nix.packages.${pkgs.stdenv.hostPlatform.system}.rustdesk.overrideAttrs {
         dontFixup = true;

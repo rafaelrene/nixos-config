@@ -1,6 +1,7 @@
 let
   common = { pkgs, ... }: {
     environment.systemPackages = [ pkgs.gh ];
+    environment.variables.GH_NO_UPDATE_NOTIFIER = "1";
   };
 in
 {

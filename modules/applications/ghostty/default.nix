@@ -47,6 +47,7 @@ let
         "xdg/ghostty/common".text =
           builtins.readFile ./config-common
           + lib.optionalString pkgs.stdenv.hostPlatform.isDarwin ''
+            auto-update = off
             command = ${(features.shell.runtimes { inherit pkgs; }).zsh} --login
           '';
         "xdg/ghostty/theme".text = renderTheme { inherit lib pkgs; };

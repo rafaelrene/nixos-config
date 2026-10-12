@@ -1,6 +1,9 @@
 { inputs, ... }:
 let
   shared = { pkgs, ... }: {
+    environment.etc."mongodb-compass.conf".text = ''
+      autoUpdates: false
+    '';
     environment.systemPackages = [
       (
         if pkgs.stdenv.hostPlatform.isDarwin then
