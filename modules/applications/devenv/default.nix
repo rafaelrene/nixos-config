@@ -31,7 +31,13 @@ let
     {
       environment.systemPackages = [ pkgs.devenv ];
       programs.zsh.interactiveShellInit = lib.mkAfter ''
-        eval "$(${executable} hook zsh)"
+        # T3 queues project scripts before the first prompt. Devenv's terminal
+        # UI and reload session can consume that input during activation.
+        if [[ -n "''${T3CODE_PROJECT_ROOT:-}" ]]; then
+          eval "$(${executable} hook zsh -- --no-tui --no-reload)"
+        else
+          eval "$(${executable} hook zsh)"
+        fi
         source ${trustHook}
       '';
       # Share the release across hosts while preserving upstream cache identity.
