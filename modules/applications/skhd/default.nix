@@ -18,8 +18,23 @@ in
     {
       services.skhd = {
         enable = true;
+        package = pkgs.skhd.overrideAttrs (previous: {
+          postPatch = (previous.postPatch or "") + ''
+            # Observe the Hyper modifiers injected by OmniWM's head event tap,
+            # regardless of which service starts first.
+            substituteInPlace src/event_tap.c \
+              --replace-fail kCGHeadInsertEventTap kCGTailAppendEventTap
+          '';
+        });
         skhdConfig = ''
           alt - return : /usr/bin/open -a Ghostty "$HOME" --args --window-save-state=never
+
+          # Quit Helium to retain its session and bypass Zen mode's hidden close
+          # button. Forward every other app to OmniWM's closeFocusedWindow binding.
+          ctrl + alt + cmd - q [
+            "helium" : /usr/bin/osascript -e 'tell application id "net.imput.helium" to quit'
+            * ~
+          ]
         '';
       };
 
