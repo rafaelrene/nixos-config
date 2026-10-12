@@ -14,6 +14,10 @@ in
       runtimes = features.shell.runtimes { inherit pkgs; };
     in
     {
+      # Squirrel's native updater must not compete with Nix. Cover GUI and shell launches.
+      launchd.user.envVariables.DISABLE_UPDATE_CHECK = "1";
+      environment.variables.DISABLE_UPDATE_CHECK = "1";
+
       environment.systemPackages = [
         (features.shell.darwinApplication {
           inherit pkgs;
