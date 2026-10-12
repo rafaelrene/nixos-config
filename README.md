@@ -61,6 +61,7 @@ mode, press Space followed by a key to open a picker:
 - **Project environments:** Devenv supplies project tools and language runtimes.
   Its native zsh hook activates projects with `devenv.nix` and reloads changes.
   T3 worktrees are trusted automatically; other checkouts require `devenv allow`.
+  T3 terminals disable Devenv's UI and auto-reload to preserve queued startup commands.
   Activation opens a zsh subshell; leaving the project returns to the parent shell.
   No `.envrc` is needed. Use `devenv revoke` to stop automatic activation.
 - **Editor:** Shared LazyVim configuration, theme, language tooling, Git
