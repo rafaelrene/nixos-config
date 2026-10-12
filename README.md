@@ -62,6 +62,7 @@ mode, press Space followed by a key to open a picker:
   remote-only branch creates a tracking branch. Run `git fetch` to refresh the list.
 - **Project environments:** Devenv supplies project tools and language runtimes.
   Its native zsh hook activates projects with `devenv.nix` and reloads changes.
+  Devenv's status bar is hidden; Starship shows the active environment.
   T3 worktrees are trusted automatically; other checkouts require `devenv allow`.
   T3 terminals disable Devenv's UI and auto-reload to preserve queued startup commands.
   Activation opens a zsh subshell; leaving the project returns to the parent shell.
