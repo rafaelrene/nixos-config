@@ -150,6 +150,11 @@ Built-in application updates are disabled where verified controls exist. Coding
 agents and T3 Code retain their three-hour Nix update schedule; other applications
 update through `nup`. Plugins, extensions, tools, and content remain app-managed.
 
+- Shared application modules apply controls to both Othinus and Proserpina.
+  Codex, GitHub CLI, Compass, Zen, and T3 Code use shared policy or equivalent
+  platform controls. Tailscale uses Linux service flags and macOS preferences.
+  Ghostty has an updater only on macOS. Apps installed only on macOS keep their
+  controls there; they are not added to Othinus by this policy.
 - macOS supplies `DISABLE_UPDATE_CHECK=1` to GUI and shell launches. This disables
   Squirrel's native installer, including Proton Pass and Mailspring. It does not
   disable every Electron app's own update checks or downloads.

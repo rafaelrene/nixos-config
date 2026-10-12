@@ -13,6 +13,7 @@
     {
       lib,
       pkgs,
+      policies,
     }:
     let
       theme = config.features.theme { inherit lib pkgs; };
@@ -27,14 +28,16 @@
       })
     else
       package.override {
-        extraPolicies.Preferences = {
-          "zen.theme.accent-color" = {
-            Value = "#${theme.accentColor}";
-            Status = "locked";
-          };
-          "browser.theme.toolbar-theme" = {
-            Value = if theme.dark then 0 else 1;
-            Status = "locked";
+        extraPolicies = policies // {
+          Preferences = {
+            "zen.theme.accent-color" = {
+              Value = "#${theme.accentColor}";
+              Status = "locked";
+            };
+            "browser.theme.toolbar-theme" = {
+              Value = if theme.dark then 0 else 1;
+              Status = "locked";
+            };
           };
         };
       };
