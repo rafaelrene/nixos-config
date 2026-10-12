@@ -60,3 +60,11 @@ For Darwin changes, also evaluate and build the Darwin system:
 nix eval --raw .#darwinConfigurations.Proserpina.system.drvPath
 nix build --no-link .#darwinConfigurations.Proserpina.system
 ```
+
+If you need me to activate a system with sudo give me command with
+absolute path so I can copy paste it into terminal regardless of where I am:
+
+```sh
+ns [absolute/path/to/nixos-config-worktree]
+nups [absolute/path/to/nixos-config-worktree] 
+```
