@@ -14,9 +14,18 @@ in
       runtimes = features.shell.runtimes { inherit pkgs; };
     in
     {
-      # Squirrel's native updater must not compete with Nix. Cover GUI and shell launches.
+      # Activation sets the current session; launchd does not retain it across logins.
       launchd.user.envVariables.DISABLE_UPDATE_CHECK = "1";
       environment.variables.DISABLE_UPDATE_CHECK = "1";
+      launchd.user.agents.disable-squirrel-updates.serviceConfig = {
+        ProgramArguments = [
+          "/bin/launchctl"
+          "setenv"
+          "DISABLE_UPDATE_CHECK"
+          "1"
+        ];
+        RunAtLoad = true;
+      };
 
       environment.systemPackages = [
         (features.shell.darwinApplication {

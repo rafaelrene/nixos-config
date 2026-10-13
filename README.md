@@ -159,9 +159,13 @@ update through `nup`. Plugins, extensions, tools, and content remain app-managed
   platform controls. Tailscale uses Linux service flags and macOS preferences.
   Ghostty has an updater only on macOS. Apps installed only on macOS keep their
   controls there; they are not added to Othinus by this policy.
-- macOS supplies `DISABLE_UPDATE_CHECK=1` to GUI and shell launches. This disables
-  Squirrel's native installer, including Proton Pass and Mailspring. It does not
-  disable every Electron app's own update checks or downloads.
+- macOS sets `DISABLE_UPDATE_CHECK=1` during activation, at login, and in shells.
+  Squirrel disables its native updater when the app inherits this variable.
+  A login agent cannot order other login items; Proton Pass has its own Nix login
+  agent with the variable set directly. Disable Pass's built-in **Start at login**
+  and remove its macOS login item so it cannot start ahead of the Nix agent.
+  Other Squirrel apps, including Mailspring, must launch after the environment
+  agent. This does not disable every Electron app's own checks or downloads.
 - App modules configure Codex, GitHub CLI, Ghostty, MongoDB Compass, ONLYOFFICE,
   Tailscale, Zen, and Zentty alongside the existing app-specific controls.
 - Rebuilds merge native preferences for Anytype, FreeTube, RustDesk, Standard
@@ -183,9 +187,11 @@ Proton Pass**:
 sudo launchctl bootout system/me.proton.pass.electron.ShipIt
 ```
 
-Then quit Proton Pass, run `ns .` from this checkout, and reopen the app. If the
-helper is absent, the stop command is unnecessary. New GUI launches inherit the
-environment; running apps do not.
+Then disable Proton Pass's **Start at login**, quit it, and run `ns .` from this
+checkout. The Nix login agent starts it with updates disabled. If the helper is
+absent, the stop command is unnecessary. Avoid macOS's **Reopen windows when
+logging back in** for Pass: session restoration can bypass the Nix login agent.
+Running apps must be restarted to receive environment changes.
 
 On macOS, Nix-managed commands run from real executables in
 `/var/lib/nix-darwin/bin`; rolling tools use fixed paths beside their profiles.
