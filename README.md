@@ -60,6 +60,7 @@ mode, press Space followed by a key to open a picker:
 - **Branches:** `git nav` combines local and fetched remote branches, preferring
   local checkouts. Remote names appear only to disambiguate branches. Selecting a
   remote-only branch creates a tracking branch. Run `git fetch` to refresh the list.
+- **Prompt:** `$:<number>` shows saved Git stashes, including with a clean working tree.
 - **Project environments:** Devenv supplies project tools and language runtimes.
   Its native zsh hook activates projects with `devenv.nix` and reloads changes.
   Devenv's status bar is hidden; Starship shows the active environment.
