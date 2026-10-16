@@ -31,7 +31,7 @@ in
 
           # Quit Helium to retain its session and bypass Zen mode's hidden close
           # button. Forward every other app to OmniWM's closeFocusedWindow binding.
-          ctrl + alt + cmd - q [
+          alt - q [
             "helium" : /usr/bin/osascript -e 'tell application id "net.imput.helium" to quit'
             * ~
           ]
