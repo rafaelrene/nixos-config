@@ -37,7 +37,7 @@
         "moveColumnToWorkspaceUp" = "${caps}+Shift+PageUp";
         "moveColumnToWorkspaceDown" = "${caps}+Shift+PageDown";
         "toggleOverview" = "Option+0";
-        "closeFocusedWindow" = "${caps}+Q";
+        "closeFocusedWindow" = "Option+Q";
         "cycleSizeForward" = "${caps}+R";
         "cycleSizeBackward" = "${caps}+Shift+R";
         "setContainerPrimarySpan.decrease10Percent" = "${caps}+-";

@@ -28,7 +28,7 @@ across supported applications.
   Changes made in OmniWM last until the next rebuild.
 - **Hotkeys (macOS):** skhd runs from `/var/lib/skhd/skhd` with a stable signing
   identity, preserving Accessibility permission across updates. Grant access once
-  after migrating from the Nix store path. Caps + Q quits Helium to preserve its
+  after migrating from the Nix store path. Option + Q quits Helium to preserve its
   session, including with the toolbar hidden; it closes the focused window in
   other apps.
 - **Web apps:** Dedicated Helium launchers on Linux and Chromium launchers in
