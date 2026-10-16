@@ -5,6 +5,8 @@ let
     nixpkgs.config.allowUnfree = true;
     nix = {
       settings = {
+        min-free = 10 * 1024 * 1024 * 1024;
+        max-free = 20 * 1024 * 1024 * 1024;
         experimental-features = [
           "nix-command"
           "flakes"
@@ -22,7 +24,7 @@ let
       };
       gc = {
         automatic = true;
-        options = "--delete-older-than 30d";
+        options = "--delete-older-than 7d";
       };
     };
 
@@ -47,7 +49,6 @@ in
     imports = [ common ];
     nix.settings.trusted-users = [ "root" ];
     nix.gc.interval = {
-      Weekday = 0;
       Hour = 3;
       Minute = 0;
     };

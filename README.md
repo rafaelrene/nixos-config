@@ -151,6 +151,11 @@ Linux and macOS have separate Nixpkgs pins.
 Pass a checkout path, such as `ns .`, to use a worktree. Without one, these commands
 use the configured main checkout. Development checks live in [AGENTS.md](AGENTS.md).
 
+- **Nix storage:** Daily system and user cleanup expires profile history older
+  than seven days while preserving each profile's current generation, including
+  staged and previous T3 releases. Project environments remain rooted until removed.
+  During builds, Nix collects unused packages below 10 GiB free, targeting 20 GiB.
+
 Built-in application updates are disabled where verified controls exist. Coding
 agents and T3 Code retain their three-hour Nix update schedule; other applications
 update through `nup`. Plugins, extensions, tools, and content remain app-managed.
