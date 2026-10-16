@@ -356,7 +356,12 @@ class Installer:
                         alias = temporary / path.relative_to(destination)
                         modes = {}
                         try:
-                            writable(alias.parent, modes)
+                            # Releases may omit directories needed by fixed aliases.
+                            parent = alias.parent
+                            while not parent.exists():
+                                parent = parent.parent
+                            writable(parent, modes)
+                            directory(alias.parent)
                             alias.symlink_to(target)
                         finally:
                             for changed, mode in modes.items():
