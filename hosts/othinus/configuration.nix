@@ -51,20 +51,6 @@ in
     boot.loader.limine.style.interface.branding = "Othinus";
     system.stateVersion = "26.05";
     networking.hostName = "othinus";
-    # NetworkManager may restore a connection's WoWLAN preference. Enforce the
-    # host policy whenever networking comes up.
-    systemd.services.disable-wifi-wake = {
-      description = "Disable Wi-Fi wake-on-LAN";
-      wantedBy = [ "network-online.target" ];
-      after = [ "NetworkManager.service" ];
-      serviceConfig.Type = "oneshot";
-      script = ''
-        phy="$(${pkgs.iw}/bin/iw dev wlp4s0 info | ${pkgs.gawk}/bin/awk '/wiphy/ { print "phy" $2; exit }')"
-        if test -n "$phy"; then
-          ${pkgs.iw}/bin/iw phy "$phy" wowlan disable
-        fi
-      '';
-    };
 
     time.timeZone = "Europe/Bratislava";
     i18n = {
@@ -108,10 +94,6 @@ in
       ];
     };
 
-    systemd.tmpfiles.rules = [
-      "d /data 2775 root storage - -"
-      "d /data/code 2775 raf storage - -"
-    ];
     hardware.nvidia = {
       modesetting.enable = true;
       open = true;
@@ -136,6 +118,51 @@ in
       HandleLidSwitch = "suspend";
       HandleLidSwitchExternalPower = "ignore";
       HandleLidSwitchDocked = "ignore";
+    };
+
+    systemd = {
+      tmpfiles.rules = [
+        "d /data 2775 root storage - -"
+        "d /data/code 2775 raf storage - -"
+      ];
+      services = {
+        # NetworkManager may restore a connection's WoWLAN preference. Enforce the
+        # host policy whenever networking comes up.
+        disable-wifi-wake = {
+          description = "Disable Wi-Fi wake-on-LAN";
+          wantedBy = [ "network-online.target" ];
+          after = [ "NetworkManager.service" ];
+          serviceConfig.Type = "oneshot";
+          script = ''
+            phy="$(${pkgs.iw}/bin/iw dev wlp4s0 info | ${pkgs.gawk}/bin/awk '/wiphy/ { print "phy" $2; exit }')"
+            if test -n "$phy"; then
+              ${pkgs.iw}/bin/iw phy "$phy" wowlan disable
+            fi
+          '';
+        };
+        display-brightness-schedule = {
+          description = "Apply the daytime or nighttime screen brightness";
+          wantedBy = [ "multi-user.target" ];
+          after = [ "time-sync.target" ];
+          serviceConfig.Type = "oneshot";
+          # Check the current local time so missed runs cannot apply stale brightness.
+          script = ''
+            case "$(${pkgs.coreutils}/bin/date +%H)" in
+              23|0[0-9]) brightness=0 ;;
+              *) brightness=100% ;;
+            esac
+            ${pkgs.brightnessctl}/bin/brightnessctl --class=backlight --min-value=0 set "$brightness"
+          '';
+        };
+      };
+      timers.display-brightness-schedule = {
+        wantedBy = [ "timers.target" ];
+        timerConfig = {
+          OnCalendar = "*-*-* 10,23:00:00";
+          AccuracySec = "1s";
+          Persistent = true;
+        };
+      };
     };
   };
 }
