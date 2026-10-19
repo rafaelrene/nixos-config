@@ -83,11 +83,15 @@ in
               partOf = [ "graphical-session.target" ];
               after = [ "graphical-session.target" ];
               unitConfig.ConditionUser = user;
-              serviceConfig.Type = "oneshot";
+              serviceConfig = {
+                Type = "oneshot";
+                # The timer runs before login too; display commands need a session.
+                ExecCondition = "${pkgs.systemd}/bin/systemctl --user is-active --quiet graphical-session.target";
+              };
               # Check local time so login and missed runs apply the current schedule.
               script = ''
                 case "$(${pkgs.coreutils}/bin/date +%H)" in
-                  23|0[0-9])
+                  2[1-3]|0[0-9])
                     ${pkgs.systemd}/bin/systemctl --user start display-dimming.service
                     ${lib.getExe config.programs.niri.package} msg action power-off-monitors
                     ;;
@@ -101,16 +105,25 @@ in
             };
           };
           timers.display-brightness-schedule = {
-            wantedBy = [ "graphical-session.target" ];
-            partOf = [ "graphical-session.target" ];
+            wantedBy = [ "timers.target" ];
             unitConfig.ConditionUser = user;
             timerConfig = {
-              OnCalendar = "*-*-* 10,23:00:00";
+              OnCalendar = "*-*-* 10,21:00:00";
               AccuracySec = "1s";
               Persistent = true;
             };
           };
         };
       };
+      # WantedBy does not start a new timer under an already active target.
+      # NixOS runs user activation on boot and every switch, including ns/nups.
+      system.userActivationScripts.display-brightness-schedule = ''
+        if [ "$(${pkgs.coreutils}/bin/id -un)" = ${lib.escapeShellArg user} ]; then
+          ${pkgs.systemd}/bin/systemctl --user restart display-brightness-schedule.timer
+          if ${pkgs.systemd}/bin/systemctl --user is-active --quiet graphical-session.target; then
+            ${pkgs.systemd}/bin/systemctl --user restart display-brightness-schedule.service
+          fi
+        fi
+      '';
     };
 }
