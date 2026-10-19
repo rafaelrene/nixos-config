@@ -190,8 +190,16 @@ update through `nup`. Plugins, extensions, tools, and content remain app-managed
 - Yaak's first launch remains uncovered until it creates its settings database;
   disable its updater in Settings, close it, then rebuild. RustDesk's user
   preferences do not cover a previously enabled updater in a root service.
+- Raycast's packaged updater binaries have execute permission removed, preserving
+  its vendor signature. Activation quits Raycast, stops existing updater services,
+  copies the Nix package, and makes the bundle root-owned before reopening it.
+  macOS can re-enable the services, but their executables cannot run and Raycast
+  cannot restore their permissions. Raycast v2 ignores `updaterEnabled` and can
+  still check and download updates. `nups` fetches Raycast v2's latest stable
+  release directly from Raycast and pins its version, download URL, and hash in
+  `vendor-sources.json`, independently of the Nixpkgs version. `ns` uses that pin.
 - Unresolved controls: Ente Auth, Ente Photos, Filen, Gifox, Helium, Microsoft
-  Teams, OrbStack, Proton Drive, Raycast, Shottr, Signal, Telegram, Viber, and
+  Teams, OrbStack, Proton Drive, Shottr, Signal, Telegram, Viber, and
   WhatsApp. Proton Pass still checks release metadata. Helium's available toggle
   also disables component updates, so it is left unchanged.
 

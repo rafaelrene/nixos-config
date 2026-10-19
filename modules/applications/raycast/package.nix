@@ -2,31 +2,33 @@
 {
   options.features.raycast.package = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
-    description = "Raycast package factory retaining the required database-compatible version.";
+    description = "Raycast package factory using pinned stable vendor downloads.";
   };
   config.features.raycast.package =
-    {
-      lib,
-      pkgs,
-    }:
+    { pkgs }:
     let
       unstable = import inputs.nixpkgs-unstable {
         system = pkgs.stdenv.hostPlatform.system;
         config.allowUnfree = true;
       };
+      sources = builtins.fromJSON (builtins.readFile ../../system/updates/vendor-sources.json);
     in
-    # Raycast 2.4 cannot open databases already migrated by 2.5.2.
-    if lib.versionAtLeast unstable.raycast.version "2.5.2.0" then
-      unstable.raycast
-    else if pkgs.stdenv.hostPlatform.system == "aarch64-darwin" then
-      unstable.raycast.overrideAttrs {
-        version = "2.5.2.0";
-        src = pkgs.fetchurl {
-          name = "Raycast.dmg";
-          url = "https://x-r2.raycast-releases.com/Raycast_2.5.2.0_67ef5b0f31_arm64.dmg";
-          hash = "sha256-G3l4Ng0blsqWsL8T2bHRlAWZzuxh3YyFoN4/DoJEWyM=";
-        };
-      }
+    if pkgs.stdenv.hostPlatform.system != "aarch64-darwin" then
+      throw "Raycast v2 is only packaged for aarch64-darwin."
     else
-      throw "Raycast's 2.5.2 fallback is only packaged for aarch64-darwin.";
+      unstable.raycast.overrideAttrs (previous: {
+        inherit (sources.raycast) version;
+        src = pkgs.fetchurl {
+          inherit (sources.raycast) url hash;
+          name = "Raycast.dmg";
+        };
+        # Raycast v2 no longer reads updaterEnabled. Removing execute permission
+        # blocks launchd even if macOS re-enables these services, while preserving
+        # Raycast's vendor signature and extension/runtime updates.
+        postInstall = (previous.postInstall or "") + ''
+          chmod a-x \
+            "$out/Applications/Raycast.app/Contents/Resources/Updater" \
+            "$out/Applications/Raycast.app/Contents/Resources/UpdaterDaemon"
+        '';
+      });
 }

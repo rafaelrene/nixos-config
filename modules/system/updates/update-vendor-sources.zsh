@@ -8,7 +8,7 @@ fi
 
 sources="$1/modules/system/updates/vendor-sources.json"
 manifest=$(<"$sources")
-jq -e 'type == "object" and ([."google-drive", .viber] | all(.[];
+jq -e 'type == "object" and ([."google-drive", .raycast, .viber] | all(.[];
   type == "object" and has("version") and has("url") and has("hash")))' <<<"$manifest" >/dev/null
 workspace=$(mktemp --directory)
 staged=''
@@ -37,6 +37,16 @@ omniwm_hash=${omniwm_hash%%[[:space:]]#}
 omniwm_url=$(jq -er '.browser_download_url | select(type == "string" and length > 0)' <<<"$asset")
 omniwm_version=${tag#v}
 
+# Raycast v2 has a separate release API from Classic. Omitting release_candidate
+# selects stable releases; a zero version asks for the latest even when pinned.
+raycast_release=$(checked curl --fail --silent --show-error --location \
+	'https://x.raycast-releases.com/releases/latest?platform=macos&architecture=arm64&version=0.0.0.0')
+raycast_version=$(jq -er '.version | select(type == "string" and test("^[0-9]+(\\.[0-9]+){3}$"))' <<<"$raycast_release")
+raycast_url=$(jq -er '.builds | map(select(.platform == "macos" and .architecture == "arm64" and .format == "dmg")) |
+  first | .url | select(type == "string" and startswith("https://"))' <<<"$raycast_release")
+raycast=$(checked nix store prefetch-file --refresh --json --name Raycast.dmg "$raycast_url")
+raycast_hash=$(jq -er '.hash | select(type == "string" and length > 0)' <<<"$raycast")
+
 google_url=$(jq -er '."google-drive".url | select(type == "string" and length > 0)' <<<"$manifest")
 viber_url=$(jq -er '.viber.url | select(type == "string" and length > 0)' <<<"$manifest")
 google=$(checked nix store prefetch-file --refresh --json --name google-drive.dmg "$google_url")
@@ -64,10 +74,12 @@ done
 
 updated=$(jq --arg google_version "$google_version" --arg google_hash "$google_hash" \
 	--arg omniwm_version "$omniwm_version" --arg omniwm_url "$omniwm_url" --arg omniwm_hash "$omniwm_hash" \
+	--arg raycast_version "$raycast_version" --arg raycast_url "$raycast_url" --arg raycast_hash "$raycast_hash" \
 	--arg viber_version "$viber_version" --arg viber_hash "$viber_hash" '
   ."google-drive".version = $google_version |
   ."google-drive".hash = $google_hash |
   .omniwm = {version: $omniwm_version, url: $omniwm_url, hash: $omniwm_hash} |
+  .raycast = {version: $raycast_version, url: $raycast_url, hash: $raycast_hash} |
   .viber.version = $viber_version |
   .viber.hash = $viber_hash
 ' <<<"$manifest")
@@ -79,4 +91,4 @@ if ! jq -e --argjson updated "$updated" '. == $updated' <<<"$manifest" >/dev/nul
 	mv -f -- "$staged" "$sources"
 	staged=''
 fi
-print -r -- "Pinned Google Drive $google_version, OmniWM $omniwm_version and Viber $viber_version."
+print -r -- "Pinned Google Drive $google_version, OmniWM $omniwm_version, Raycast $raycast_version and Viber $viber_version."
