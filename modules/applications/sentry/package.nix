@@ -41,9 +41,14 @@
         runHook postInstall
       '';
       doInstallCheck = true;
-      nativeInstallCheckInputs = [ pkgs.versionCheckHook ];
+      nativeInstallCheckInputs = [
+        pkgs.writableTmpDirAsHomeHook
+        pkgs.versionCheckHook
+      ];
       versionCheckProgram = "${placeholder "out"}/bin/sentry";
       versionCheckProgramArg = "--version";
+      # Sentry initializes its config database even when printing its version.
+      versionCheckKeepEnvironment = [ "HOME" ];
       meta = {
         description = "Command-line access to Sentry issues, events, and traces";
         homepage = "https://cli.sentry.dev";
