@@ -1,5 +1,7 @@
 """Set native updater preferences without replacing unrelated application state."""
 
+import configparser
+import io
 import json
 import os
 import sqlite3
@@ -15,6 +17,7 @@ APPLICATIONS = {
     "standard-notes": ("Standard Notes", "Library/Application Support/Standard Notes"),
     "freetube": ("FreeTube", "Library/Application Support/FreeTube"),
     "yaak": ("yaak-app", "Library/Application Support/app.yaak.desktop"),
+    "obs-studio": ("OBS", "Library/Application Support/obs-studio"),
     "rustdesk": ("RustDesk", "Library/Preferences/com.carriez.RustDesk"),
 }
 
@@ -39,6 +42,21 @@ def replacement(path, contents):
 
 
 def prepare(app, directory):
+    if app == "obs-studio":
+        path = directory / "global.ini"
+        data = configparser.ConfigParser(interpolation=None)
+        data.optionxform = str
+        if path.exists():
+            data.read_string(path.read_text())
+        if not data.has_section("General"):
+            data.add_section("General")
+        if data.get("General", "EnableAutoUpdates", fallback="").lower() == "false":
+            return []
+        data.set("General", "EnableAutoUpdates", "false")
+        output = io.StringIO()
+        data.write(output, space_around_delimiters=False)
+        return [replacement(path, output.getvalue())]
+
     if app in ("anytype", "standard-notes"):
         filename, key, value = (
             ("devconfig.json", "updateDisabled", True)
