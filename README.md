@@ -76,6 +76,8 @@ mode, press Space followed by a key to open a picker:
   integration, and image previews. Project tools take precedence over Neovim's
   bundled helper runtimes.
 - **Forge tools:** GitHub CLI (`gh`), Bitbucket CLI (`bkt`), and Forgejo CLI (`fj`).
+- **Sentry:** `sentry` inspects issues, events, and traces. Run `sentry auth login`
+  once per machine; credentials stay local. Native update checks are disabled.
 
 ### Coding agents
 

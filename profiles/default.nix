@@ -27,6 +27,7 @@ let
     "openssh"
     "project-run"
     "ripgrep"
+    "sentry"
     "starship"
     "t3code"
     "tailscale"
