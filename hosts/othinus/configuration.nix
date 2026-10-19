@@ -140,28 +140,6 @@ in
             fi
           '';
         };
-        display-brightness-schedule = {
-          description = "Apply the daytime or nighttime screen brightness";
-          wantedBy = [ "multi-user.target" ];
-          after = [ "time-sync.target" ];
-          serviceConfig.Type = "oneshot";
-          # Check the current local time so missed runs cannot apply stale brightness.
-          script = ''
-            case "$(${pkgs.coreutils}/bin/date +%H)" in
-              23|0[0-9]) brightness=0 ;;
-              *) brightness=100% ;;
-            esac
-            ${pkgs.brightnessctl}/bin/brightnessctl --class=backlight --min-value=0 set "$brightness"
-          '';
-        };
-      };
-      timers.display-brightness-schedule = {
-        wantedBy = [ "timers.target" ];
-        timerConfig = {
-          OnCalendar = "*-*-* 10,23:00:00";
-          AccuracySec = "1s";
-          Persistent = true;
-        };
       };
     };
   };
