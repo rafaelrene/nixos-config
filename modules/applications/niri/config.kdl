@@ -171,8 +171,8 @@ binds {
     XF86AudioLowerVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.05-"; }
     XF86AudioMute allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
     XF86AudioMicMute allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
-    XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "100%"; }
-    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "--min-value=0" "set" "0"; }
+    XF86MonBrightnessUp allow-when-locked=true repeat=false { spawn-sh "systemctl --user stop display-dimming.service && brightnessctl --class=backlight set 100% && niri msg action power-on-monitors"; }
+    XF86MonBrightnessDown allow-when-locked=true repeat=false { spawn-sh "systemctl --user start display-dimming.service && niri msg action power-off-monitors"; }
 
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
     Mod+Shift+E { quit; }

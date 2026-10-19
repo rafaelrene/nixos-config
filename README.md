@@ -20,10 +20,13 @@ across supported applications.
 - **Othinus (NixOS):** Niri, DankMaterialShell, Vicinae, and screenshot annotation.
   The display uses 60 Hz without VRR on battery and 165 Hz with VRR on AC power.
   Battery idle timers lock after 10 minutes and suspend after 15; AC disables both.
-  Fn + F7 sets the screen backlight to zero; Fn + F8 restores full brightness.
-  A daily schedule sets zero at 23:00 and full brightness at 10:00, in local time;
-  boot and missed runs apply the brightness for the current time. Keys override
-  brightness until the next scheduled change or boot. The desktop stays running.
+  Fn + F7 sets minimum backlight, blackens the display color ramps, and sleeps
+  the panels; Fn + F8 restores full brightness. Agents and screen capture still
+  see the desktop while panels sleep. Input can wake the panels, but the black
+  color ramps remain until brightness is restored; awake LCDs retain a faint glow.
+  A daily schedule sleeps the panels at 23:00 and restores full brightness at
+  10:00, in local time; login and missed runs apply the current schedule. Keys
+  override it until the next scheduled change or login. The desktop stays running.
 - **Proserpina (macOS):** OmniWM with nine workspaces, Raycast, and Nix-managed
   native apps. Option + arrows navigates windows; Option + 1–9 switches workspaces;
   Option + Enter opens a fresh Ghostty window. Hold Caps for Hyper window actions;
