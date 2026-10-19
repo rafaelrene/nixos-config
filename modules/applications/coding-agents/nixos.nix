@@ -16,7 +16,10 @@ in
       home = config.users.users.${user}.home;
       group = config.users.users.${user}.group;
       inherit (features.coding-agents.themes { inherit lib pkgs; }) claudeTheme codexTheme opencodeTheme;
-      agentSource = "${config.workstation.checkout}/config/agents";
+      agentSource = features.sources.checkoutPath {
+        inherit (config.workstation) checkout;
+        source = features.coding-agents.source;
+      };
       inherit (features.coding-agents.links { inherit lib; })
         rules
         settings

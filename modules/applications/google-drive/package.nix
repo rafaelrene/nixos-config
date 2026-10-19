@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ config, lib, ... }:
 {
   options.features.google-drive.package = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -7,7 +7,7 @@
   config.features.google-drive.package =
     { pkgs }:
     let
-      sources = builtins.fromJSON (builtins.readFile ../../system/updates/vendor-sources.json);
+      sources = config.features.vendorSources;
     in
     pkgs.stdenvNoCC.mkDerivation {
       pname = "google-drive";

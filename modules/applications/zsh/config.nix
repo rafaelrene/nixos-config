@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ config, lib, ... }:
 {
   options.features.zsh.configuration = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -33,7 +33,7 @@
           rebuild
           (toString ./navigation.zsh)
           (toString ./git-nav.zsh)
-          (toString ../../shell/scripts/git-worktrees.zsh)
+          (toString config.features.shell.gitWorktreesSource)
         ]
         (builtins.readFile ./config.zsh)
     );

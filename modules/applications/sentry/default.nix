@@ -1,8 +1,6 @@
-{ config, ... }:
 let
-  inherit (config) features;
   common = { pkgs, ... }: {
-    environment.systemPackages = [ (features.sentry.package { inherit pkgs; }) ];
+    environment.systemPackages = [ (pkgs.callPackage ./_package.nix { }) ];
     environment.variables.SENTRY_CLI_NO_UPDATE_CHECK = "1";
   };
 in

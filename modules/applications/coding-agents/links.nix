@@ -1,5 +1,11 @@
-{ lib, ... }:
+{ config, lib, ... }:
 {
+  options.features.coding-agents.source = lib.mkOption {
+    type = lib.types.path;
+    default = ../../../config/agents;
+    description = "Shared editable agent instructions, settings, and skills.";
+  };
+
   options.features.coding-agents.links = lib.mkOption {
     type = lib.types.functionTo (lib.types.attrsOf lib.types.raw);
     description = "Declare shared agent rules, settings and skill links.";
@@ -15,8 +21,9 @@
       skillNames = lib.attrNames (
         lib.filterAttrs (
           name: type:
-          type == "directory" && builtins.pathExists (../../../config/agents/skills + "/${name}/SKILL.md")
-        ) (builtins.readDir ../../../config/agents/skills)
+          type == "directory"
+          && builtins.pathExists (config.features.coding-agents.source + "/skills/${name}/SKILL.md")
+        ) (builtins.readDir (config.features.coding-agents.source + "/skills"))
       );
       skillDirectories = [
         ".local/share/codex/skills"

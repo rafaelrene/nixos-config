@@ -1,6 +1,7 @@
 { inputs, config, ... }:
 {
   flake.modules.darwin.rustdesk = { lib, pkgs, ... }: {
+    # User preferences do not disable an updater already enabled in a root service.
     imports = [ (config.features.updates.darwinAppSettings "rustdesk") ];
     environment.systemPackages = [
       (inputs.brew-nix.packages.${pkgs.stdenv.hostPlatform.system}.rustdesk.overrideAttrs {

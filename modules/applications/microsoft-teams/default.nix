@@ -1,5 +1,6 @@
 { inputs, ... }:
 {
+  # Native updater disablement has not been verified for this application.
   flake.modules.darwin.microsoft-teams =
     { pkgs, ... }:
     let

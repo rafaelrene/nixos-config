@@ -1,51 +1,10 @@
 { config, lib, ... }:
-let
-  applications = [
-    "age"
-    "bat"
-    "bkt"
-    "btop"
-    "coding-agents"
-    "curl"
-    "delta"
-    "devenv"
-    "eza"
-    "fd"
-    "forgejo-cli"
-    "fzf"
-    "gh"
-    "ghostty"
-    "git"
-    "git-delete-branches"
-    "gnutar"
-    "helium"
-    "jq"
-    "lsof"
-    "mongodb-compass"
-    "mpv"
-    "neovim"
-    "openssh"
-    "project-run"
-    "ripgrep"
-    "sentry"
-    "starship"
-    "t3code"
-    "tailscale"
-    "tealdeer"
-    "unzip"
-    "webapps"
-    "wget"
-    "xz"
-    "yazi"
-    "yq-go"
-    "zip"
-    "zsh"
-    "zoxide"
-    "zen"
-  ];
-in
 {
   flake.modules = lib.genAttrs [ "nixos" "darwin" ] (platform: {
-    common-applications.imports = map (name: config.flake.modules.${platform}.${name}) applications;
+    desktop-workstation.imports = with (config.features.modulesFor platform); [
+      development
+      personal-applications
+      platform-desktop
+    ];
   });
 }

@@ -5,27 +5,37 @@ See [README.md](README.md) for the project introduction and overview of features
 
 ## Working principles
 
-- Follow dendritic nix pattern
-- Use flake-parts
+- Follow the dendritic Nix pattern with flake-parts and import-tree
+- Keep application modules individually selectable; compose them through ordinary,
+  nested bundles for shared and platform selections
+- Use `features.modulesFor` for named module imports so overlapping bundles include
+  each merged feature once
 - By default, any changes apply to all machines
 - Convenience of use is number one priority
 - Prioritize nix options, then application-native configuration and lastly,
-only fallback to scripts when needed
+  only fallback to scripts when needed
 - Keep differences between platforms or machines explicit, while keeping
-common parts reusable
+  common parts reusable
+- Preserve live editing of Git, Ghostty, Neovim, and agent configuration
 - Avoid scope creep, ask about unrelated changes
 
 ## Application updates
 
-- Disable built-in auto-updates by default for every app; document unsupported cases.
-- Keep scheduled Nix updates for coding agents and T3 Code; update other apps manually through Nix.
+- Disable built-in auto-updates by default for every app; document unsupported
+  cases in brief comments beside the affected configuration.
+- Keep scheduled Nix updates for coding agents and T3 Code; update other apps
+  manually through Nix.
 - Apps may update their plugins, extensions, tools, and content.
 
 ## Documentation
 
-- Keep repository overview in [README.md](README.md)
-- Keep overview in sync with code; Describe only current state
-- Keep every point brief; Utilize short descriptions and lists
+- Keep [README.md](README.md) limited to purpose, machines, major capabilities,
+  architecture, update ownership, and rebuild/update commands.
+- Describe only the current state and keep each point brief.
+- Keep implementation details, decision rationales, hotkey references, catalogues,
+  runbooks, and TODOs out of the README. Do not move removed material into new docs.
+- Put implementation constraints and unsupported updater cases in brief comments
+  beside the relevant source configuration.
 
 ## Boundaries
 
@@ -66,5 +76,5 @@ absolute path so I can copy paste it into terminal regardless of where I am:
 
 ```sh
 ns [absolute/path/to/nixos-config-worktree]
-nups [absolute/path/to/nixos-config-worktree] 
+nups [absolute/path/to/nixos-config-worktree]
 ```

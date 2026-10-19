@@ -1,4 +1,4 @@
-{ inputs, config, ... }:
+{ config, withSystem, ... }:
 let
   inherit (config) features;
   common =
@@ -43,13 +43,7 @@ let
       # Share the release across hosts while preserving upstream cache identity.
       nixpkgs.overlays = [
         (_final: prev: {
-          inherit
-            (import inputs.nixpkgs-unstable {
-              system = prev.stdenv.hostPlatform.system;
-              config.allowUnfree = true;
-            })
-            devenv
-            ;
+          devenv = withSystem prev.stdenv.hostPlatform.system ({ unstable, ... }: unstable.devenv);
         })
       ];
     };

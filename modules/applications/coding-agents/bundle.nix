@@ -1,6 +1,5 @@
 {
   config,
-  inputs,
   lib,
   ...
 }:
@@ -83,17 +82,12 @@
         package;
 
     perSystem =
-      { pkgs, system, ... }:
-      let
-        agentPkgs =
-          if system == "aarch64-darwin" then import inputs.nixpkgs-darwin { inherit system; } else pkgs;
-      in
+      { pkgs, ... }:
       {
         legacyPackages.llmAgentsForSource =
           source:
           config.features.coding-agents.bundle {
-            pkgs = agentPkgs;
-            inherit source;
+            inherit pkgs source;
             profile = source.profile or null;
           };
       };

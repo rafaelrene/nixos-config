@@ -1,267 +1,46 @@
 # Workstation configuration
 
-Personal workstation configuration for all of
-my machines (both NixOS and MacOS with nix-darwin).
-This repository manages the operating system settings,
-desktop, applications, development tools, and agent configuration, etc...
+Personal Nix configuration for operating systems, desktops, applications,
+development tools, and coding agents across two machines:
 
-## Philosophy
-
-- **Convenience comes first.** Keep workstation setup and changes in this
-  repository and apply them through a system rebuild.
+- **Othinus:** NixOS with Niri, DankMaterialShell, and Vicinae.
+- **Proserpina:** macOS with nix-darwin, OmniWM, and Raycast.
 
 ## Features
 
-### Desktop
+- Shared Catppuccin theme, Ghostty terminal, Zsh shell, and Neovim configuration.
+- Development environments with Devenv, Git tooling, and command-line utilities.
+- T3 Code, Codex, Claude Code, and OpenCode with shared instructions and skills.
+- Native desktop applications, web app launchers, and local dictation on macOS.
+- SSH key provisioning and Tailscale access; filesystem snapshots on Othinus.
 
-Both machines use scrolling, tiled windows and a shared Catppuccin palette
-across supported applications.
-
-- **Othinus (NixOS):** Niri, DankMaterialShell, Vicinae, and screenshot annotation.
-  The display uses 60 Hz without VRR on battery and 165 Hz with VRR on AC power.
-  Battery idle timers lock after 10 minutes and suspend after 15; AC disables both.
-  Fn + F7 sets minimum backlight, blackens the display color ramps, and sleeps
-  the panels; Fn + F8 restores full brightness. Agents and screen capture still
-  see the desktop while panels sleep. Input can wake the panels, but the black
-  color ramps remain until brightness is restored; awake LCDs retain a faint glow.
-  A daily schedule sleeps the panels at 23:00 and restores full brightness at
-  10:00, in local time; login and missed runs apply the current schedule. Keys
-  override it until the next scheduled change or login. The desktop stays running.
-- **Proserpina (macOS):** OmniWM with nine workspaces, Raycast, and Nix-managed
-  native apps. Option + arrows navigates windows; Option + 1–9 switches workspaces;
-  Option + Enter opens a fresh Ghostty window. Hold Caps for Hyper window actions;
-  tap it to toggle Caps Lock. Homebrew is not required.
-- **OmniWM settings:** Rebuilds install a writable copy of the declared settings.
-  Changes made in OmniWM last until the next rebuild.
-- **Hotkeys (macOS):** skhd runs from `/var/lib/skhd/skhd` with a stable signing
-  identity, preserving Accessibility permission across updates. Grant access once
-  after migrating from the Nix store path. Option + Q quits Helium to preserve its
-  session, including with the toolbar hidden; it closes the focused window in
-  other apps.
-- **Web apps:** Dedicated Helium launchers on Linux and Chromium launchers in
-  Raycast on macOS.
-- **Dictation (macOS):** TypeWhisper uses local Parakeet v3 for English and Slovak
-  and inserts the result at the cursor. Models download through the app.
-
-Numbered navigation uses keys 1–9. Columns count from the left in the current workspace.
-
-| Action | Othinus | Proserpina |
-| ------ | ------- | ---------- |
-| Switch workspace | Super + 1–9 | Option + 1–9 |
-| Focus column | Super + Alt + 1–9 | Control + Option + 1–9 |
-| Move column to workspace | Super + Control + 1–9 | Option + Shift + 1–9 |
-
-### Shell and development
-
-Zsh is the Nix-managed login shell on both machines. Ghostty and T3 Code terminals
-share its Vi editing, Starship prompt, environment, and aliases. In normal
-mode, press Space followed by a key to open a picker:
-
-| Keys        | Command               | Purpose                                      |
-| ----------- | --------------------- | -------------------------------------------- |
-| Space Space | `nav`                 | Jump to a project, config folder, or SSH host. |
-| Space g n   | `git nav`             | Navigate branches, worktrees, and submodules. |
-| Space g r   | `project-run`         | Find and run a `package.json` script.         |
-| Space g d   | `git delete-branches` | Pick branches and worktrees to delete.       |
-
-- **Branches:** `git nav` combines local and fetched remote branches, preferring
-  local checkouts. Remote names appear only to disambiguate branches. Selecting a
-  remote-only branch creates a tracking branch. Run `git fetch` to refresh the list.
-- **Prompt:** `$:<number>` shows saved Git stashes, including with a clean working tree.
-- **Project environments:** Devenv supplies project tools and language runtimes.
-  Its native zsh hook activates projects with `devenv.nix` and reloads changes.
-  Devenv's status bar is hidden; Starship shows the active environment.
-  T3 worktrees are trusted automatically; other checkouts require `devenv allow`.
-  T3 terminals disable Devenv's UI and auto-reload to preserve queued startup commands.
-  Activation opens a zsh subshell; leaving the project returns to the parent shell.
-  No `.envrc` is needed. Use `devenv revoke` to stop automatic activation.
-- **Editor:** Shared LazyVim configuration, theme, language tooling, Git
-  integration, and image previews. Project tools take precedence over Neovim's
-  bundled helper runtimes.
-- **Forge tools:** GitHub CLI (`gh`), Bitbucket CLI (`bkt`), and Forgejo CLI (`fj`).
-- **Sentry:** `sentry` inspects issues, events, and traces. Run `sentry auth login`
-  once per machine; credentials stay local. Native update checks are disabled.
-
-### Coding agents
-
-T3 Code, Codex, Claude Code, and OpenCode share instructions, skills, and themes.
-Agent launchers enter the project's Devenv environment when needed.
-
-- T3 Code keeps its nightly server and desktop on the same release.
-  Its terminals use the shared zsh configuration; the server uses the unpatched release.
-  On NixOS, preview browser libraries are scoped to the T3 service environment.
-- Codex and Claude Code follow stable publisher releases; OpenCode follows Numtide.
-- Updates stage every three hours and activate at 04:00, independently of system
-  rebuilds. Failed downloads or builds preserve the installed versions.
-- Agent updates apply to new sessions. Every T3 Code server start closes its
-  managed local clients and helpers, forcing survivors after five seconds.
-  Previously running clients reopen once the matching server is ready.
-  Restarts can interrupt work.
-- On macOS, T3 Code uses a signed app at `~/Applications/T3 Code.app`;
-  existing Dock pins migrate to that path and stay in their original position.
-  The server starts at login; the desktop opens manually with its built-in
-  updater disabled.
-- T3 Code retains its previous Nix release. Failed activation restores it;
-  interrupted activation recovers on the next `t3-activate` or managed launch.
-  `t3-rollback` restores the previous server and desktop together. The failed or
-  rolled-back generation stays blocked until a different generation is staged.
-- T3 rollback leaves databases and other user data untouched. It does not undo
-  database migrations; incompatible migrations require a separate data backup.
-
-### Remote access and snapshots
-
-- **SSH:** `ssh othinus` and `ssh proserpina` connect to the two machines.
-  A shared, passphrase-encrypted bundle provisions personal, work, and machine
-  keys during rebuilds. Plaintext keys stay outside the repository and Nix store.
-- **Private access:** Othinus exposes SSH and T3 Code over the LAN and Tailscale.
-  Proserpina's T3 Code server listens only on localhost.
-- **Tailscale (macOS):** Rebuilds stop Tailscale's VPN and GUI before replacing
-  its app, then reopen the managed bundle and restore an existing connection
-  after the VPN extension updates. Rebuilds assess the signed installer and VPN
-  extension before stopping the VPN; macOS validates the copy before it opens.
-  Competing app installations block the rebuild.
-- **Snapshots:** Othinus snapshots home hourly and replicates it to the data disk;
-  the data filesystem gets daily local snapshots.
-
-### Wallpapers
-
-On Othinus, DMS rotates the images in `~/Pictures/Wallpapers`. Its current local
-setting changes wallpaper every five minutes; rotation is controlled in DMS,
-not pinned by this repository. Wallpaper changes leave application themes intact.
-
-Nix includes one image per original from [wallpapers/](wallpapers/), accepting
-JPG, JPEG, PNG, and WebP. It prefers a `-2560x1440` variant matching the configured
-display, otherwise the original. Variants never appear as separate rotation
-entries. Akame uses the resized variant; the other six use their originals.
-
-| Wallpaper                      | Preview                                                                                                         |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| Stellar Blade: Eve, monochrome | <img src="wallpapers/stellar-blade-eve-monochrome-6l2yzw.jpg" width="180" alt="Stellar Blade: Eve, monochrome"> |
-| Stellar Blade: 2B              | <img src="wallpapers/stellar-blade-2b-vpod58.png" width="180" alt="Stellar Blade: 2B">                          |
-| NieR: Automata, dark           | <img src="wallpapers/nier-automata-dark-6o5qjl.jpg" width="180" alt="NieR: Automata, dark">                     |
-| NieR: Automata, 2B, A2 and 9S  | <img src="wallpapers/nier-automata-2b-a2-9s-gjlg2q.png" width="180" alt="NieR: Automata, 2B, A2 and 9S">        |
-| NieR: Automata, YoRHa          | <img src="wallpapers/nier-automata-yorha-285v3m.jpg" width="180" alt="NieR: Automata, YoRHa">                   |
-| Neverness to Everness: city    | <img src="wallpapers/neverness-to-everness-city-gwdvxq.jpg" width="180" alt="Neverness to Everness: city">      |
-| Akame                          | <img src="wallpapers/akame-95y5rk-2560x1440.png" width="180" alt="Akame">                                       |
-
-## Configuration and updates
+## Architecture
 
 The repository uses flake-parts and the dendritic pattern, without Home Manager.
-[Modules](modules/) own features, [profiles](profiles/) select shared applications,
-[hosts](hosts/) declare machine differences, and [themes](themes/) define the palette.
-Linux and macOS have separate Nixpkgs pins.
+Import-tree discovers the flake-parts modules.
 
-| Command | Action                                            |
-| ------- | ------------------------------------------------- |
+- [Application modules](modules/applications/) expose individually selectable apps.
+- [Profiles](profiles/) compose app modules and other bundles into shared and
+  platform selections.
+- [Hosts](hosts/) select bundles and declare hardware and machine-specific settings.
+- [Themes](themes/) provide the shared palette.
+
+Linux and macOS have separate Nixpkgs pins and explicit platform differences.
+Git, Ghostty, Neovim, and agent settings support live editing from the checkout.
+
+## Updates and rebuilds
+
+| Command | Action                                           |
+| ------- | ------------------------------------------------ |
 | `ns`    | Rebuild and switch to the configured system.      |
 | `nup`   | Refresh package sources and update rolling tools. |
 | `nups`  | Update, then rebuild and switch.                  |
 
-Pass a checkout path, such as `ns .`, to use a worktree. Without one, these commands
-use the configured main checkout. Development checks live in [AGENTS.md](AGENTS.md).
+Each command accepts a checkout path, such as `ns /path/to/nixos-config`.
+Without one, it uses the configured main checkout.
 
-- **Nix storage:** Daily system and user cleanup expires profile history older
-  than seven days while preserving each profile's current generation, including
-  staged and previous T3 releases. Project environments remain rooted until removed.
-  During builds, Nix collects unused packages below 10 GiB free, targeting 20 GiB.
+Coding agents and T3 Code receive scheduled Nix updates. Other applications update
+manually through Nix. Built-in application updaters are disabled where supported;
+apps manage their own plugins, extensions, tools, and content.
 
-Built-in application updates are disabled where verified controls exist. Coding
-agents and T3 Code retain their three-hour Nix update schedule; other applications
-update through `nup`. Plugins, extensions, tools, and content remain app-managed.
-
-- Shared application modules apply controls to both Othinus and Proserpina.
-  Codex, GitHub CLI, Compass, Zen, and T3 Code use shared policy or equivalent
-  platform controls. Tailscale uses Linux service flags and macOS preferences.
-  Ghostty has an updater only on macOS. Apps installed only on macOS keep their
-  controls there; they are not added to Othinus by this policy.
-- macOS sets `DISABLE_UPDATE_CHECK=1` during activation, at login, and in shells.
-  Squirrel disables its native updater when the app inherits this variable.
-  A login agent cannot order other login items; Proton Pass has its own Nix login
-  agent with the variable set directly. Disable Pass's built-in **Start at login**
-  and remove its macOS login item so it cannot start ahead of the Nix agent.
-  Other Squirrel apps, including Mailspring, must launch after the environment
-  agent. This does not disable every Electron app's own checks or downloads.
-- App modules configure Codex, GitHub CLI, Ghostty, MongoDB Compass, ONLYOFFICE,
-  Tailscale, Zen, and Zentty alongside the existing app-specific controls.
-- Rebuilds merge native preferences for Anytype, FreeTube, RustDesk, Standard
-  Notes, and initialized Yaak installations. If a preference needs changing,
-  close that app before rebuilding. Other settings are preserved. These writable
-  preferences can be changed in the app and are reapplied on the next rebuild.
-- Yaak's first launch remains uncovered until it creates its settings database;
-  disable its updater in Settings, close it, then rebuild. RustDesk's user
-  preferences do not cover a previously enabled updater in a root service.
-- Raycast's packaged updater binaries have execute permission removed, preserving
-  its vendor signature. Activation quits Raycast, stops existing updater services,
-  copies the Nix package, and makes the bundle root-owned before reopening it.
-  macOS can re-enable the services, but their executables cannot run and Raycast
-  cannot restore their permissions. Raycast v2 ignores `updaterEnabled` and can
-  still check and download updates. `nups` fetches Raycast v2's latest stable
-  release directly from Raycast and pins its version, download URL, and hash in
-  `vendor-sources.json`, independently of the Nixpkgs version. `ns` uses that pin.
-- Unresolved controls: Ente Auth, Ente Photos, Filen, Gifox, Helium, Microsoft
-  Teams, OrbStack, Proton Drive, Shottr, Signal, Telegram, Viber, and
-  WhatsApp. Proton Pass still checks release metadata. Helium's available toggle
-  also disables component updates, so it is left unchanged.
-
-For an already-running Proton Pass update helper, stop it **before quitting
-Proton Pass**:
-
-```sh
-sudo launchctl bootout system/me.proton.pass.electron.ShipIt
-```
-
-Then disable Proton Pass's **Start at login**, quit it, and run `ns .` from this
-checkout. The Nix login agent starts it with updates disabled. If the helper is
-absent, the stop command is unnecessary. Avoid macOS's **Reopen windows when
-logging back in** for Pass: session restoration can bypass the Nix login agent.
-Running apps must be restarted to receive environment changes.
-
-On macOS, Nix-managed commands run from real executables in
-`/var/lib/nix-darwin/bin`; rolling tools use fixed paths beside their profiles.
-Activation preserves vendor signatures and signs local builds with persistent
-certificates. Private signing keys stay outside the Nix store, under
-`/var/lib/nix-darwin/code-signing` or beside the user's rolling profiles.
-Grant access to the fixed installation once and remove obsolete store-path
-entries in System Settings. Subsequent switches retain the same executable paths
-and signing identities. Keep the signing state when restoring the machine.
-
-## TODO
-
-### Pending validation
-
-- On Othinus, unplug the charger, wait five seconds, then reconnect it. Confirm
-  the display stays usable, switches to 60 Hz with VRR off on battery, and
-  returns to 165 Hz with VRR on when charging.
-
-### Replace DankMaterialShell with our own Quickshell
-
-Status: incomplete. Priority: low. Handle after the other TODO items.
-
-Keep DMS until the custom shell covers every feature we want. Replace features
-incrementally, then remove DMS in one deliberate change.
-
-- [ ] Bar layout and per-monitor behavior
-- [ ] Dynamic Niri workspace indicator and controls
-- [ ] Clock, Slovak-style numeric dates, English month and weekday names
-- [ ] Calendar and event integration
-- [ ] System tray and status notifier items
-- [ ] Wi-Fi status, network selection, and VPN controls
-- [ ] Bluetooth status and device controls
-- [ ] Output volume, microphone, mixer, and device selection
-- [ ] Display brightness
-- [ ] Battery state, charging state, and power profiles
-- [ ] Notification daemon, popups, history, and notification center
-- [ ] Clipboard history
-- [ ] Vicinae launcher handoff and launcher state
-- [ ] Lock screen and authentication flow
-- [ ] Logout, suspend, reboot, and shutdown menu
-- [ ] Audio, brightness, media, and power on-screen displays
-- [ ] Idle timers, locking, display power, and suspend policy UI
-- [ ] CPU, memory, disk, network, temperature, and process monitoring
-- [ ] Media controls and player metadata
-- [ ] Weather widgets
-- [ ] Wallpaper and theme integration
-- [ ] Central settings UI
-- [ ] Screen recording and screen sharing indicators
-- [ ] Keyboard layout and input state
-- [ ] DND, night light, and other quick toggles
+Development checks are documented in [AGENTS.md](AGENTS.md).

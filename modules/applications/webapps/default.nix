@@ -1,5 +1,12 @@
+{ lib, ... }:
 {
-  flake.modules.darwin.webapps = { lib, pkgs, ... }: {
+  options.features.webapps.skill = lib.mkOption {
+    type = lib.types.path;
+    default = ./skills/create-web-app;
+    description = "Editable web app creation skill shared with coding agents.";
+  };
+
+  config.flake.modules.darwin.webapps = { lib, pkgs, ... }: {
     workstation.links =
       let
         apps = builtins.fromJSON (builtins.readFile ./darwin-apps.json);

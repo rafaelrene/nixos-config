@@ -1,4 +1,4 @@
-{ inputs, config, ... }:
+{ config, withSystem, ... }:
 let
   inherit (config) features;
 in
@@ -11,10 +11,7 @@ in
       ...
     }:
     let
-      unstable = import inputs.nixpkgs-unstable {
-        system = pkgs.stdenv.hostPlatform.system;
-        config.allowUnfree = true;
-      };
+      unstable = withSystem pkgs.stdenv.hostPlatform.system ({ unstable, ... }: unstable);
       package = unstable.discord.overrideAttrs (old: {
         # Keep Nixpkgs' staged modules outside Discord's signed resource seal.
         installPhase =

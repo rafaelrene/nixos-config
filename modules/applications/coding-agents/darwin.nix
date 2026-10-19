@@ -12,7 +12,10 @@ in
     }:
     let
       home = config.users.users.${config.workstation.user}.home;
-      source = "${config.workstation.checkout}/config/agents";
+      source = features.sources.checkoutPath {
+        inherit (config.workstation) checkout;
+        source = features.coding-agents.source;
+      };
       profile = "${home}/.local/state/nix/profiles/llm-agents";
       agents = features.coding-agents.packages {
         inherit pkgs profile;
@@ -25,7 +28,10 @@ in
       sharedLinks = features.coding-agents.links {
         inherit lib;
         skillSource = "${source}/skills";
-        extraSkills.create-web-app = "${config.workstation.checkout}/modules/applications/webapps/skills/create-web-app";
+        extraSkills.create-web-app = features.sources.checkoutPath {
+          inherit (config.workstation) checkout;
+          source = features.webapps.skill;
+        };
       };
       inherit (sharedLinks) skillLinks;
     in
