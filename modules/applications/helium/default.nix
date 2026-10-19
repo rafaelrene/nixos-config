@@ -6,6 +6,7 @@ let
   };
 in
 {
+  # The available update toggle also stops component updates, so it is left unchanged.
   flake.modules = {
     nixos.helium =
       { lib, pkgs, ... }:

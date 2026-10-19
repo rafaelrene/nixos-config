@@ -1,6 +1,7 @@
 { config, inputs, ... }:
 let
-  modules = config.flake.modules.darwin;
+  modules = config.features.modulesFor "darwin";
+  inherit (config.features.sources) checkoutPath;
 in
 {
   flake.darwinConfigurations.Proserpina = inputs.nix-darwin.lib.darwinSystem {
@@ -11,41 +12,7 @@ in
     {
       imports = [
         modules.workstation
-        modules.system
-        modules.fonts
-        modules.user-files
-        modules.updates
-        modules.common-applications
-        modules.anytype
-        modules.discord
-        modules.ente
-        modules.ente-auth
-        modules.filen
-        modules.freetube
-        modules.gifox
-        modules.google-drive
-        modules.mailspring
-        modules.microsoft-teams
-        modules.omniwm
-        modules.onlyoffice
-        modules.orbstack
-        modules.proton-drive
-        modules.proton-pass
-        modules.raycast
-        modules.rustdesk
-        modules.shottr
-        modules.signal
-        modules.skhd
-        modules.slack
-        modules.standard-notes
-        modules.telegram
-        modules.thaw
-        modules.typewhisper
-        modules.ungoogled-chromium
-        modules.viber
-        modules.whatsapp
-        modules.yaak
-        modules.zentty
+        modules.desktop-workstation
       ];
 
       nixpkgs.hostPlatform = "aarch64-darwin";
@@ -66,10 +33,14 @@ in
         user = "rafael";
         codeRoot = "/Users/rafael/code";
         checkout = "/Users/rafael/code/.personal/nixos-config";
-        links.".local/share/codex/config.toml" =
-          "${config.workstation.checkout}/hosts/proserpina/codex.toml";
-        links.".local/share/claude/settings.json" =
-          "${config.workstation.checkout}/hosts/proserpina/claude.json";
+        links.".local/share/codex/config.toml" = checkoutPath {
+          inherit (config.workstation) checkout;
+          source = ./codex.toml;
+        };
+        links.".local/share/claude/settings.json" = checkoutPath {
+          inherit (config.workstation) checkout;
+          source = ./claude.json;
+        };
       };
     };
 }

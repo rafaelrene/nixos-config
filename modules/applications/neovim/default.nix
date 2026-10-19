@@ -29,13 +29,20 @@ in
         # Mason downloads executables built for conventional Linux distributions.
         programs.nix-ld.enable = true;
         systemd.tmpfiles.rules = [
-          "L+ ${home}/.config/nvim - - - - ${config.workstation.checkout}/modules/applications/neovim/config"
+          "L+ ${home}/.config/nvim - - - - ${
+            features.sources.checkoutPath {
+              inherit (config.workstation) checkout;
+              source = ./config;
+            }
+          }"
         ];
       };
     darwin.neovim = { config, ... }: {
       imports = [ common ];
-      workstation.links.".config/nvim" =
-        "${config.workstation.checkout}/modules/applications/neovim/config";
+      workstation.links.".config/nvim" = features.sources.checkoutPath {
+        inherit (config.workstation) checkout;
+        source = ./config;
+      };
     };
   };
 }

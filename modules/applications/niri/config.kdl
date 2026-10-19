@@ -15,14 +15,6 @@ input {
 
 }
 
-output "eDP-1" {
-    // Omitting the refresh rate selects the highest 2560x1440 mode, 165 Hz on
-    // Othinus. The niri-battery-refresh-rate service selects 60 Hz on battery.
-    // The service enables VRR on AC and disables it on battery.
-    mode "@displayResolution@"
-    scale 1.5
-}
-
 layout {
     gaps 2
     center-focused-column "on-overflow"
@@ -171,8 +163,7 @@ binds {
     XF86AudioLowerVolume allow-when-locked=true { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "0.05-"; }
     XF86AudioMute allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
     XF86AudioMicMute allow-when-locked=true { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
-    XF86MonBrightnessUp allow-when-locked=true repeat=false { spawn-sh "systemctl --user stop display-dimming.service && brightnessctl --class=backlight set 100% && niri msg action power-on-monitors"; }
-    XF86MonBrightnessDown allow-when-locked=true repeat=false { spawn-sh "systemctl --user start display-dimming.service && niri msg action power-off-monitors"; }
+    @extraBinds@
 
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
     Mod+Shift+E { quit; }

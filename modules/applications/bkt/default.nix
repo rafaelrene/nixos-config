@@ -1,8 +1,6 @@
-{ config, ... }:
 let
-  inherit (config) features;
   common = { pkgs, ... }: {
-    environment.systemPackages = [ (features.bkt.package { inherit pkgs; }) ];
+    environment.systemPackages = [ (pkgs.callPackage ./_package.nix { }) ];
   };
 in
 {

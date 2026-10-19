@@ -1,5 +1,11 @@
 { config, lib, ... }:
 {
+  options.features.shell.gitWorktreesSource = lib.mkOption {
+    type = lib.types.path;
+    default = ./git-worktrees.zsh;
+    description = "Shared Git worktree helpers used by workstation commands and navigation.";
+  };
+
   options.features.shell.packages = lib.mkOption {
     type = lib.types.functionTo (lib.types.attrsOf lib.types.package);
     description = "Create the shared Git and project command packages.";

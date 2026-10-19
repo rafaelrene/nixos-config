@@ -69,13 +69,20 @@ in
         imports = [ common ];
         systemd.tmpfiles.rules = [
           "d ${home}/.config/ghostty 0700 ${user} ${group} - -"
-          "L+ ${home}/.config/ghostty/config - - - - ${config.workstation.checkout}/modules/applications/ghostty/config"
+          "L+ ${home}/.config/ghostty/config - - - - ${
+            features.sources.checkoutPath {
+              inherit (config.workstation) checkout;
+              source = ./config;
+            }
+          }"
         ];
       };
     darwin.ghostty = { config, ... }: {
       imports = [ common ];
-      workstation.links.".config/ghostty/config" =
-        "${config.workstation.checkout}/modules/applications/ghostty/darwin.config";
+      workstation.links.".config/ghostty/config" = features.sources.checkoutPath {
+        inherit (config.workstation) checkout;
+        source = ./darwin.config;
+      };
     };
   };
 }

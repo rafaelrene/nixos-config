@@ -1,4 +1,4 @@
-{ config, inputs, ... }:
+{ config, withSystem, ... }:
 let
   inherit (config) features;
 in
@@ -11,11 +11,8 @@ in
       ...
     }:
     let
-      unstable = import inputs.nixpkgs-unstable {
-        system = pkgs.stdenv.hostPlatform.system;
-        config.allowUnfree = true;
-      };
-      sources = builtins.fromJSON (builtins.readFile ../../system/updates/vendor-sources.json);
+      unstable = withSystem pkgs.stdenv.hostPlatform.system ({ unstable, ... }: unstable);
+      sources = features.vendorSources;
       # Reuse Nixpkgs' signed-bundle packaging with the upstream release from nup.
       package = unstable.omniwm.overrideAttrs {
         inherit (sources.omniwm) version;

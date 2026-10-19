@@ -30,7 +30,7 @@ for argument in "$@"; do
 done
 
 print -r -- "Updating Proserpina's Nix inputs..."
-nix flake update --flake "$checkout" flake-parts nixpkgs-darwin nixpkgs-unstable nix-darwin rust-overlay zen-browser helium-browser brew-nix brew-api
+nix flake update --flake "$checkout" flake-parts import-tree nixpkgs-darwin nixpkgs-unstable nix-darwin rust-overlay zen-browser helium-browser brew-nix brew-api
 print -r -- 'Updating pinned vendor downloads...'
 zsh -f "$vendor_updater" "$checkout"
 print -r -- 'Updating T3 Code server and desktop...'

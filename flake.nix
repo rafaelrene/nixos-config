@@ -6,6 +6,7 @@
       url = "github:hercules-ci/flake-parts";
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
+    import-tree.url = "github:denful/import-tree";
 
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
@@ -46,26 +47,12 @@
 
   outputs =
     inputs:
-    let
-      inherit (inputs.nixpkgs) lib;
-      featureFiles = lib.concatMap lib.filesystem.listFilesRecursive [
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } (
+      inputs.import-tree [
         ./modules
         ./hosts
         ./profiles
         ./themes
-      ];
-    in
-    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [
-        inputs.flake-parts.flakeModules.modules
       ]
-      ++ builtins.filter (
-        path: lib.hasSuffix ".nix" (toString path) && builtins.baseNameOf path != "flake.nix"
-      ) featureFiles;
-
-      systems = [
-        "x86_64-linux"
-        "aarch64-darwin"
-      ];
-    };
+    );
 }

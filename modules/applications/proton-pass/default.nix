@@ -1,20 +1,19 @@
-{ inputs, ... }:
+{ withSystem, ... }:
 {
   flake.modules.darwin.proton-pass =
     { pkgs, ... }:
     let
-      unstable = import inputs.nixpkgs-unstable {
-        system = pkgs.stdenv.hostPlatform.system;
-        config.allowUnfree = true;
-      };
+      unstable = withSystem pkgs.stdenv.hostPlatform.system ({ unstable, ... }: unstable);
     in
     {
       environment.systemPackages = [
         (unstable.proton-pass.overrideAttrs { dontFixup = true; })
       ];
 
-      # Disable Pass's own "Start at login" item. A separate environment agent
-      # cannot guarantee ordering with apps launched during login.
+      # Pass still checks release metadata. Disable its "Start at login", macOS
+      # login item and session restoration so this agent supplies its environment.
+      # Stop an existing helper before quitting Pass:
+      # sudo launchctl bootout system/me.proton.pass.electron.ShipIt
       launchd.user.agents.proton-pass = {
         environment.DISABLE_UPDATE_CHECK = "1";
         serviceConfig = {

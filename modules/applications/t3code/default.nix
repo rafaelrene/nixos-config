@@ -1,14 +1,12 @@
-{ config, inputs, ... }:
+{ config, ... }:
 let
   inherit (config) features;
 in
 {
   perSystem =
-    { pkgs, system, ... }:
+    { pkgs, ... }:
     let
-      t3pkgs =
-        if system == "aarch64-darwin" then import inputs.nixpkgs-darwin { inherit system; } else pkgs;
-      bundle = features.t3code.bundle { pkgs = t3pkgs; };
+      bundle = features.t3code.bundle { inherit pkgs; };
     in
     {
       packages.t3code-nightly = bundle.server;
@@ -17,8 +15,7 @@ in
       legacyPackages.t3codeForRelease =
         release:
         features.t3code.bundle {
-          pkgs = t3pkgs;
-          inherit release;
+          inherit pkgs release;
         };
     };
 }

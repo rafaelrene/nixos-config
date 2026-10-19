@@ -1,3 +1,7 @@
+{ config, ... }:
+let
+  inherit (config) features;
+in
 {
   flake.modules.nixos.openssh =
     {
@@ -11,7 +15,10 @@
       user = config.workstation.user;
       home = config.users.users.${user}.home;
       group = config.users.users.${user}.group;
-      source = "${config.workstation.checkout}/modules/applications/openssh";
+      source = features.sources.checkoutPath {
+        inherit (config.workstation) checkout;
+        source = ./.;
+      };
       installKeys = pkgs.writeShellApplication {
         name = "install-managed-ssh-keys";
         runtimeInputs = [ pkgs.util-linux ];

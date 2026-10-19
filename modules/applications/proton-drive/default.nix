@@ -6,6 +6,7 @@
         dontFixup = true;
       })
     ];
+    # These Sparkle controls are declared but have not been verified in Proton Drive.
     system.defaults.CustomUserPreferences."ch.protonmail.drive" = {
       SUEnableAutomaticChecks = false;
       SUAutomaticallyUpdate = false;

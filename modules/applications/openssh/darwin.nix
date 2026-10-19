@@ -23,7 +23,10 @@ in
         runtimes.python3
         "${./ssh-keys.py}"
         "--repo"
-        "${config.workstation.checkout}/modules/applications/openssh"
+        (features.sources.checkoutPath {
+          inherit (config.workstation) checkout;
+          source = ./.;
+        })
         "--home"
         home
         "--source"

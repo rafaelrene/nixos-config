@@ -1,6 +1,6 @@
 { config, inputs, ... }:
 let
-  modules = config.flake.modules.nixos;
+  modules = config.features.modulesFor "nixos";
 in
 {
   flake.nixosConfigurations.othinus = inputs.nixpkgs.lib.nixosSystem {
@@ -10,30 +10,8 @@ in
     imports = [
       modules.othinus-hardware
       modules.workstation
-      modules.system
-      modules.fonts
-      modules.updates
-      modules.common-applications
-      modules.desktop
-      modules.desktop-theme
-      modules.niri
-      modules.dms
+      modules.desktop-workstation
       modules.snapshots
-      modules.brightnessctl
-      modules.ffmpegthumbnailer
-      modules.ark
-      modules.dolphin
-      modules.gwenview
-      modules.kdegraphics-thumbnailers
-      modules.kio-extras
-      modules.okular
-      modules.p7zip
-      modules.pciutils
-      modules.satty
-      modules.usbutils
-      modules.vicinae
-      modules.wl-clipboard
-      modules.xwayland-satellite
     ];
     nixpkgs.hostPlatform = "x86_64-linux";
     workstation = {

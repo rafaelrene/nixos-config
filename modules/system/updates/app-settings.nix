@@ -5,6 +5,8 @@
     description = "Merge native updater preferences while the application is closed.";
   };
 
+  # Close the app before rebuilding if its managed preference changes. Settings
+  # remain writable and are reapplied on each rebuild.
   config.features.updates.darwinAppSettings =
     app:
     {

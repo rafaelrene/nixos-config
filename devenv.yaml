@@ -1,4 +1,6 @@
 inputs:
+  import-tree:
+    url: github:denful/import-tree
   flake-parts:
     url: github:hercules-ci/flake-parts
     inputs:

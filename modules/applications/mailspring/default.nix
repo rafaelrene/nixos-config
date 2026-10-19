@@ -1,14 +1,13 @@
-{ inputs, ... }:
+{ withSystem, ... }:
 {
   flake.modules.darwin.mailspring =
     { pkgs, ... }:
     let
-      unstable = import inputs.nixpkgs-unstable {
-        system = pkgs.stdenv.hostPlatform.system;
-        config.allowUnfree = true;
-      };
+      unstable = withSystem pkgs.stdenv.hostPlatform.system ({ unstable, ... }: unstable);
     in
     {
+      # Launch after the environment agent so Squirrel inherits DISABLE_UPDATE_CHECK.
+      # Electron's other update checks may remain enabled.
       environment.systemPackages = [ unstable.mailspring ];
     };
 }
