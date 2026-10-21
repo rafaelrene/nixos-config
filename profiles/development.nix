@@ -3,6 +3,7 @@
   flake.modules = lib.genAttrs [ "nixos" "darwin" ] (platform: {
     development.imports =
       (with (config.features.modulesFor platform); [
+        acli
         shell
         coding-agents
         devenv
