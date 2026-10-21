@@ -9,6 +9,7 @@
         devenv
         forgejo-cli
         gh
+        linear-cli
         mongodb-compass
         sentry
         t3code
