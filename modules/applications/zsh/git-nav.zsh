@@ -34,18 +34,15 @@ git_nav() {
 	entries=$(command jq -cn --arg root "$root" --arg main "$main" --arg parent "$parent" \
 		--argjson trees "$trees" --argjson locals "$local_refs" \
 		--argjson remotes "$remote_refs" --argjson submodules "$submodules" '
-		($remotes | map(select(.symbolic == "") | select(.branch as $b | $locals | all(.name != $b)) |
-			select(.ref as $r | $locals | all(.upstream != $r)))) as $untracked |
 		[{kind: "create", name: "+ Create worktree…", path: $main}] +
 		($locals | map(. as $branch | ($trees | map(select(.branch == $branch.name))) as $owners |
 			{kind: (if ($owners | length) > 0 then "worktree" else "branch" end),
 			name: .name, branch: .name, ref: "", path: ($owners[0].path // $main)})) +
-		($untracked | map(. as $remote |
-			{kind: "branch", name: (if ($untracked | map(select(.branch == $remote.branch)) | length) > 1
-				then (.ref | ltrimstr("refs/remotes/")) else .branch end),
+		($remotes | map(select(.symbolic == "") |
+			{kind: "remote", name: (.ref | ltrimstr("refs/remotes/")),
 			branch: .branch, ref: .ref, path: $main})) +
 		($trees | map(select(.branch == "") |
-			{kind: "detached", name: ((.path | split("/") | last) + " @ " + .head[0:8]), path: .path})) +
+			{kind: "detached", name: ((.path | split("/") | last) + " @ " + .head[0:8]), ref: .head, path: .path})) +
 		($submodules | map({kind: "submodule", name: ., path: ($root + "/" + .)})) +
 		(if $parent == "" then [] else [{kind: "parent", name: ($parent | split("/") | last), path: $parent}] end)
 	') || return
@@ -60,8 +57,8 @@ git_nav() {
 	local -a selected
 	selection=$(print -rn -- "$rows" | command fzf --read0 --print0 --delimiter $'\t' \
 		--with-nth 2.. --nth 1,2 --layout reverse --wrap --tiebreak begin,index \
-		--no-multi --no-select-1 --no-exit-0 --expect ctrl-t --prompt 'Repository > ' \
-		--header "${root:t} · $head"$'\n'"Enter: $(if $new_window; then print 'new window'; else print go; fi)   Ctrl+T: new window   Esc: cancel")
+		--no-multi --no-select-1 --no-exit-0 --expect ctrl-t,ctrl-w --prompt 'Repository > ' \
+		--header "${root:t} · $head"$'\n'"Enter: $(if $new_window; then print 'new window'; else print go; fi)   Ctrl+T: new window   Ctrl+W: create worktree from branch   Esc: cancel")
 	result=$?
 	(( result == 1 || result == 130 )) && return 0
 	(( result == 0 )) || return $result
@@ -73,16 +70,26 @@ git_nav() {
 	kind=$(command jq -r .kind <<< "$destination") || return
 	target=$(command jq -jr '.path + "\u0000"' <<< "$destination") || return
 	target=${target%$'\0'}
+	if [[ $key == ctrl-w ]]; then
+		case $kind in
+			create|branch|worktree|remote|detached) kind=create ;;
+			*) print -u2 -- 'Select a branch or worktree to create a worktree from.'; return 1 ;;
+		esac
+	fi
 	case $kind in
 		create)
 			local starting_commit directory name checked_name
-			starting_commit=$(command jq -r .head <<< "$current") || return
+			starting_commit=$(command jq -r --argjson current "$current" '
+				if .kind == "create" then $current.head
+				elif .kind == "branch" or .kind == "worktree" then "refs/heads/" + .branch
+				else .ref end
+			' <<< "$destination") || return
 			if [[ $starting_commit == 0## ]]; then
 				print -u2 -- 'Commit before creating a worktree with git nav.'
 				return 1
 			fi
 			directory="${T3CODE_HOME:-$HOME/.local/share/t3code}/worktrees/${main:t}"
-			print -- "New worktree in $directory"
+			print -- "New worktree in $directory from $starting_commit"
 			read -r 'name?Worktree / branch name (empty cancels): ' || return 0
 			name=${name##[[:space:]]#}
 			name=${name%%[[:space:]]#}
@@ -97,11 +104,28 @@ git_nav() {
 				print -u2 -- "Worktree path already exists: $target"
 				return 1
 			fi
-			git_output "$main" worktree add -b "$name" "$target" "$starting_commit" || return
+			if [[ $(command jq -r .kind <<< "$destination") == remote ]]; then
+				git_output "$main" worktree add --track -b "$name" "$target" "$starting_commit" || return
+			else
+				git_output "$main" worktree add -b "$name" "$target" "$starting_commit" || return
+			fi
 			;;
-		branch|worktree)
+		branch|worktree|remote)
 			branch=$(command jq -r .branch <<< "$destination") || return
 			remote=$(command jq -r .ref <<< "$destination") || return
+			if [[ $kind == remote ]]; then
+				local tracked_branch
+				tracked_branch=$(command jq -r --arg ref "$remote" --arg branch "$branch" '
+					map(select(.upstream == $ref)) | sort_by(.name != $branch) | .[0].name // ""
+				' <<< "$local_refs") || return
+				if [[ -n $tracked_branch ]]; then
+					branch=$tracked_branch
+					remote=''
+				elif git_output "$main" show-ref --verify --quiet "refs/heads/$branch"; then
+					print -u2 -- "Local branch $branch does not track $remote. Use Ctrl+W to create a worktree with a new branch name."
+					return 1
+				fi
+			fi
 			owners=$(git_worktrees "$root" | command jq -sjr --arg branch "$branch" '(map(select(.branch == $branch))[0].path // "") + "\u0000"') || return
 			owners=${owners%$'\0'}
 			if [[ -n $owners ]]; then
