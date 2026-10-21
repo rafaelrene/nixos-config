@@ -2,6 +2,16 @@
 set -eu
 set -o pipefail
 
+print_command=false
+if [[ ${1-} == --print-command ]]; then
+  print_command=true
+  shift
+fi
+if (( $# )); then
+  print -u2 -- 'Usage: project-run [--print-command]'
+  exit 2
+fi
+
 fail() {
   print -u2 -- "$1"
   return 1
@@ -118,6 +128,15 @@ for (( ancestor = package_index; ancestor <= ${#directories}; ancestor++ )); do
 done
 
 command -v "$manager" >/dev/null 2>&1 || fail "$manager is not on PATH. Enter this project's development environment first."
+if $print_command; then
+  # Quote data as Zsh words; the caller submits this line to its own shell.
+  selected_command="command $manager run ${(q)name}"
+  if [[ $directory != $PWD:A ]]; then
+    selected_command="(builtin cd -- ${(q)directory} && $selected_command)"
+  fi
+  print -r -- "$selected_command"
+  exit 0
+fi
 print -- "$directory> $manager run $(jq -Rn --arg name "$name" '$name')"
 command rm -f -- "$input_file" "$selection_file"
 input_file=''
