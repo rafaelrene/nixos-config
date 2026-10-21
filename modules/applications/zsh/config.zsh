@@ -11,6 +11,26 @@ source @navigation@
 
 nav() { workstation_nav @code-root@; }
 
+project-run() {
+	local selected
+	if (( $# )); then
+		command project-run "$@"
+		return $?
+	fi
+	selected=$(command project-run --print-command) || return
+	[[ -n $selected ]] || return 0
+	if zle; then
+		# Submit a real command, restoring pending text at the next prompt.
+		zle .push-line
+		BUFFER=$selected
+		zle .accept-line
+	else
+		# Typed invocations also record the resolved command in this shell.
+		print -s -- "$selected"
+		eval "$selected"
+	fi
+}
+
 # Dispatch the shell-only command while retaining Git's external subcommands.
 git() {
 	if [[ ${1-} == nav ]]; then
@@ -59,7 +79,11 @@ workstation_leader_widget() {
 			read -rk1 key || return
 			case $key in
 				n) action=(git_nav) ;;
-				r) action=(command project-run) ;;
+				r)
+					zle -I
+					project-run </dev/tty
+					return $?
+					;;
 				d) action=(command git-delete-branches) ;;
 			esac
 			;;
