@@ -2,7 +2,8 @@ set -euo pipefail
 
 default_checkout=$1
 vendor_updater=$2
-shift 2
+node_updater=$3
+shift 3
 checkout=$default_checkout
 stage_t3=false
 checkout_supplied=false
@@ -31,6 +32,8 @@ done
 
 print -r -- "Updating Proserpina's Nix inputs..."
 nix flake update --flake "$checkout" flake-parts import-tree nixpkgs-darwin nixpkgs-unstable nix-darwin rust-overlay zen-browser helium-browser brew-nix brew-api
+print -r -- 'Updating Node.js...'
+zsh -f "$node_updater" "$checkout"
 print -r -- 'Updating pinned vendor downloads...'
 zsh -f "$vendor_updater" "$checkout"
 print -r -- 'Updating T3 Code server and desktop...'

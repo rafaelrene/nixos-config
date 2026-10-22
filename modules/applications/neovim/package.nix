@@ -1,4 +1,9 @@
-{ inputs, lib, ... }:
+{
+  config,
+  inputs,
+  lib,
+  ...
+}:
 {
   options.features.neovim.package = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -24,7 +29,7 @@
           pkgs.gcc
           pkgs.go
           pkgs.lazygit
-          pkgs.nodejs_24
+          (config.features.nodejs.package { inherit pkgs; })
           pkgs.python3
           pkgs.tree-sitter
           pkgs.viu

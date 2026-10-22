@@ -45,7 +45,7 @@ in
             libarchive
           ];
           text = ''
-            exec ${runtimes.zsh} -f ${./updates.zsh} ${lib.escapeShellArg config.workstation.checkout} ${./update-vendor-sources.zsh} "$@"
+            exec ${runtimes.zsh} -f ${./updates.zsh} ${lib.escapeShellArg config.workstation.checkout} ${./update-vendor-sources.zsh} ${./update-nodejs.sh} "$@"
           '';
         })
       ];

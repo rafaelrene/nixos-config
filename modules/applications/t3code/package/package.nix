@@ -15,7 +15,7 @@ in
       installShellFiles,
       lib,
       makeWrapper,
-      nodejs_24,
+      nodejs,
       stdenv,
       stdenvNoCC,
       versionCheckHook,
@@ -53,7 +53,7 @@ in
           chmod +x "$out/libexec/t3code/node_modules/node-pty/prebuilds/darwin-arm64/spawn-helper"
         ''}
         makeWrapper "$out/libexec/t3code/t3" "$out/bin/t3" \
-          --suffix PATH : ${lib.makeBinPath [ nodejs_24 ]}
+          --suffix PATH : ${lib.makeBinPath [ nodejs ]}
         runHook postInstall
       '';
       preInstallCheck = ''
