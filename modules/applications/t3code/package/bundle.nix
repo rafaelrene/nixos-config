@@ -20,6 +20,7 @@ in
     }:
     let
       server = pkgs.callPackage t3code.serverPackage {
+        nodejs = config.features.nodejs.package { inherit pkgs; };
         inherit (release) version;
         hash = release.serverHash;
       };

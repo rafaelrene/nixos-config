@@ -16,7 +16,7 @@ in
         bash = "${pkgs.bashInteractive}/bin/bash";
         zsh = lib.getExe pkgs.zsh;
         python3 = lib.getExe pkgs.python3;
-        node = lib.getExe pkgs.nodejs_24;
+        node = lib.getExe (features.nodejs.package { inherit pkgs; });
       };
       sources = pkgs.writeText "darwin-executable-sources.json" (
         builtins.toJSON {
