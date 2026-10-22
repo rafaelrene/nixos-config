@@ -56,7 +56,7 @@ viber_store=$(jq -er '.storePath | select(type == "string" and length > 0)' <<<"
 google_hash=$(jq -er '.hash | select(type == "string" and length > 0)' <<<"$google")
 viber_hash=$(jq -er '.hash | select(type == "string" and length > 0)' <<<"$viber")
 
-checked 7zz e -so "$google_store" 'Install Google Drive/GoogleDrive.pkg' >"$workspace/GoogleDrive.pkg"
+checked /bin/bash "$1/modules/applications/google-drive/extract-installer.sh" "$google_store" "$workspace/GoogleDrive.pkg"
 checked 7zz e -so "$workspace/GoogleDrive.pkg" GoogleDrive_arm64.pkg/PackageInfo >"$workspace/PackageInfo"
 google_version=$(checked xmllint --nonet --xpath 'string((/pkg-info/bundle)[1]/@CFBundleVersion)' "$workspace/PackageInfo")
 checked unzip -p "$viber_store" Viber.app.tar >"$workspace/Viber.app.tar"

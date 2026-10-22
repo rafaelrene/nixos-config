@@ -17,13 +17,12 @@
         name = "google-drive.dmg";
       };
       nativeBuildInputs = with pkgs; [
-        undmg
         xar
         pbzx
         cpio
       ];
       unpackPhase = ''
-        undmg "$src"
+        bash ${./extract-installer.sh} "$src" GoogleDrive.pkg
         xar -xf GoogleDrive.pkg
         mkdir payload
         cd payload
