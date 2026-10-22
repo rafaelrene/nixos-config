@@ -1,11 +1,11 @@
 {
-  "version": "0.0.46-nightly.20261005.2676",
+  "version": "0.1.2-nightly.20261022.3512",
   "x86_64-linux": {
-    "serverHash": "sha256-MRRhiU4/F1l78Y5NpQ2MhDyKMocUXjEFjSLDHBHfgMY=",
-    "desktopHash": "sha256-K6eYKrnagw5kN2pKB49H6q5UPMMXIPKhK2xVIVqynas="
+    "desktopHash": "sha256-zdpAe/G9/wj23l2Tn0UeqDuLuSczK2af4AzaixW37qM=",
+    "serverHash": "sha256-F7LiLz0UdHiz+VE3QLuJnz+gKP0yW/yaqgQAdAfaG0k="
   },
   "aarch64-darwin": {
-    "serverHash": "sha256-ndQ5H7YcL2YWbj2KAB7oPIf9smpUThlDFedUHBuhOz8=",
-    "desktopHash": "sha256-kceuW70kVWsMS321BAQ8pb/GEEL9jmRcSv+HnQDsyf8="
+    "desktopHash": "sha256-lAeIsCLl567YvkA0qSqBZbEgALJEGJOChCIzAxHixeE=",
+    "serverHash": "sha256-KS+zvUH2LLAM/YRxgiVykRDTlVii9qTV3M1m8T+SCfI="
   }
 }

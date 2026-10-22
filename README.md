@@ -43,4 +43,9 @@ Coding agents and T3 Code receive scheduled Nix updates. Other applications upda
 manually through Nix. Built-in application updaters are disabled where supported;
 apps manage their own plugins, extensions, tools, and content.
 
+`nups` updates Nix-managed CA certificates along with applications and runtimes.
+Applications with embedded trust stores receive fixes through their releases.
+Restart running applications after updating. macOS updates and environments
+managed separately by projects, mise, or uv remain separate update responsibilities.
+
 Development checks are documented in [AGENTS.md](AGENTS.md).
