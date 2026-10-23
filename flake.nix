@@ -8,6 +8,11 @@
     };
     import-tree.url = "github:denful/import-tree";
 
+    anthropic-skills = {
+      url = "github:anthropics/skills/main";
+      flake = false;
+    };
+
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     nixpkgs-darwin.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";

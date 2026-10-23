@@ -28,10 +28,6 @@ in
       sharedLinks = features.coding-agents.links {
         inherit lib;
         skillSource = "${source}/skills";
-        extraSkills.create-web-app = features.sources.checkoutPath {
-          inherit (config.workstation) checkout;
-          source = features.webapps.skill;
-        };
       };
       inherit (sharedLinks) skillLinks;
     in

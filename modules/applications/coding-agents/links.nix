@@ -15,7 +15,6 @@
     {
       lib,
       skillSource ? "skills",
-      extraSkills ? { },
     }:
     let
       skillNames = lib.attrNames (
@@ -30,7 +29,7 @@
         ".local/share/claude/skills"
         ".config/opencode/skills"
       ];
-      skills = lib.genAttrs skillNames (name: "${skillSource}/${name}") // extraSkills;
+      skills = lib.genAttrs skillNames (name: "${skillSource}/${name}");
     in
     {
       inherit skillDirectories;
