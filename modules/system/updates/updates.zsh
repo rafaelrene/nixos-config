@@ -3,7 +3,8 @@ set -euo pipefail
 default_checkout=$1
 vendor_updater=$2
 node_updater=$3
-shift 3
+skill_updater=$4
+shift 4
 checkout=$default_checkout
 stage_t3=false
 checkout_supplied=false
@@ -31,7 +32,9 @@ for argument in "$@"; do
 done
 
 print -r -- "Updating Proserpina's Nix inputs..."
-nix flake update --flake "$checkout" flake-parts import-tree nixpkgs-darwin nixpkgs-unstable nix-darwin rust-overlay zen-browser helium-browser brew-nix brew-api
+nix flake update --flake "$checkout" flake-parts import-tree nixpkgs-darwin nixpkgs-unstable nix-darwin rust-overlay zen-browser helium-browser brew-nix brew-api anthropic-skills
+print -r -- 'Updating the frontend-design skill...'
+zsh -f "$skill_updater" "$checkout"
 print -r -- 'Updating Node.js...'
 zsh -f "$node_updater" "$checkout"
 print -r -- 'Updating pinned vendor downloads...'

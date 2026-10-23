@@ -40,7 +40,8 @@ Each command accepts a checkout path, such as `ns /path/to/nixos-config`.
 Without one, it uses the configured main checkout.
 
 Coding agents and T3 Code receive scheduled Nix updates. Other applications update
-manually through Nix. Built-in application updaters are disabled where supported;
+manually through Nix. The frontend-design skill syncs from Anthropic with `nup`
+and `nups`. Built-in application updaters are disabled where supported;
 apps manage their own plugins, extensions, tools, and content.
 
 `nups` updates Nix-managed CA certificates along with applications and runtimes.

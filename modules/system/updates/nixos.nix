@@ -14,6 +14,7 @@
         text = ''
           checkout="''${1:-${config.workstation.checkout}}"
           nix flake update --flake "path:$checkout"
+          bash ${./update-frontend-design.sh} "$checkout"
           bash ${./update-nodejs.sh} "$checkout"
           if test "''${2-}" = --stage-t3; then
             /run/current-system/sw/bin/update-t3code
