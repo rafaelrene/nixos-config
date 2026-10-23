@@ -44,7 +44,6 @@ in
         shells = [ runtimes.zsh ];
         systemPath = lib.mkBefore [
           "$HOME/.local/bin"
-          "$HOME/.orbstack/bin"
         ];
         variables = {
           SHELL = runtimes.zsh;

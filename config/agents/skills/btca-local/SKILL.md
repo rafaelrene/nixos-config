@@ -33,6 +33,8 @@ BTCA Local, aka "The Better Context App Local" is a simple app defined as a skil
     </step>
     <step name="load">
         if the repo(s) are already in the work dir ~/.local/share/btca-sandbox update them, otherwise clone them. clone the main branch by default, unless the user asks for something else
+        Before updating an existing clone, run `touch <repo>/.git/btca-last-used`. Touch this marker again after cloning and after finishing research in that repository.
+        Daily `btca-clean` removes clean clones unused for at least 24 hours. Clones with local changes or commits absent from remote branches are kept.
     </step>
     <step name="search">
         search the repo for the information you need. make sure to follow the guidelines

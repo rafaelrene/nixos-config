@@ -4,6 +4,7 @@
     development.imports =
       (with (config.features.modulesFor platform); [
         acli
+        btca
         shell
         coding-agents
         devenv
@@ -17,7 +18,6 @@
       ++ lib.optionals (platform == "darwin") (
         with (config.features.modulesFor "darwin");
         [
-          orbstack
           yaak
         ]
       );
