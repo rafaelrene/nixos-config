@@ -23,7 +23,6 @@ in
       inherit (features.coding-agents.themes { inherit lib pkgs; })
         claudeTheme
         codexTheme
-        opencodeTheme
         ;
       sharedLinks = features.coding-agents.links {
         inherit lib;
@@ -61,7 +60,6 @@ in
             ".local/share/codex/themes/workstation.tmTheme" = toString codexTheme;
             ".local/share/claude/settings.json" = lib.mkDefault "${source}/claude/settings.json";
             ".local/share/claude/themes/workstation.json" = toString claudeTheme;
-            ".config/opencode/themes/workstation.json" = toString opencodeTheme;
           };
 
       };

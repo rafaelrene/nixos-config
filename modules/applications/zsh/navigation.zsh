@@ -16,7 +16,7 @@ workstation_nav() {
 		markers=("${(@0)$(command fd --hidden --no-ignore --prune --type d --type f --glob .git \
 			--absolute-path --print0 --exclude node_modules --exclude vendor --exclude target \
 			--exclude dist --exclude build --exclude .devenv \
-			--exclude .cache --exclude .opencode "$code_root")}") || return
+			--exclude .cache "$code_root")}") || return
 		for marker in "${markers[@]}"; do
 			[[ -n $marker ]] && repositories+=("${marker:h}")
 		done

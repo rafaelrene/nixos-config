@@ -38,7 +38,6 @@ in
           [
             "claude"
             "codex"
-            "opencode"
           ];
     };
 }

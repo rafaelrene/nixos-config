@@ -10,7 +10,7 @@ development tools, and coding agents across two machines:
 
 - Shared Catppuccin theme, Ghostty terminal, Zsh shell, and Neovim configuration.
 - Development environments with Devenv, Git tooling, and command-line utilities.
-- T3 Code, Codex, Claude Code, and OpenCode with shared instructions and skills.
+- T3 Code, Codex, and Claude Code with shared instructions and skills.
 - Native desktop applications, web app launchers, and local dictation on macOS.
 - SSH key provisioning and Tailscale access; filesystem snapshots on Othinus.
 

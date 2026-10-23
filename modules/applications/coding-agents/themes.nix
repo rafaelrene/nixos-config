@@ -5,7 +5,7 @@ in
 {
   options.features.coding-agents.themes = lib.mkOption {
     type = lib.types.functionTo (lib.types.attrsOf lib.types.package);
-    description = "Generate the Claude, Codex and OpenCode themes.";
+    description = "Generate the Claude and Codex themes.";
   };
 
   config.features.coding-agents.themes =
@@ -96,65 +96,8 @@ in
               "markup.underline.link" = colors.blue;
             };
       };
-      opencodeTheme = pkgs.writeText "opencode-workstation.json" (
-        builtins.toJSON {
-          "$schema" = "https://opencode.ai/theme.json";
-          theme = {
-            primary = "#${theme.accentColor}";
-            secondary = colors.lavender;
-            accent = "#${theme.accentColor}";
-            error = colors.red;
-            warning = colors.yellow;
-            success = colors.green;
-            info = colors.teal;
-            inherit (colors) text;
-            textMuted = colors.overlay2;
-            background = colors.base;
-            backgroundPanel = colors.mantle;
-            backgroundElement = colors.crust;
-            border = colors.surface0;
-            borderActive = "#${theme.accentColor}";
-            borderSubtle = colors.surface2;
-            diffAdded = colors.green;
-            diffRemoved = colors.red;
-            diffContext = colors.overlay2;
-            diffHunkHeader = colors.peach;
-            diffHighlightAdded = colors.green;
-            diffHighlightRemoved = colors.red;
-            diffAddedBg = "#${theme.diff.added}";
-            diffRemovedBg = "#${theme.diff.removed}";
-            diffContextBg = colors.mantle;
-            diffLineNumber = colors.overlay2;
-            diffAddedLineNumberBg = colors.mantle;
-            diffRemovedLineNumberBg = colors.mantle;
-            markdownText = colors.text;
-            markdownHeading = "#${theme.accentColor}";
-            markdownLink = colors.blue;
-            markdownLinkText = colors.sky;
-            markdownCode = colors.green;
-            markdownBlockQuote = colors.yellow;
-            markdownEmph = colors.yellow;
-            markdownStrong = colors.peach;
-            markdownHorizontalRule = colors.subtext0;
-            markdownListItem = colors.blue;
-            markdownListEnumeration = colors.sky;
-            markdownImage = colors.blue;
-            markdownImageText = colors.sky;
-            markdownCodeBlock = colors.text;
-            syntaxComment = colors.overlay2;
-            syntaxKeyword = colors.mauve;
-            syntaxFunction = colors.blue;
-            syntaxVariable = colors.red;
-            syntaxString = colors.green;
-            syntaxNumber = colors.peach;
-            syntaxType = colors.yellow;
-            syntaxOperator = colors.sky;
-            syntaxPunctuation = colors.text;
-          };
-        }
-      );
     in
     {
-      inherit claudeTheme codexTheme opencodeTheme;
+      inherit claudeTheme codexTheme;
     };
 }

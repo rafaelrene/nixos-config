@@ -128,7 +128,7 @@ releases=$(jq -cn --arg codex "$codex_version" --arg cd "$codex_darwin" --arg cl
   --arg claude "$claude_version" --arg ad "$claude_darwin" --arg al "$claude_linux" \
   '{codex: {version: $codex, hashes: {"aarch64-darwin": $cd, "x86_64-linux": $cl}}, "claude-code": {version: $claude, hashes: {"aarch64-darwin": $ad, "x86_64-linux": $al}}}')
 print -- "Agent tools: Codex $codex_version, Claude Code $claude_version."
-# Numtide still supplies OpenCode and Claude's platform integration.
+# Numtide supplies Claude's platform integration.
 source=$(nix flake prefetch --refresh --json --no-accept-flake-config "$flake")
 store_path=$(jq -er '.storePath | select(type == "string")' <<<"$source")
 source_hash=$(jq -er '.hash | select(type == "string")' <<<"$source")
@@ -142,7 +142,7 @@ if [[ "$darwin" == true ]]; then identity="profile = $(jq -Rn --arg profile "$pr
 expression="$bundle { path = \"$store_path\"; hash = \"$source_hash\"; releases = builtins.fromJSON ''$releases''; $identity }"
 expected=$(nix eval --raw --expr "($expression).outPath")
 if [[ "$expected" != "$(resolved "$staged")" ]]; then
-  print -- 'Agent tools: building Codex, Claude Code and OpenCode...'
+  print -- 'Agent tools: building Codex and Claude Code...'
   generation=$(nix build --print-build-logs --no-link --print-out-paths --expr "$expression")
   mkdir -p "${staged:h}"
   nix-env --profile "$staged" --set "$generation"
