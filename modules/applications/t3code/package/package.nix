@@ -1,7 +1,4 @@
 { lib, ... }:
-let
-  release = builtins.fromJSON (builtins.readFile ./release.json);
-in
 {
   options.features.t3code.serverPackage = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -19,8 +16,8 @@ in
       stdenv,
       stdenvNoCC,
       versionCheckHook,
-      version ? release.version,
-      hash ? release.${stdenv.hostPlatform.system}.serverHash,
+      version,
+      hash,
     }:
     let
       isDarwin = stdenv.hostPlatform.isDarwin;

@@ -76,5 +76,5 @@ absolute path so I can copy paste it into terminal regardless of where I am:
 
 ```sh
 ns [absolute/path/to/nixos-config-worktree]
-nups [absolute/path/to/nixos-config-worktree]
+ns -u [absolute/path/to/nixos-config-worktree]
 ```

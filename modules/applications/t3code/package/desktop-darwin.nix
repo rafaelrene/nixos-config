@@ -1,7 +1,4 @@
 { lib, ... }:
-let
-  release = builtins.fromJSON (builtins.readFile ./release.json);
-in
 {
   options.features.t3code.desktopDarwinPackage = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -14,8 +11,8 @@ in
       stdenvNoCC,
       fetchurl,
       unzip,
-      version ? release.version,
-      hash ? release.aarch64-darwin.desktopHash,
+      version,
+      hash,
     }:
     stdenvNoCC.mkDerivation (finalAttrs: {
       pname = "t3code-desktop";

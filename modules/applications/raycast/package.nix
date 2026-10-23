@@ -1,7 +1,6 @@
 {
-  config,
+  inputs,
   lib,
-  withSystem,
   ...
 }:
 {
@@ -12,18 +11,13 @@
   config.features.raycast.package =
     { pkgs }:
     let
-      unstable = withSystem pkgs.stdenv.hostPlatform.system ({ unstable, ... }: unstable);
-      sources = config.features.vendorSources;
+      upstream = inputs.brew-nix.packages.${pkgs.stdenv.hostPlatform.system}.raycast;
     in
     if pkgs.stdenv.hostPlatform.system != "aarch64-darwin" then
       throw "Raycast v2 is only packaged for aarch64-darwin."
     else
-      unstable.raycast.overrideAttrs (previous: {
-        inherit (sources.raycast) version;
-        src = pkgs.fetchurl {
-          inherit (sources.raycast) url hash;
-          name = "Raycast.dmg";
-        };
+      upstream.overrideAttrs (previous: {
+        dontFixup = true;
         # Raycast v2 no longer reads updaterEnabled. Removing execute permission
         # blocks launchd even if macOS re-enables these services, while preserving
         # Raycast's vendor signature and extension/runtime updates. Checks and

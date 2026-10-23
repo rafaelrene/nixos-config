@@ -19,6 +19,7 @@ in
       profile = "${home}/.local/state/nix/profiles/llm-agents";
       agents = features.coding-agents.packages {
         inherit pkgs profile;
+        hostname = config.networking.hostName;
       };
       inherit (features.coding-agents.themes { inherit lib pkgs; })
         claudeTheme

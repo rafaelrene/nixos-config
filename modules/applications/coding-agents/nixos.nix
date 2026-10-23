@@ -42,6 +42,7 @@ in
       profile = "${home}/.local/state/nix/profiles/llm-agents";
       agents = features.coding-agents.packages {
         inherit pkgs profile;
+        hostname = config.networking.hostName;
       };
     in
     {

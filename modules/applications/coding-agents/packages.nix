@@ -12,10 +12,11 @@ in
     {
       pkgs,
       profile,
+      hostname,
       installCommand ? "update-llm-agents",
     }:
     let
-      updater = features.coding-agents.update { inherit pkgs profile; };
+      updater = features.coding-agents.update { inherit pkgs profile hostname; };
     in
     {
       inherit updater;

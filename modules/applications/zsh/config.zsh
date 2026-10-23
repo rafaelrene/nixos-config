@@ -42,28 +42,42 @@ git() {
 }
 
 ns() {
-	local checkout=${1:-@checkout@}
+	local checkout=@checkout@ upgrade=false checkout_supplied=false positional=false argument
+	for argument in "$@"; do
+		if ! $positional; then
+			case "$argument" in
+			-u | --upgrade-packages) upgrade=true; continue ;;
+			-h | --help)
+				print -r -- 'Usage: ns [-u|--upgrade-packages] [checkout]'
+				print -r -- 'Apply system configuration. With -u, update inputs and activate coding agents and T3 too.'
+				return 0 ;;
+			--) positional=true; continue ;;
+			-*) print -u2 -r -- "Unknown option: $argument"; return 2 ;;
+			esac
+		fi
+		if $checkout_supplied || [[ -z $argument ]]; then
+			print -u2 -r -- 'Supply at most one nonempty checkout path.'
+			return 2
+		fi
+		checkout=$argument
+		checkout_supplied=true
+	done
 	checkout=${checkout:A}
+	if $upgrade; then
+		nix-update-packages "$checkout" || return
+	fi
 
 	# Git's flake source excludes ignored local development state.
 	sudo @rebuild@ switch --flake "$checkout#"@hostname@ || return
-	local activate=/nix/var/nix/profiles/system/sw/bin/t3-activate
-	if [[ -x $activate ]]; then
-		"$activate"
-	else
-		print -u2 -- "System switch completed from $checkout. This configuration has no t3-activate; T3 Code activation was skipped."
+	if $upgrade; then
+		local system_bin=/nix/var/nix/profiles/system/sw/bin
+		if [[ -x $system_bin/update-llm-agents ]]; then
+			"$system_bin/update-llm-agents" --activate || return
+		fi
+		if [[ -x $system_bin/t3-activate ]]; then
+			"$system_bin/t3-activate"
+		fi
 	fi
-}
-
-nup() {
-	local checkout=${1:-@checkout@}
-	nix-update-packages "${checkout:A}"
-}
-
-nups() {
-	local checkout=${1:-@checkout@}
-	nix-update-packages "${checkout:A}" --stage-t3 || return
-	ns "$checkout"
 }
 
 # Read menu keys while ZLE owns the terminal; suspend it only for the picker.

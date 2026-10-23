@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ inputs, lib, ... }:
 {
   options.features.google-drive.package = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -7,15 +7,14 @@
   config.features.google-drive.package =
     { pkgs }:
     let
-      sources = config.features.vendorSources;
+      source = inputs.google-drive-download;
     in
     pkgs.stdenvNoCC.mkDerivation {
       pname = "google-drive";
-      inherit (sources.google-drive) version;
-      src = pkgs.fetchurl {
-        inherit (sources.google-drive) url hash;
-        name = "google-drive.dmg";
-      };
+      # The mutable download has no independent version/hash feed. The lockfile
+      # pins its bytes; the signed bundle retains the actual application version.
+      version = "rolling-${builtins.substring 0 12 (builtins.hashString "sha256" source.narHash)}";
+      src = source;
       nativeBuildInputs = with pkgs; [
         xar
         pbzx

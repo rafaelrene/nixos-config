@@ -14,6 +14,7 @@
     {
       pkgs,
       profile,
+      hostname,
       flake ? "github:numtide/llm-agents.nix",
     }:
     let
@@ -22,8 +23,11 @@
       source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
       settings = pkgs.writeText "llm-agents-updater.json" (
         builtins.toJSON {
-          inherit flake profile;
+          inherit flake profile source;
           darwin = pkgs.stdenv.hostPlatform.isDarwin;
+          output = "${
+            if pkgs.stdenv.hostPlatform.isDarwin then "darwin" else "nixos"
+          }Configurations.${hostname}.config.system.build.llm-agents";
           staged = "${profile}-staged";
           bundle = "(builtins.getFlake ${builtins.toJSON source}).legacyPackages.${pkgs.stdenv.hostPlatform.system}.llmAgentsForSource";
         }
@@ -34,7 +38,6 @@
       name = "update-llm-agents";
       runtimeInputs = with pkgs; [
         coreutils
-        curl
         gnused
         nix
         jq

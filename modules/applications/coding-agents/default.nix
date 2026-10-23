@@ -9,10 +9,14 @@ in
       let
         home = config.users.users.${config.workstation.user}.home;
         profile = "${home}/.local/state/nix/profiles/llm-agents";
-        agents = features.coding-agents.packages { inherit pkgs profile; };
+        agents = features.coding-agents.packages {
+          inherit pkgs profile;
+          hostname = config.networking.hostName;
+        };
         environmentHome = if pkgs.stdenv.hostPlatform.isDarwin then home else "$HOME";
       in
       {
+        system.build.llm-agents = features.coding-agents.bundle { inherit pkgs profile; };
         environment = {
           systemPackages = agents.packages;
           etc."codex/requirements.toml".text = ''

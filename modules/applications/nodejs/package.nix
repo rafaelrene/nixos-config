@@ -1,6 +1,29 @@
-{ lib, ... }:
+{ inputs, lib, ... }:
 let
-  release = builtins.fromJSON (builtins.readFile ./release.json);
+  checksums = lib.splitString "\n" (builtins.readFile inputs.nodejs-checksums);
+  platforms = {
+    aarch64-darwin = "darwin-arm64";
+    x86_64-linux = "linux-x64";
+  };
+  sources = lib.mapAttrs (
+    _: platform:
+    let
+      matches = lib.filter (entry: entry != null) (
+        map (builtins.match "([0-9a-f]{64})  node-v(24[.][0-9]+[.][0-9]+)-${platform}[.]tar[.]gz") checksums
+      );
+      entry =
+        if builtins.length matches == 1 then
+          builtins.head matches
+        else
+          throw "Expected one Node.js 24 checksum for ${platform}.";
+      version = builtins.elemAt entry 1;
+    in
+    {
+      inherit version;
+      url = "https://nodejs.org/dist/v${version}/node-v${version}-${platform}.tar.gz";
+      sha256 = builtins.elemAt entry 0;
+    }
+  ) platforms;
 in
 {
   options.features.nodejs.package = lib.mkOption {
@@ -10,12 +33,15 @@ in
 
   config.features.nodejs.package =
     { pkgs }:
-    # nups refreshes release.json from upstream Node 24 releases. Vendor binaries
-    # include their patched native libraries without waiting for Nixpkgs.
+    let
+      source = sources.${pkgs.stdenv.hostPlatform.system};
+    in
+    # The locked upstream checksum manifest selects binaries with their bundled
+    # native-library fixes, independently of Nixpkgs' Node release schedule.
     pkgs.stdenvNoCC.mkDerivation {
       pname = "nodejs";
-      inherit (release) version;
-      src = pkgs.fetchurl release.sources.${pkgs.stdenv.hostPlatform.system};
+      inherit (source) version;
+      src = pkgs.fetchurl { inherit (source) url sha256; };
       nativeBuildInputs = lib.optional pkgs.stdenv.hostPlatform.isLinux pkgs.autoPatchelfHook;
       buildInputs = lib.optional pkgs.stdenv.hostPlatform.isLinux pkgs.stdenv.cc.cc.lib;
       dontBuild = true;

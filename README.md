@@ -30,23 +30,22 @@ Git, Ghostty, Neovim, and agent settings support live editing from the checkout.
 
 ## Updates and rebuilds
 
-| Command | Action                                           |
-| ------- | ------------------------------------------------ |
-| `ns`    | Rebuild and switch to the configured system.      |
-| `nup`   | Refresh package sources and update rolling tools. |
-| `nups`  | Update, then rebuild and switch.                  |
+| Command | Action |
+| ------- | ------ |
+| `ns` | Rebuild and switch to the configured system. |
+| `ns -u` / `ns --upgrade-packages` | Update inputs, build and switch, then activate coding agents and T3 Code. |
 
-Each command accepts a checkout path, such as `ns /path/to/nixos-config`.
+Both modes accept a checkout path, such as `ns -u /path/to/nixos-config`.
 Without one, it uses the configured main checkout.
 
 Devenv tracks upstream `main` and updates with `nup` and `nups`.
 
 Coding agents and T3 Code receive scheduled Nix updates. Other applications update
-manually through Nix. The frontend-design skill syncs from Anthropic with `nup`
-and `nups`. Built-in application updaters are disabled where supported;
+manually through Nix. The frontend-design skill syncs from Anthropic with `ns -u`.
+Built-in application updaters are disabled where supported;
 apps manage their own plugins, extensions, tools, and content.
 
-`nups` updates Nix-managed CA certificates along with applications and runtimes.
+`ns -u` updates Nix-managed CA certificates along with applications and runtimes.
 Applications with embedded trust stores receive fixes through their releases.
 Restart running applications after updating. macOS updates and environments
 managed separately by projects or uv remain separate update responsibilities.

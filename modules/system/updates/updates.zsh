@@ -1,50 +1,18 @@
 set -euo pipefail
 
 default_checkout=$1
-vendor_updater=$2
-node_updater=$3
-skill_updater=$4
-shift 4
-checkout=$default_checkout
-stage_t3=false
-checkout_supplied=false
+skill_updater=$2
+shift 2
+checkout=${1:-$default_checkout}
 
-for argument in "$@"; do
-	case "$argument" in
-	--stage-t3) stage_t3=true ;;
-	--help | -h)
-		print -r -- 'Usage: nix-update-packages [checkout] [--stage-t3]'
-		exit 0
-		;;
-	--*)
-		print -u2 -r -- "Unknown option: $argument"
-		exit 1
-		;;
-	*)
-		if $checkout_supplied; then
-			print -u2 -r -- 'Only one checkout may be supplied.'
-			exit 1
-		fi
-		checkout=$argument
-		checkout_supplied=true
-		;;
-	esac
-done
-
-print -r -- "Updating Proserpina's Nix inputs..."
-nix flake update --flake "$checkout" flake-parts import-tree devenv nixpkgs-darwin nixpkgs-unstable nix-darwin rust-overlay zen-browser helium-browser brew-nix brew-api anthropic-skills
-print -r -- 'Updating the frontend-design skill...'
+nix flake update --refresh --flake "$checkout"
+# Keep the upstream skill editable alongside the other live agent settings.
 zsh -f "$skill_updater" "$checkout"
-print -r -- 'Updating Node.js...'
-zsh -f "$node_updater" "$checkout"
-print -r -- 'Updating pinned vendor downloads...'
-zsh -f "$vendor_updater" "$checkout"
-print -r -- 'Updating T3 Code server and desktop...'
-if $stage_t3; then
-	/nix/var/nix/profiles/system/sw/bin/update-t3code
-else
-	/nix/var/nix/profiles/system/sw/bin/t3-update-now
+
+system_bin=/nix/var/nix/profiles/system/sw/bin
+if [[ -x $system_bin/update-llm-agents ]]; then
+  "$system_bin/update-llm-agents" --stage --flake "$checkout"
 fi
-print -r -- 'Updating agent tools...'
-/nix/var/nix/profiles/system/sw/bin/update-llm-agents
-print -r -- 'All update sources checked. Run ns to apply the updated Nix system, or use nups next time.'
+if [[ -x $system_bin/update-t3code ]]; then
+  "$system_bin/update-t3code" --flake "$checkout"
+fi

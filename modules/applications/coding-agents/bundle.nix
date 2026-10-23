@@ -1,24 +1,29 @@
 {
   config,
+  inputs,
   lib,
   ...
 }:
 {
   options.features.coding-agents.bundle = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
-    description = "Build one coding-agent generation from a prefetched flake source.";
+    description = "Build one coding-agent generation from maintained Nix packages.";
   };
 
   config = {
     features.coding-agents.bundle =
       {
         pkgs,
-        source,
+        source ? null,
         profile ? null,
       }:
       let
-        # getFlake loads package definitions without applying upstream nixConfig.
-        agents = builtins.getFlake "path:${source.path}?narHash=${lib.escapeURL source.hash}";
+        # Retain the old recipe only for stable-identity migration of existing profiles.
+        agents =
+          if source == null then
+            inputs.llm-agents
+          else
+            builtins.getFlake "path:${source.path}?narHash=${lib.escapeURL source.hash}";
         system = pkgs.stdenv.hostPlatform.system;
         claude = source.releases.claude-code;
         claudeSource =
@@ -33,29 +38,31 @@
             }/claude";
             sha256 = claude.hashes.${system};
           };
-        packages = agents.packages.${system} // {
-          codex = config.features.coding-agents.codex {
-            inherit pkgs;
-            release = source.releases.codex;
+        packages =
+          agents.packages.${system}
+          // lib.optionalAttrs (source != null) {
+            codex = config.features.coding-agents.codex {
+              inherit pkgs;
+              release = source.releases.codex;
+            };
+            claude-code = agents.packages.${system}.claude-code.overrideAttrs {
+              inherit (claude) version;
+              src = claudeSource system;
+              codesignSources = [ (claudeSource "aarch64-darwin") ];
+            };
           };
-          claude-code = agents.packages.${system}.claude-code.overrideAttrs {
-            inherit (claude) version;
-            src = claudeSource system;
-            codesignSources = [ (claudeSource "aarch64-darwin") ];
-          };
-        };
         selected = with packages; [
           codex
           claude-code
         ];
         release = {
-          inherit (source) releases;
           source = {
             path = agents.outPath;
-            inherit (source) hash;
+            hash = if source == null then agents.narHash else source.hash;
           };
           versions = lib.genAttrs [ "codex" "claude-code" ] (name: packages.${name}.version);
-        };
+        }
+        // lib.optionalAttrs (source != null) { inherit (source) releases; };
         package = pkgs.buildEnv {
           name = "llm-agents";
           paths = selected ++ [

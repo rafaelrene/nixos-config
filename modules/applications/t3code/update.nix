@@ -15,6 +15,7 @@
       lib,
       pkgs,
       home,
+      hostname,
       lifecycle,
       project ? null,
     }:
@@ -25,8 +26,12 @@
       source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
       settings = pkgs.writeText "t3code-updater.json" (
         builtins.toJSON {
-          inherit project darwin;
-          bundle = "(builtins.getFlake ${builtins.toJSON source}).legacyPackages.${pkgs.stdenv.hostPlatform.system}.t3codeForRelease";
+          inherit project darwin source;
+          output = "${
+            if darwin then "darwin" else "nixos"
+          }Configurations.${hostname}.config.system.build.t3code";
+          serverInput = "github:patrikduksin/t3code-nix";
+          desktopInput = "github:omarcresp/t3code-flake";
           profile = "${home}/.local/state/nix/profiles/t3code";
           staged = "${home}/.local/state/nix/profiles/t3code-staged";
           base = "${home}/.local/share/t3code";
@@ -40,7 +45,6 @@
       name = "update-t3code";
       runtimeInputs = with pkgs; [
         coreutils
-        curl
         nix
         jq
         zsh

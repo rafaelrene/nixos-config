@@ -12,14 +12,7 @@ in
     }:
     let
       unstable = withSystem pkgs.stdenv.hostPlatform.system ({ unstable, ... }: unstable);
-      sources = features.vendorSources;
-      # Reuse Nixpkgs' signed-bundle packaging with the upstream release from nup.
-      package = unstable.omniwm.overrideAttrs {
-        inherit (sources.omniwm) version;
-        src = pkgs.fetchurl {
-          inherit (sources.omniwm) url hash;
-        };
-      };
+      package = unstable.omniwm;
       home = config.users.users.${config.system.primaryUser}.home;
       settings = features.omniwm.settings { inherit lib pkgs; };
       settingsFile = (pkgs.formats.toml { }).generate "omniwm-settings.toml" settings;
