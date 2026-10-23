@@ -32,7 +32,7 @@ for argument in "$@"; do
 done
 
 print -r -- "Updating Proserpina's Nix inputs..."
-nix flake update --flake "$checkout" flake-parts import-tree nixpkgs-darwin nixpkgs-unstable nix-darwin rust-overlay zen-browser helium-browser brew-nix brew-api anthropic-skills
+nix flake update --flake "$checkout" flake-parts import-tree devenv nixpkgs-darwin nixpkgs-unstable nix-darwin rust-overlay zen-browser helium-browser brew-nix brew-api anthropic-skills
 print -r -- 'Updating the frontend-design skill...'
 zsh -f "$skill_updater" "$checkout"
 print -r -- 'Updating Node.js...'

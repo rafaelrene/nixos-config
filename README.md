@@ -39,6 +39,8 @@ Git, Ghostty, Neovim, and agent settings support live editing from the checkout.
 Each command accepts a checkout path, such as `ns /path/to/nixos-config`.
 Without one, it uses the configured main checkout.
 
+Devenv tracks upstream `main` and updates with `nup` and `nups`.
+
 Coding agents and T3 Code receive scheduled Nix updates. Other applications update
 manually through Nix. The frontend-design skill syncs from Anthropic with `nup`
 and `nups`. Built-in application updaters are disabled where supported;

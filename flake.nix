@@ -7,6 +7,7 @@
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
     import-tree.url = "github:denful/import-tree";
+    devenv.url = "github:cachix/devenv/main";
 
     anthropic-skills = {
       url = "github:anthropics/skills/main";

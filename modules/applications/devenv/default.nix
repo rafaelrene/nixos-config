@@ -1,4 +1,4 @@
-{ config, withSystem, ... }:
+{ config, inputs, ... }:
 let
   inherit (config) features;
   common =
@@ -40,12 +40,8 @@ let
         fi
         source ${trustHook}
       '';
-      # Share the release across hosts while preserving upstream cache identity.
-      nixpkgs.overlays = [
-        (_final: prev: {
-          devenv = withSystem prev.stdenv.hostPlatform.system ({ unstable, ... }: unstable.devenv);
-        })
-      ];
+      # Keep upstream's dependency pins so its binary cache matches on both hosts.
+      nixpkgs.overlays = [ inputs.devenv.overlays.default ];
     };
 in
 {
