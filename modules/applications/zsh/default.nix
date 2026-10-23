@@ -52,8 +52,15 @@ in
           LC_ALL = "en_US.UTF-8";
         };
       };
-      # Darwin only installs environment aliases in login shells by default.
-      programs.zsh.interactiveShellInit = lib.mkBefore config.system.build.setAliases.text;
+      programs.zsh = {
+        # Darwin runs compinit after interactiveShellInit; CLI integrations need it first.
+        enableGlobalCompInit = false;
+        interactiveShellInit = lib.mkBefore ''
+          # Darwin only installs environment aliases in login shells by default.
+          ${config.system.build.setAliases.text}
+          ${lib.optionalString config.programs.zsh.enableCompletion "autoload -U compinit && compinit"}
+        '';
+      };
       # Only shell settings are managed for the existing macOS administrator.
       system.activationScripts.postActivation.text =
         lib.mkIf (!(builtins.elem config.workstation.user config.users.knownUsers))
