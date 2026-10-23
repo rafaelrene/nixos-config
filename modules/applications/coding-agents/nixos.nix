@@ -15,7 +15,7 @@ in
       user = config.workstation.user;
       home = config.users.users.${user}.home;
       group = config.users.users.${user}.group;
-      inherit (features.coding-agents.themes { inherit lib pkgs; }) claudeTheme codexTheme opencodeTheme;
+      inherit (features.coding-agents.themes { inherit lib pkgs; }) claudeTheme codexTheme;
       agentSource = features.sources.checkoutPath {
         inherit (config.workstation) checkout;
         source = features.coding-agents.source;
@@ -60,14 +60,11 @@ in
           "L+ ${home}/.local/share/claude/themes/workstation.json - - - - ${claudeTheme}"
           "d ${home}/.local/share/codex/themes 0700 ${user} ${group} - -"
           "L+ ${home}/.local/share/codex/themes/workstation.tmTheme - - - - ${codexTheme}"
-          "d ${home}/.config/opencode/themes 0700 ${user} ${group} - -"
-          "L+ ${home}/.config/opencode/themes/workstation.json - - - - ${opencodeTheme}"
         ]
         ++ map (directory: "d ${home}/${directory} 0700 ${user} ${group} - -") (
           [
             ".local/share/codex"
             ".local/share/claude"
-            ".config/opencode"
           ]
           ++ skillDirectories
         );

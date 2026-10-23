@@ -36,7 +36,6 @@ Search `<checkout>` for the skill's name, excluding its own directory. Expect
 hits in:
 
 - `config/agents/AGENTS.md`
-- `config/agents/opencode/opencode.jsonc`
 - other `SKILL.md` bodies that invoke the skill
 
 Record each hit with its file, line, and surrounding text. Do not edit yet.

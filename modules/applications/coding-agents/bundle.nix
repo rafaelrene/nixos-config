@@ -47,7 +47,6 @@
         selected = with packages; [
           codex
           claude-code
-          opencode
         ];
         release = {
           inherit (source) releases;
@@ -55,7 +54,7 @@
             path = agents.outPath;
             inherit (source) hash;
           };
-          versions = lib.genAttrs [ "codex" "claude-code" "opencode" ] (name: packages.${name}.version);
+          versions = lib.genAttrs [ "codex" "claude-code" ] (name: packages.${name}.version);
         };
         package = pkgs.buildEnv {
           name = "llm-agents";
