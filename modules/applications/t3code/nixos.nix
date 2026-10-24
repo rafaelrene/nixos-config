@@ -16,6 +16,21 @@ in
       user = config.workstation.user;
       home = config.users.users.${user}.home;
       group = config.users.users.${user}.group;
+      # T3 requires the emulator and command-line tools for physical devices too.
+      androidPackages = pkgs.androidenv.composeAndroidPackages {
+        toolsVersion = null;
+        buildToolsVersions = [ ];
+        platformVersions = [ ];
+        includeEmulator = true;
+        includeCmake = false;
+      };
+      androidSdk = androidPackages.androidsdk.overrideAttrs (previous: {
+        # Nixpkgs uses a versioned directory; T3 and Expo require cmdline-tools/latest.
+        postInstall = (previous.postInstall or "") + ''
+          ln -s "$out/libexec/android-sdk/${androidPackages.cmdline-tools-package.path}" \
+            "$out/libexec/android-sdk/cmdline-tools/latest"
+        '';
+      });
       browserLibraries = with pkgs; [
         alsa-lib
         at-spi2-core
@@ -145,6 +160,7 @@ in
       };
     in
     {
+      nixpkgs.config.android_sdk.accept_license = true;
       environment.variables.T3CODE_HOME = "$HOME/.local/share/t3code";
       environment.systemPackages = [
         t3Command
@@ -211,6 +227,7 @@ in
                 lib.makeBinPath (
                   with pkgs;
                   [
+                    androidSdk
                     bash
                     coreutils
                     findutils
@@ -223,6 +240,7 @@ in
                   ]
                 )
               }:/run/current-system/sw/bin:${home}/.local/bin";
+              ANDROID_HOME = "${androidSdk}/libexec/android-sdk";
               SHELL = lib.getExe pkgs.zsh;
               # Keep browser libraries private to T3 and its ldd diagnostics.
               LD_LIBRARY_PATH = lib.makeLibraryPath browserLibraries;
