@@ -1,4 +1,9 @@
-{ inputs, lib, ... }:
+{
+  config,
+  inputs,
+  lib,
+  ...
+}:
 let
   checksums = lib.splitString "\n" (builtins.readFile inputs.nodejs-checksums);
   platforms = {
@@ -29,6 +34,10 @@ in
   options.features.nodejs.package = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
     description = "Node.js runtime for application-private PATHs.";
+  };
+
+  config.perSystem = { pkgs, ... }: {
+    packages.nodejs-native = config.features.nodejs.package { inherit pkgs; };
   };
 
   config.features.nodejs.package =

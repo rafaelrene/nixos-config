@@ -1,8 +1,18 @@
-{ inputs, lib, ... }:
+{
+  config,
+  inputs,
+  lib,
+  ...
+}:
 {
   options.features.google-drive.package = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
     description = "Google Drive package factory using pinned vendor downloads.";
+  };
+  config.perSystem = { pkgs, ... }: {
+    packages = lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+      google-drive = config.features.google-drive.package { inherit pkgs; };
+    };
   };
   config.features.google-drive.package =
     { pkgs }:

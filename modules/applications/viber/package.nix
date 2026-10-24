@@ -1,8 +1,18 @@
-{ inputs, lib, ... }:
+{
+  config,
+  inputs,
+  lib,
+  ...
+}:
 {
   options.features.viber.package = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
     description = "Viber package factory preserving the signed vendor application.";
+  };
+  config.perSystem = { pkgs, ... }: {
+    packages = lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+      viber = config.features.viber.package { inherit pkgs; };
+    };
   };
   config.features.viber.package =
     { pkgs }:

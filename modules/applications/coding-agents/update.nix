@@ -29,7 +29,6 @@
             if pkgs.stdenv.hostPlatform.isDarwin then "darwin" else "nixos"
           }Configurations.${hostname}.config.system.build.llm-agents";
           staged = "${profile}-staged";
-          bundle = "(builtins.getFlake ${builtins.toJSON source}).legacyPackages.${pkgs.stdenv.hostPlatform.system}.llmAgentsForSource";
         }
       );
     in
@@ -38,7 +37,6 @@
       name = "update-llm-agents";
       runtimeInputs = with pkgs; [
         coreutils
-        gnused
         nix
         jq
         zsh

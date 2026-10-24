@@ -102,9 +102,7 @@ class Desktop:
         self.app = Path(settings["home"]) / "Applications/T3 Code.app"
         self.candidate = self.app.with_name(".T3 Code.next.app")
         self.record = Path(settings["state"]) / "desktop-copies.json"
-        self.releases = [
-            settings.get(key) for key in ("initial", "profile", "previous", "staged")
-        ]
+        self.releases = [settings.get(key) for key in ("initial", "profile", "staged")]
 
     def copies(self):
         copies = json.loads(self.record.read_text()) if self.record.exists() else {}

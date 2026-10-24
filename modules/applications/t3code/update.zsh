@@ -42,8 +42,11 @@ update() {
       --override-input t3-desktop-releases "$desktop_input")
   fi
   print -- "T3 Code: building the matching Nix server and desktop..."
-  generation=$(nix build --print-build-logs --no-link --print-out-paths "${build_options[@]}" "$build_source#$output") || return
   previous=$(readlink -f "$staged" 2>/dev/null) || previous=''
+  mkdir -p "$base" || return
+  # Retain a GC root while the lifecycle waits to promote under its activation lock.
+  nix build --print-build-logs --out-link "$base/.t3code-build" "${build_options[@]}" "$build_source#$output" || return
+  generation=$(readlink -f "$base/.t3code-build") || return
   if [[ "$generation" == "$previous" ]]; then
     print -- "T3 Code: server and desktop are already staged."
     changed=false

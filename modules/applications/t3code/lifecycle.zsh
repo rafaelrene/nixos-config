@@ -8,7 +8,7 @@ if [[ "$action" == --help || "$action" == -h ]]; then
   exit 0
 fi
 settings=$(cat "$settings_file") || exit
-for key in state profile staged previous desktopApp desktopCommand spawn notifyCommand serviceCommand serviceFile healthUrl initial darwin processCommand bundle; do
+for key in state profile staged desktopApp desktopCommand spawn notifyCommand serviceCommand serviceFile healthUrl initial darwin processCommand; do
   value=$(jq -r --arg key "$key" '.[$key] // empty' <<<"$settings") || exit
   typeset "$key=$value"
 done
@@ -34,21 +34,37 @@ active() {
 }
 install_executables() {
   [[ "$darwin" == true ]] || return 0
-  local target=$1 installer="$1/share/darwin-identity/install" metadata literal identity_generation
-  if [[ ! -x "$installer" ]]; then
-    # Rebuild the existing release recipe without changing its version or hashes.
-    metadata=$(jq -ce --arg profile "$profile" '
-      . + {profile: $profile} |
-      select(.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+-nightly\\.[0-9.]+$")) |
-      select([.serverHash, .desktopHash] | all(test("^sha256-[A-Za-z0-9+/]{43}=$")))
-    ' "$target/share/t3code/release.json") || { fail 'Cannot read the existing T3 Code release metadata.'; return; }
-    literal=$(jq -Rn --arg metadata "$metadata" '$metadata' | sed 's/\${/\\${/g') || return
-    identity_generation=$(nix build --print-build-logs --no-link --print-out-paths \
-      --expr "$bundle (builtins.fromJSON $literal)") || { fail 'Cannot build stable identities for the existing T3 Code release.'; return; }
-    run nix-env --profile "${profile}-identity-generation" --set "$identity_generation" || return
-    installer="$identity_generation/share/darwin-identity/install"
-  fi
-  run "$installer"
+  run "$1/share/darwin-identity/install"
+}
+# Keep failed releases blocked across retries. Accept the old single-path record.
+is_blocked() {
+  jq -e --arg target "$1" '(if type == "array" then . else [.] end) | index($target) != null' \
+    "$state/blocked.json" >/dev/null 2>&1
+}
+block() {
+  local existing updated
+  existing=$(cat "$state/blocked.json" 2>/dev/null) || existing='[]'
+  updated=$(jq -cn --argjson existing "$existing" --arg target "$1" \
+    '($existing | if type == "array" then . else [.] end) + [$target] | unique') || return
+  save_state blocked.json "$updated"
+}
+profile_version() {
+  nix-env --profile "$profile" --list-generations | awk '/\(current\)/ { version = $1 } END { print version }'
+}
+rollback_version() {
+  local listing version target current
+  current=$(active) || return
+  listing=$(nix-env --profile "$profile" --list-generations | awk '/\(current\)/ { current = 1 } !current { print $1 }') || return
+  local -a versions=("${(@f)listing}")
+  for version in "${(@Oa)versions}"; do
+    [[ -n "$version" ]] || continue
+    target=$(generation "$profile-$version-link") || return
+    if [[ -n "$target" && "$target" != "$current" ]] && ! is_blocked "$target"; then
+      print -- "$version"
+      return
+    fi
+  done
+  fail 'No previous working T3 Code generation is available.'
 }
 
 # Read process names and arguments separately because executable names may contain
@@ -210,7 +226,7 @@ save_state() {
   run sync "$state"
 }
 clear_journal() {
-  run rm -f "$state/activation.json" || return
+  run rm -f "$state/activation.json" "$state/recovery" || return
   run sync "$state"
 }
 desktop_action() {
@@ -242,58 +258,54 @@ start_server() {
     run "$serviceCommand" --user start t3code.service
   fi
 }
-recover() {
-  local journal old target reopen processes
-  journal=$(cat "$state/activation.json") || return
-  old=$(jq -er '.previous' <<<"$journal") || return
-  target=$(jq -er '.target' <<<"$journal") || return
-  reopen=$(jq -r '.reopen' <<<"$journal") || return
-  print -- 'T3 Code: restoring the previous release after an incomplete activation...'
-  # Retain the journal until the old server and complete desktop both work.
-  desktop_action prepare "$old" || return
+# Both activation and recovery use the same ordered runtime operations.
+apply_generation() {
+  local target=$1 reopen=$2 version=${3-} processes remaining
   processes=$(desktop_processes) || return
-  stop_desktops "$processes" || return
-  stop_server || return
-  install_executables "$old" || return
-  run nix-env --profile "$profile" --set "$old" || return
-  desktop_action install "$old" || return
-  start_server || return
-  wait_ready "$old" || return
-  desktop_action dock "$old" || return
-  if [[ "$reopen" == true ]]; then launch || return; fi
-  run nix-env --profile "$staged" --set "$old" || return
-  if [[ "$target" != "$old" ]]; then save_state blocked.json "$(jq -cn --arg target "$target" '$target')" || return; fi
-  clear_journal || return
-  print -- 'T3 Code: the previous release is running. Database files were left untouched.'
-}
-promote() {
-  local target=$1 old=$2 rollback=$3 processes=$4 reopen=$5 remaining
   stop_desktops "$processes" || return
   remaining=$(desktop_processes) || return
   if [[ "$remaining" != '[]' ]]; then fail 'A T3 Code desktop appeared during shutdown.'; return; fi
-  print -- 'T3 Code: stopping the managed server...'
   stop_server || return
   install_executables "$target" || return
-  run nix-env --profile "$profile" --set "$target" || return
+  if [[ -n "$version" && -e "$profile-$version-link" ]]; then
+    run nix profile rollback --profile "$profile" --to "$version" || return
+  else
+    run nix build --no-link --profile "$profile" "$target" || return
+  fi
   desktop_action install "$target" || return
   start_server || return
   wait_ready "$target" || return
   desktop_action dock "$target" || return
   if [[ "$reopen" == true ]]; then launch || return; fi
-  if [[ "$rollback" == true ]]; then
-    run nix-env --profile "$staged" --set "$target" || return
-    if [[ "$old" != "$target" ]]; then save_state blocked.json "$(jq -cn --arg target "$old" '$target')" || return; fi
-  fi
-  clear_journal
+}
+recover() {
+  local journal old target reopen version
+  journal=$(cat "$state/activation.json") || return
+  old=$(jq -er '.previous' <<<"$journal") || return
+  target=$(jq -er '.target' <<<"$journal") || return
+  reopen=$(jq -r '.reopen' <<<"$journal") || return
+  version=$(jq -r '.previousVersion // empty' <<<"$journal") || return
+  print -- 'T3 Code: restoring the previous release after an incomplete activation...'
+  # Old journals have no generation number. Nix can still restore their store path.
+  desktop_action prepare "$old" || return
+  apply_generation "$old" "$reopen" "$version" || return
+  run nix build --no-link --profile "$staged" "$old" || return
+  if [[ "$target" != "$old" ]]; then block "$target" || return; fi
+  clear_journal || return
+  print -- 'T3 Code: the previous release is running. Database files were left untouched.'
 }
 activate() {
-  local rollback=$1 old target blocked processes clients clients_current=true pid reopen=false activation_failure
+  local rollback=$1 old target old_version target_version='' processes clients clients_current=true reopen=false activation_failure
   old=$(active) || return
-  if [[ "$rollback" == true ]]; then target=$(generation "$previous") || return
-  else target=$(generation "$staged") || return; target=${target:-$old}; fi
+  if [[ "$rollback" == true ]]; then
+    target_version=$(rollback_version) || return
+    target=$(generation "$profile-$target_version-link") || return
+  else
+    target=$(generation "$staged") || return
+    target=${target:-$old}
+  fi
   if [[ -z "$target" ]]; then fail 'No T3 Code release is available for this operation.'; return; fi
-  blocked=$(jq -r '.' "$state/blocked.json" 2>/dev/null) || blocked=''
-  if [[ "$target" == "$blocked" ]]; then fail 'This T3 Code generation failed or was rolled back. Stage a different release before activating it.'; return; fi
+  if is_blocked "$target"; then fail 'This T3 Code generation failed or was rolled back. Stage a different release before activating it.'; return; fi
   processes=$(desktop_processes) || return
   clients=$(desktops) || return
   if [[ "$processes" != '[]' ]]; then
@@ -307,29 +319,36 @@ activate() {
     return
   fi
   if [[ -z "$old" ]]; then fail 'No previous T3 Code release exists. Bootstrap it before activation.'; return; fi
-  # Verify the replacement and retain a GC root before interrupting the old app.
   desktop_action prepare "$target" || return
-  if [[ "$target" != "$old" ]]; then run nix-env --profile "$previous" --set "$old" || return; fi
+  # Profile history owns rollback. This temporary root also protects recovery if
+  # scheduled garbage collection prunes old generations during activation.
+  if [[ ! -e "$profile" ]]; then run nix build --no-link --profile "$profile" "$old" || return; fi
+  old_version=$(profile_version) || return
+  run nix build --out-link "$state/recovery" "$old" || return
   [[ "$clients" == '[]' ]] || reopen=true
-  save_state activation.json "$(jq -cn --arg previous "$old" --arg target "$target" --argjson reopen "$reopen" '{previous: $previous, target: $target, reopen: $reopen}')" || return
-  if ! promote "$target" "$old" "$rollback" "$processes" "$reopen"; then
+  save_state activation.json "$(jq -cn --arg previous "$old" --arg previousVersion "$old_version" --arg target "$target" --argjson reopen "$reopen" '{previous: $previous, previousVersion: $previousVersion, target: $target, reopen: $reopen}')" || return
+  if ! apply_generation "$target" "$reopen" "$target_version"; then
     activation_failure=${failure:-'A lifecycle command failed'}
     if ! recover; then fail "Activation failed: $activation_failure. Recovery also failed: ${failure:-A lifecycle command failed}. The previous release and recovery journal are retained; retry t3-activate."; return; fi
     fail "Activation failed: $activation_failure. The previous release was restored."
     return
   fi
+  if [[ "$rollback" == true ]]; then
+    run nix build --no-link --profile "$staged" "$target" || return
+    if [[ "$old" != "$target" ]]; then block "$old" || return; fi
+  fi
+  clear_journal || return
   local version
   version=$(jq -er '.version' "$target/share/t3code/release.json") || return
   print -- "T3 Code: activated $version."
 }
 perform() {
-  local target blocked processes reopen
+  local target processes reopen
   case "$action" in
     stage)
       target=${1:?A release generation is required}
-      blocked=$(jq -r '.' "$state/blocked.json" 2>/dev/null) || blocked=''
-      if [[ "$target" == "$blocked" ]]; then fail 'This T3 Code generation failed or was rolled back; leaving the working release installed.'; return; fi
-      run nix-env --profile "$staged" --set "$target"
+      if is_blocked "$target"; then fail 'This T3 Code generation failed or was rolled back; leaving the working release installed.'; return; fi
+      run nix build --no-link --profile "$staged" "$target"
       ;;
     seed)
       target=$(generation "$profile") || return
@@ -338,7 +357,7 @@ perform() {
         target=${target:-$initial}
         if [[ -z "$target" ]]; then fail 'No T3 Code bootstrap release is available.'; return; fi
         install_executables "$target" || return
-        run nix-env --profile "$profile" --set "$target" || return
+        run nix build --no-link --profile "$profile" "$target" || return
       else
         install_executables "$target" || return
       fi

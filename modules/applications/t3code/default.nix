@@ -9,13 +9,10 @@ in
       bundle = features.t3code.bundle { inherit pkgs; };
     in
     {
-      packages.t3code-nightly = bundle.server;
-      packages.t3code = bundle;
-      # The updater calls the same recipe with the nightly version and its two hashes.
-      legacyPackages.t3codeForRelease =
-        release:
-        features.t3code.bundle {
-          inherit pkgs release;
-        };
+      packages = {
+        t3code-nightly = bundle.server;
+        t3code = bundle;
+        t3code-desktop = bundle.desktop;
+      };
     };
 }

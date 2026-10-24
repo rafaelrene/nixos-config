@@ -14,55 +14,16 @@
     features.coding-agents.bundle =
       {
         pkgs,
-        source ? null,
         profile ? null,
       }:
       let
-        # Retain the old recipe only for stable-identity migration of existing profiles.
-        agents =
-          if source == null then
-            inputs.llm-agents
-          else
-            builtins.getFlake "path:${source.path}?narHash=${lib.escapeURL source.hash}";
         system = pkgs.stdenv.hostPlatform.system;
-        claude = source.releases.claude-code;
-        claudeSource =
-          system:
-          pkgs.fetchurl {
-            url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/${claude.version}/${
-              {
-                aarch64-darwin = "darwin-arm64";
-                x86_64-linux = "linux-x64";
-              }
-              .${system}
-            }/claude";
-            sha256 = claude.hashes.${system};
-          };
-        packages =
-          agents.packages.${system}
-          // lib.optionalAttrs (source != null) {
-            codex = config.features.coding-agents.codex {
-              inherit pkgs;
-              release = source.releases.codex;
-            };
-            claude-code = agents.packages.${system}.claude-code.overrideAttrs {
-              inherit (claude) version;
-              src = claudeSource system;
-              codesignSources = [ (claudeSource "aarch64-darwin") ];
-            };
-          };
+        packages = inputs.llm-agents.packages.${system};
         selected = with packages; [
           codex
           claude-code
         ];
-        release = {
-          source = {
-            path = agents.outPath;
-            hash = if source == null then agents.narHash else source.hash;
-          };
-          versions = lib.genAttrs [ "codex" "claude-code" ] (name: packages.${name}.version);
-        }
-        // lib.optionalAttrs (source != null) { inherit (source) releases; };
+        release.versions = lib.genAttrs [ "codex" "claude-code" ] (name: packages.${name}.version);
         package = pkgs.buildEnv {
           name = "llm-agents";
           paths = selected ++ [
@@ -90,12 +51,7 @@
     perSystem =
       { pkgs, ... }:
       {
-        legacyPackages.llmAgentsForSource =
-          source:
-          config.features.coding-agents.bundle {
-            inherit pkgs source;
-            profile = source.profile or null;
-          };
+        packages.llm-agents = config.features.coding-agents.bundle { inherit pkgs; };
       };
   };
 }
