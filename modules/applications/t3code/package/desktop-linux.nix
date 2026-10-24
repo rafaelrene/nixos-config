@@ -1,7 +1,4 @@
 { lib, ... }:
-let
-  release = builtins.fromJSON (builtins.readFile ./release.json);
-in
 {
   options.features.t3code.desktopLinuxPackage = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
@@ -13,8 +10,8 @@ in
       appimageTools,
       fetchurl,
       lib,
-      version ? release.version,
-      hash ? release.x86_64-linux.desktopHash,
+      version,
+      hash,
     }:
     appimageTools.wrapType2 rec {
       pname = "t3code-desktop";

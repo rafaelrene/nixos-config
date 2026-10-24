@@ -14,6 +14,30 @@
       flake = false;
     };
 
+    llm-agents.url = "github:numtide/llm-agents.nix";
+    t3-server-releases = {
+      url = "github:patrikduksin/t3code-nix";
+      flake = false;
+    };
+    t3-desktop-releases = {
+      url = "github:omarcresp/t3code-flake";
+      flake = false;
+    };
+    # These upstream URLs are overwritten. Archive locked inputs with
+    # `nix flake archive` to reproduce superseded downloads on another machine.
+    nodejs-checksums = {
+      url = "file+https://nodejs.org/dist/latest-v24.x/SHASUMS256.txt";
+      flake = false;
+    };
+    google-drive-download = {
+      url = "file+https://dl.google.com/drive-file-stream/5-percent/GoogleDrive.dmg";
+      flake = false;
+    };
+    viber-download = {
+      url = "file+https://download.viber.com/desktop/mac_arm/update/update.zip";
+      flake = false;
+    };
+
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     nixpkgs-darwin.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";

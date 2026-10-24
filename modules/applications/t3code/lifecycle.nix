@@ -1,6 +1,5 @@
 {
   config,
-  inputs,
   lib,
   ...
 }:
@@ -22,7 +21,6 @@
       runtimes = config.features.shell.runtimes { inherit pkgs; };
       darwin = pkgs.stdenv.hostPlatform.isDarwin;
       state = "${home}/.local/state/t3code-bundle-updater";
-      source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
       desktopSupport = config.features.shell.application {
         inherit pkgs;
         name = "t3code-darwin-app";
@@ -65,11 +63,9 @@
       settings = pkgs.writeText "t3code-lifecycle.json" (
         builtins.toJSON {
           inherit home darwin state;
-          bundle = "(builtins.getFlake ${builtins.toJSON source}).legacyPackages.${pkgs.stdenv.hostPlatform.system}.t3codeForRelease";
           initial = if initial == null then null else toString initial;
           profile = "${home}/.local/state/nix/profiles/t3code";
           staged = "${home}/.local/state/nix/profiles/t3code-staged";
-          previous = "${home}/.local/state/nix/profiles/t3code-previous";
           desktopApp = "${home}/Applications/T3 Code.app";
           desktopCommand = if darwin then lib.getExe desktopSupport else null;
           spawn = lib.getExe spawn;
@@ -87,6 +83,7 @@
       runtimeInputs = with pkgs; [
         coreutils
         curl
+        gawk
         lsof
         nix
         jq

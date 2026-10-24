@@ -62,6 +62,7 @@ in
         desktop = client;
       };
       updateT3Code = features.t3code.update {
+        hostname = config.networking.hostName;
         inherit
           lib
           pkgs
@@ -161,6 +162,7 @@ in
     in
     {
       nixpkgs.config.android_sdk.accept_license = true;
+      system.build.t3code = features.t3code.bundle { inherit pkgs profile; };
       environment.variables.T3CODE_HOME = "$HOME/.local/share/t3code";
       environment.systemPackages = [
         t3Command

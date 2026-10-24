@@ -1,7 +1,6 @@
 { config, lib, ... }:
 let
   inherit (config.features) t3code;
-  packaged = builtins.fromJSON (builtins.readFile ./release.json);
 in
 {
   options.features.t3code.bundle = lib.mkOption {
@@ -12,10 +11,7 @@ in
   config.features.t3code.bundle =
     {
       pkgs,
-      release ? {
-        inherit (packaged) version;
-      }
-      // packaged.${pkgs.stdenv.hostPlatform.system},
+      release ? t3code.releaseFor pkgs.stdenv.hostPlatform.system,
       profile ? release.profile or null,
     }:
     let

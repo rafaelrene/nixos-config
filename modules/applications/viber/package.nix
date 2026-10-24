@@ -1,21 +1,29 @@
-{ config, lib, ... }:
+{
+  config,
+  inputs,
+  lib,
+  ...
+}:
 {
   options.features.viber.package = lib.mkOption {
     type = lib.types.functionTo lib.types.package;
     description = "Viber package factory preserving the signed vendor application.";
   };
+  config.perSystem = { pkgs, ... }: {
+    packages = lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+      viber = config.features.viber.package { inherit pkgs; };
+    };
+  };
   config.features.viber.package =
     { pkgs }:
     let
-      sources = config.features.vendorSources;
+      source = inputs.viber-download;
     in
     pkgs.stdenvNoCC.mkDerivation {
       pname = "viber";
-      inherit (sources.viber) version;
-      src = pkgs.fetchurl {
-        inherit (sources.viber) url hash;
-        name = "viber.zip";
-      };
+      # Pin the complete signed update payload, without a separate hash manifest.
+      version = "rolling-${builtins.substring 0 12 (builtins.hashString "sha256" source.narHash)}";
+      src = source;
       nativeBuildInputs = [
         pkgs.unzip
         pkgs.libarchive
