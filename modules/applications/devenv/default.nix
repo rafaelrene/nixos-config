@@ -39,6 +39,19 @@ let
           eval "$(${executable} hook zsh)"
         fi
         source ${trustHook}
+
+        # Bootstrap T3 before it can execute queued setup commands. Replacing
+        # the shell also prevents a failed activation from falling back to it.
+        if [[ -n "''${T3CODE_PROJECT_ROOT:-}" && -z "''${DEVENV_ROOT:-}" ]]; then
+          _devenv_trust_t3
+          typeset _devenv_t3_project
+          _devenv_t3_project=$(${executable} hook-should-activate) || exit $?
+          if [[ -n "$_devenv_t3_project" ]]; then
+            _DEVENV_CALLER=hook _DEVENV_SHELL_HINT=zsh exec ${executable} shell --no-tui --no-reload
+            exit $?
+          fi
+          unset _devenv_t3_project
+        fi
       '';
       # Keep upstream's dependency pins so its binary cache matches on both hosts.
       nixpkgs.overlays = [ inputs.devenv.overlays.default ];
