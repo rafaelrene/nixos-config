@@ -2,7 +2,13 @@
 # worktrees, then let its own hook handle activation, reload, and deactivation.
 _devenv_trust_t3() {
   emulate -L zsh
-  if [[ -n "${DEVENV_ROOT:-}" || "${_DEVENV_HOOK_ACTIVATED:-}" == "$PWD" ]]; then
+  if [[ -n "${DEVENV_ROOT:-}" ]]; then
+    # Devenv compares canonical DEVENV_ROOT with PWD when deciding to exit.
+    # Resolve symlinked paths first so worktree aliases stay inside the shell.
+    [[ "$PWD" == "${PWD:A}" ]] || builtin cd -P -- .
+    return 0
+  fi
+  if [[ "${_DEVENV_HOOK_ACTIVATED:-}" == "$PWD" ]]; then
     return 0
   fi
 
