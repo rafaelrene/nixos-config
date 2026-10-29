@@ -1,6 +1,8 @@
 { inputs, lib, ... }:
 let
-  server = builtins.fromJSON (builtins.readFile (inputs.t3-server-releases + "/sources.json"));
+  server = builtins.fromJSON (
+    builtins.readFile (inputs.t3-server-releases + "/pkgs/t3code/sources.json")
+  );
   desktop = (import (inputs.t3-desktop-releases + "/releases.nix")).nightly;
 in
 {

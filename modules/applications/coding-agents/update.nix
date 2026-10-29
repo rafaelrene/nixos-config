@@ -19,6 +19,7 @@
     }:
     let
       runtimes = config.features.shell.runtimes { inherit pkgs; };
+      githubAuth = config.features.nix.withGithubAuth { inherit pkgs; };
       state = "${profile}-updater";
       source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
       settings = pkgs.writeText "llm-agents-updater.json" (
@@ -47,7 +48,7 @@
         exec 9>${lib.escapeShellArg "${state}/update.lock"}
         echo "Agent tools: waiting for any existing update to finish..."
         flock 9
-        exec ${runtimes.zsh} -f ${./update.zsh} ${settings} "$@"
+        exec ${lib.getExe githubAuth} ${runtimes.zsh} -f ${./update.zsh} ${settings} "$@"
       '';
     };
 }
