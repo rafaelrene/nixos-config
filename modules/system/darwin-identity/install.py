@@ -239,10 +239,15 @@ class Installer:
 
     def native(self, path, identifier, old_requirement=None, *, deep=False):
         original = signature(path)
+        # Preserve vendor signatures only when they retain the installed identity.
         if (
             original
             and not original["adhoc"]
             and verify(path, original["requirement"], deep=deep, check=False)
+            and (
+                not old_requirement
+                or verify(path, old_requirement, deep=deep, check=False)
+            )
         ):
             requirement = original["requirement"]
         else:
