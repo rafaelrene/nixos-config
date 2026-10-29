@@ -10,6 +10,7 @@ let
     }:
     let
       runtimes = features.shell.runtimes { inherit pkgs; };
+      githubAuth = features.nix.withGithubAuth { inherit pkgs; };
     in
     {
       environment.systemPackages = [
@@ -23,7 +24,7 @@ let
             jq
           ];
           text = ''
-            exec ${runtimes.zsh} -f ${./updates.zsh} ${lib.escapeShellArg config.workstation.checkout} ${./update-frontend-design.sh} "$@"
+            exec ${lib.getExe githubAuth} ${runtimes.zsh} -f ${./updates.zsh} ${lib.escapeShellArg config.workstation.checkout} ${./update-frontend-design.sh} "$@"
           '';
         })
       ];

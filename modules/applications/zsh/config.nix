@@ -14,6 +14,7 @@
     }:
     let
       rebuild = if pkgs.stdenv.hostPlatform.isDarwin then "darwin-rebuild" else "nixos-rebuild";
+      githubAuth = config.features.nix.withGithubAuth { inherit pkgs; };
     in
     pkgs.writeText "workstation.zsh" (
       lib.replaceStrings
@@ -22,6 +23,7 @@
           "@code-root@"
           "@hostname@"
           "@rebuild@"
+          "@nix-github-auth@"
           "@navigation@"
           "@git-nav@"
           "@git-worktrees@"
@@ -31,6 +33,7 @@
           (lib.escapeShellArg codeRoot)
           (lib.escapeShellArg hostname)
           rebuild
+          (lib.escapeShellArg (lib.getExe githubAuth))
           (toString ./navigation.zsh)
           (toString ./git-nav.zsh)
           (toString config.features.shell.gitWorktreesSource)

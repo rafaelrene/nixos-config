@@ -85,5 +85,5 @@ if [[ "$restart" == true ]]; then
   fi
   print -- 'T3 Code: activation runs in the service manager; an open desktop will reopen automatically.'
 elif [[ "$changed" == true ]]; then
-  print -- 'T3 Code: release staged for ns -u, t3-activate, or the 04:00 activation.'
+  print -- 'T3 Code: release staged for ns, t3-activate, or the 04:00 activation.'
 fi

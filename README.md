@@ -33,11 +33,12 @@ Local package definitions are also available as flake package outputs.
 
 | Command | Action |
 | ------- | ------ |
-| `ns` | Rebuild and switch to the configured system. |
-| `ns -u` / `ns --upgrade-packages` | Update inputs, build and switch, then activate coding agents and T3 Code. |
+| `ns` | Build and switch the system, then activate staged coding agents and T3 Code. |
+| `ns -u` / `ns --upgrade-packages` | Update inputs and stage releases, then build, switch, and activate. |
 
 Both modes accept a checkout path, such as `ns -u /path/to/nixos-config`.
 Without one, it uses the configured main checkout.
+Nix update and rebuild commands reuse the GitHub CLI login when available.
 
 Devenv tracks upstream `main` and updates with `nup` and `nups`.
 

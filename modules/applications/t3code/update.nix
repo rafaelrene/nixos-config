@@ -21,6 +21,7 @@
     }:
     let
       runtimes = config.features.shell.runtimes { inherit pkgs; };
+      githubAuth = config.features.nix.withGithubAuth { inherit pkgs; };
       darwin = pkgs.stdenv.hostPlatform.isDarwin;
       state = "${home}/.local/state/t3code-bundle-updater";
       source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
@@ -56,7 +57,7 @@
         exec 9>${lib.escapeShellArg "${state}/update.lock"}
         echo "T3 Code: waiting for any existing update to finish..."
         flock 9
-        exec ${runtimes.zsh} -f ${./update.zsh} ${settings} "$@"
+        exec ${lib.getExe githubAuth} ${runtimes.zsh} -f ${./update.zsh} ${settings} "$@"
       '';
     };
 }

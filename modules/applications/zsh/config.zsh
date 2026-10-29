@@ -49,7 +49,8 @@ ns() {
 			-u | --upgrade-packages) upgrade=true; continue ;;
 			-h | --help)
 				print -r -- 'Usage: ns [-u|--upgrade-packages] [checkout]'
-				print -r -- 'Apply system configuration. With -u, update inputs and activate coding agents and T3 too.'
+				print -r -- 'Apply system configuration and activate staged coding agents and T3.'
+				print -r -- 'With -u, refresh inputs and stage updates first.'
 				return 0 ;;
 			--) positional=true; continue ;;
 			-*) print -u2 -r -- "Unknown option: $argument"; return 2 ;;
@@ -68,15 +69,13 @@ ns() {
 	fi
 
 	# Git's flake source excludes ignored local development state.
-	sudo @rebuild@ switch --flake "$checkout#"@hostname@ || return
-	if $upgrade; then
-		local system_bin=/nix/var/nix/profiles/system/sw/bin
-		if [[ -x $system_bin/update-llm-agents ]]; then
-			"$system_bin/update-llm-agents" --activate || return
-		fi
-		if [[ -x $system_bin/t3-activate ]]; then
-			"$system_bin/t3-activate"
-		fi
+	@nix-github-auth@ sudo --preserve-env=NIX_CONFIG @rebuild@ switch --flake "$checkout#"@hostname@ || return
+	local system_bin=/nix/var/nix/profiles/system/sw/bin
+	if [[ -x $system_bin/update-llm-agents ]]; then
+		"$system_bin/update-llm-agents" --activate || return
+	fi
+	if [[ -x $system_bin/t3-activate ]]; then
+		"$system_bin/t3-activate"
 	fi
 }
 

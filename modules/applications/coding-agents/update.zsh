@@ -64,7 +64,7 @@ fi
 mkdir -p "${staged:h}"
 nix build --print-build-logs --no-link --profile "$staged" "${build_options[@]}" "$build_source#$output"
 print -- 'Agent tools: staged.'
-# Background checks may bootstrap; a manual system upgrade activates afterward.
+# Background checks may bootstrap; otherwise ns or the daily job activates.
 if [[ "$stage" != true || ( ! -e "$profile" && -z "$checkout" ) ]]; then
   activate
 fi
