@@ -89,17 +89,23 @@
         if [[ "''${1-}" == stop-clients ]]; then
           exec ${runtimes.zsh} -f ${./lifecycle.zsh} ${settings} "$@"
         fi
+        if [[ "''${1-}" == reopen ]]; then
+          ${runtimes.zsh} -f ${../../system/updates/report.zsh} \
+            'T3 Code desktop' ${lib.escapeShellArg "${state}/desktop.log"} ${lib.getExe notify} \
+            ${./lifecycle.zsh} ${settings} ready
+          set -- launch
+        fi
         if [[ "''${1-}" == activate || "''${1-}" == rollback || "''${1-}" == launch ]]; then
+          title='T3 Code activation'
           log=${lib.escapeShellArg "${state}/activation.log"}
-          if [[ "$1" == launch ]]; then log=${lib.escapeShellArg "${state}/desktop.log"}; fi
+          if [[ "$1" == launch ]]; then
+            title='T3 Code desktop'
+            log=${lib.escapeShellArg "${state}/desktop.log"}
+          fi
           exec flock --close ${lib.escapeShellArg "${state}/activation.lock"} \
             ${runtimes.zsh} -f ${../../system/updates/report.zsh} \
-            'T3 Code activation' "$log" ${lib.getExe notify} \
+            "$title" "$log" ${lib.getExe notify} \
             ${./lifecycle.zsh} ${settings} "$@"
-        fi
-        if [[ "''${1-}" == reopen ]]; then
-          ${runtimes.zsh} -f ${./lifecycle.zsh} ${settings} ready
-          set -- launch
         fi
         # The child does not inherit the lock descriptor, including detached clients.
         exec flock --close ${lib.escapeShellArg "${state}/activation.lock"} \

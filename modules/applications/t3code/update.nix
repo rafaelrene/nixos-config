@@ -28,7 +28,10 @@
       resolver = config.features.shell.application {
         inherit pkgs;
         name = "resolve-t3-release";
-        runtimeInputs = [ pkgs.gh ];
+        runtimeInputs = [
+          pkgs.curl
+          pkgs.gh
+        ];
         text = ''
           exec ${runtimes.python3} ${./resolve-release.py} "$@"
         '';

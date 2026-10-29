@@ -377,7 +377,10 @@ perform() {
       if [[ "$processes" != '[]' ]]; then fail 'A T3 Code desktop appeared during shutdown. Server startup stopped.'; return; fi
       print -- "$reopen"
       ;;
-    ready) wait_ready '' 120 ;;
+    ready)
+      update_phase='waiting for the active server'
+      wait_ready '' 120
+      ;;
     activate|rollback|launch)
       if [[ -e "$state/activation.json" ]]; then recover || return; fi
       case "$action" in
@@ -391,8 +394,6 @@ perform() {
 }
 run mkdir -p "${profile:h}" || exit
 if ! perform "$@"; then
-  if [[ "$action" == activate || "$action" == rollback || "$action" == launch ]]; then
-    update_failure=${failure:-A lifecycle command failed.}
-  fi
+  update_failure=$failure
   exit 1
 fi

@@ -59,8 +59,33 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("destination", type=Path)
     destination = parser.parse_args().destination
+    # Public releases remain available before the first gh auth login.
+    token = subprocess.run(
+        ["gh", "auth", "token", "--hostname", "github.com"],
+        capture_output=True,
+        text=True,
+    )
+    headers = "Accept: application/vnd.github+json\n"
+    if token.returncode == 0:
+        credential = token.stdout.strip()
+        if not credential or any(character.isspace() for character in credential):
+            raise ValueError("GitHub returned an invalid authentication token.")
+        headers += f"Authorization: Bearer {credential}\n"
     response = subprocess.run(
-        ["gh", "api", "repos/pingdotgg/t3code/releases?per_page=100"],
+        [
+            "curl",
+            "--fail",
+            "--silent",
+            "--show-error",
+            "--connect-timeout",
+            "10",
+            "--max-time",
+            "30",
+            "--header",
+            "@-",
+            "https://api.github.com/repos/pingdotgg/t3code/releases?per_page=100",
+        ],
+        input=headers,
         check=True,
         capture_output=True,
         text=True,
