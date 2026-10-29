@@ -683,11 +683,11 @@
     "t3-desktop-releases": {
       "flake": false,
       "locked": {
-        "lastModified": 1792794902,
-        "narHash": "sha256-dOILRuZRTlJOY4Up5MKWmUddd0ecX9Lib3txocqYwxE=",
+        "lastModified": 1793254894,
+        "narHash": "sha256-FBRmyCWVE9jxQDbKl3UYo8vQVJZZSJGmyoxHwli3qx4=",
         "owner": "omarcresp",
         "repo": "t3code-flake",
-        "rev": "f8e20e0c8460501e89da8d06a0ccca913326ec5c",
+        "rev": "1208503046f6f5212d9cc1a0369ccc6f4f67be4e",
         "type": "github"
       },
       "original": {
@@ -699,11 +699,11 @@
     "t3-server-releases": {
       "flake": false,
       "locked": {
-        "lastModified": 1792793690,
-        "narHash": "sha256-pSaRVWtBVX9V5t3fqWj/EOcoR6sT9CJv6bq5L0YYqiA=",
+        "lastModified": 1793262919,
+        "narHash": "sha256-GNXI92/fy5MO9M27J5fb4Xjrv+fkRt/Wepe8InHo6NU=",
         "owner": "patrikduksin",
         "repo": "t3code-nix",
-        "rev": "aaf8ee0913a0b9709ac409093086290e354e2b08",
+        "rev": "feb6e2874b588138978d052b4d9ee05e278523a3",
         "type": "github"
       },
       "original": {
