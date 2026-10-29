@@ -9,11 +9,11 @@ base=$(jq -er '.base' <<<"$settings")
 lifecycle=$(jq -er '.lifecycle' <<<"$settings")
 build_source=$(jq -er '.source' <<<"$settings")
 output=$(jq -er '.output' <<<"$settings")
-server_input=$(jq -er '.serverInput' <<<"$settings")
-desktop_input=$(jq -er '.desktopInput' <<<"$settings")
+release_directory=$(jq -er '.releaseDirectory' <<<"$settings")
+resolver=$(jq -er '.resolverCommand' <<<"$settings")
+state=$(jq -er '.state' <<<"$settings")
 darwin=$(jq -er '.darwin | tostring' <<<"$settings")
 project=$(jq -r '.project // empty' <<<"$settings")
-activate_command=$(jq -er '.activateCommand' <<<"$settings")
 restart=false
 bootstrap=false
 checkout=''
@@ -31,30 +31,32 @@ while (( $# )); do
 done
 
 update() {
-  local generation previous version
+  local generation previous version snapshot
   local -a build_options=(--no-write-lock-file --no-accept-flake-config)
   if [[ -n "$checkout" ]]; then
     build_source=$checkout
+    snapshot="$checkout/$release_directory"
+    [[ -f "$snapshot/release.json" ]] || { print -u2 -- "Checkout has no T3 release snapshot: $snapshot/release.json"; return 1; }
   else
-    # Nix resolves nightly versions and publisher hashes from the release input.
-    build_options+=(--refresh
-      --override-input t3-server-releases "$server_input"
-      --override-input t3-desktop-releases "$desktop_input")
+    snapshot="$state/release"
+    build_options+=(--override-input t3-release "path:$snapshot")
   fi
+  update_step 'discovering the official nightly release' "$resolver" "$snapshot/release.json" || return
   print -- "T3 Code: building the matching Nix server and desktop..."
   previous=$(readlink -f "$staged" 2>/dev/null) || previous=''
   mkdir -p "$base" || return
   # Retain a GC root while the lifecycle waits to promote under its activation lock.
-  nix build --print-build-logs --out-link "$base/.t3code-build" "${build_options[@]}" "$build_source#$output" || return
+  update_step 'building the server and desktop' nix build --print-build-logs --out-link "$base/.t3code-build" "${build_options[@]}" "$build_source#$output" || return
   generation=$(readlink -f "$base/.t3code-build") || return
   if [[ "$generation" == "$previous" ]]; then
     print -- "T3 Code: server and desktop are already staged."
     changed=false
     return
   fi
-  "$lifecycle" stage "$generation" || return
+  update_step 'staging the release' "$lifecycle" stage "$generation" || return
   version=$(jq -er '.version' "$generation/share/t3code/release.json") || return
   print -- "T3 Code: server and desktop $version staged."
+  update_success="Server and desktop $version staged."
   changed=true
 }
 server="$profile/bin/t3"
@@ -62,28 +64,24 @@ if [[ "$darwin" == true ]]; then server="${profile}-executables/bin/t3"; fi
 changed=false
 if [[ "$bootstrap" != true || ! -e "$server" ]]; then
   if ! update; then
-    print -u2 -- 'T3 Code: update failed. No server restart requested. The update can be retried.'
+    print -u2 -- 'T3 Code: update failed. No server restart requested. The previous staged and active releases are retained.'
     exit 1
   fi
 fi
 if [[ "$bootstrap" == true && ! -e "$server" ]]; then
-  "$lifecycle" seed
+  update_step 'bootstrapping the release' "$lifecycle" seed || exit $?
 fi
 if [[ -n "$project" && -x "$server" && ! -e "$base/.nixos-config-registered" ]]; then
   install -d -m 0700 "$base"
-  "$server" project add "$project" --base-dir "$base"
+  update_step 'registering the configuration project' "$server" project add "$project" --base-dir "$base" || exit $?
   touch "$base/.nixos-config-registered"
 fi
 if [[ "$restart" == true ]]; then
   # Bootstrap may need this same lock when the server starts for the first time.
   flock -u 9
-  print -- 'T3 Code: requesting coordinated activation...'
-  if [[ "$darwin" == true ]]; then
-    "$activate_command" kickstart "gui/$(id -u)/org.nixos.t3code-restart"
-  else
-    "$activate_command" --user start --no-block t3code-restart.service
-  fi
-  print -- 'T3 Code: activation runs in the service manager; an open desktop will reopen automatically.'
+  # The coordinator reports success only after checking the running release.
+  update_success=''
+  update_step 'activating the staged release' "$lifecycle" request || exit $?
 elif [[ "$changed" == true ]]; then
   print -- 'T3 Code: release staged for ns, t3-activate, or the 04:00 activation.'
 fi

@@ -204,16 +204,39 @@ class Installer:
         self.manifest = manifest
         self.state = Path(manifest["state"])
         self.bin = Path(manifest["bin"])
-        self.keychain = self.state / "identity.keychain-db"
-        self.password_file = self.state / "password"
-        self.certificate = self.state / "certificate.pem"
-        self.identity_file = self.state / "identity.json"
+        self.identity_state = Path(manifest.get("identityState", manifest["state"]))
+        self.previous_bin = (
+            Path(manifest["previousBin"]) if manifest.get("previousBin") else None
+        )
+        self.keychain = self.identity_state / "identity.keychain-db"
+        self.password_file = self.identity_state / "password"
+        self.certificate = self.identity_state / "certificate.pem"
+        self.identity_file = self.identity_state / "identity.json"
         directory(self.state, 0o700)
         owned(self.state.parent, directory=True, protected=True)
         os.chmod(self.state, 0o700)
+        directory(self.identity_state, 0o700)
+        owned(self.identity_state.parent, directory=True, protected=True)
         directory(self.bin)
         owned(self.bin, directory=True, protected=True)
         owned(self.bin.parent, directory=True, protected=True)
+
+    def previous_record(self, destination, kind):
+        """Retain the old code requirements when splitting a combined profile."""
+        if self.previous_bin is None:
+            return None
+        previous = self.previous_bin.parent / destination.relative_to(self.bin.parent)
+        if not previous.exists() and not previous.is_symlink():
+            return None
+        records = read_json(self.identity_state / f"{kind}.json")
+        record = records.get(str(previous))
+        if (
+            not record
+            or previous.lstat().st_uid != os.geteuid()
+            or digest(previous) != record["installed"]
+        ):
+            raise InstallationError(f"Previous managed code changed: {previous}")
+        return record
 
     def resource_destination(self, name):
         requested = Path(os.path.normpath(self.bin / name))
@@ -325,6 +348,9 @@ class Installer:
                 sort_keys=True,
             )
             previous = records.get(str(destination))
+            old_requirements = (
+                previous or self.previous_record(destination, "resources") or {}
+            ).get("requirements", {})
             if destination.exists() or destination.is_symlink():
                 metadata = destination.lstat()
                 if (
@@ -400,9 +426,7 @@ class Installer:
                     try:
                         writable(executable.parent, modes)
                         writable(executable, modes)
-                        old_requirement = (
-                            (previous or {}).get("requirements", {}).get(relative)
-                        )
+                        old_requirement = old_requirements.get(relative)
                         requirements[relative] = self.native(
                             executable, identifier, old_requirement
                         )
@@ -449,7 +473,7 @@ class Installer:
     def identity(self):
         if not self.identity_file.exists():
             if (
-                any(self.state.glob("identity*"))
+                any(self.identity_state.glob("identity*"))
                 or self.password_file.exists()
                 or self.certificate.exists()
             ):
@@ -722,8 +746,17 @@ class Installer:
                 shutil.copyfile(source.resolve(), temporary)
                 os.chmod(temporary, source.stat().st_mode & 0o777)
                 if macho(temporary):
+                    previous = (
+                        self.previous_record(destination, "executables")
+                        if old is None
+                        else None
+                    )
                     requirement = self.native(
-                        temporary, identifier, old["requirement"] if old else None
+                        temporary,
+                        identifier,
+                        old["requirement"]
+                        if old
+                        else (previous or {}).get("requirement"),
                     )
             os.replace(temporary, destination)
             records[str(destination)] = {
@@ -1057,7 +1090,8 @@ def main():
         )
     manifest = json.loads(Path(sys.argv[1]).read_text())
     installer = Installer(manifest)
-    lock_path = installer.state / "activation.lock"
+    # Split agent profiles share the existing certificate and serialize its use.
+    lock_path = installer.identity_state / "activation.lock"
     with locked(lock_path):
         installer.identity()
         os.umask(0o022)

@@ -1,0 +1,13 @@
+{
+  "version": "0.1.5-nightly.20261029.3877",
+  "platforms": {
+    "aarch64-darwin": {
+      "serverHash": "sha256-wfKea3yxMcyTZ+2TNHlfYZmBhVch9zaHHJQwELa09lk=",
+      "desktopHash": "sha256-Tvr1L286Mp7HoaXRq7bH/fbd71ljRz93n0AL9La1BUg="
+    },
+    "x86_64-linux": {
+      "serverHash": "sha256-vuU9CkprUoGel8Cjtlx9TbAY7vo9Bdj6/qxJKYF5D2A=",
+      "desktopHash": "sha256-KJcabnVn51y9cipEFPB/QD6rHEvlucohmWNcAumSylc="
+    }
+  }
+}

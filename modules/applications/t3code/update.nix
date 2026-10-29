@@ -22,8 +22,17 @@
     let
       runtimes = config.features.shell.runtimes { inherit pkgs; };
       githubAuth = config.features.nix.withGithubAuth { inherit pkgs; };
+      notify = config.features.updates.notify { inherit pkgs; };
       darwin = pkgs.stdenv.hostPlatform.isDarwin;
       state = "${home}/.local/state/t3code-bundle-updater";
+      resolver = config.features.shell.application {
+        inherit pkgs;
+        name = "resolve-t3-release";
+        runtimeInputs = [ pkgs.gh ];
+        text = ''
+          exec ${runtimes.python3} ${./resolve-release.py} "$@"
+        '';
+      };
       source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
       settings = pkgs.writeText "t3code-updater.json" (
         builtins.toJSON {
@@ -31,13 +40,13 @@
           output = "${
             if darwin then "darwin" else "nixos"
           }Configurations.${hostname}.config.system.build.t3code";
-          serverInput = "github:patrikduksin/t3code-nix";
-          desktopInput = "github:omarcresp/t3code-flake";
+          releaseDirectory = "modules/applications/t3code/release";
+          resolverCommand = lib.getExe resolver;
+          inherit state;
           profile = "${home}/.local/state/nix/profiles/t3code";
           staged = "${home}/.local/state/nix/profiles/t3code-staged";
           base = "${home}/.local/share/t3code";
           lifecycle = lib.getExe lifecycle;
-          activateCommand = if darwin then "/bin/launchctl" else "${pkgs.systemd}/bin/systemctl";
         }
       );
     in
@@ -57,7 +66,9 @@
         exec 9>${lib.escapeShellArg "${state}/update.lock"}
         echo "T3 Code: waiting for any existing update to finish..."
         flock 9
-        exec ${lib.getExe githubAuth} ${runtimes.zsh} -f ${./update.zsh} ${settings} "$@"
+        exec ${lib.getExe githubAuth} ${runtimes.zsh} -f ${../../system/updates/report.zsh} \
+          'T3 Code update' ${lib.escapeShellArg "${state}/update.log"} ${lib.getExe notify} \
+          ${./update.zsh} ${settings} "$@"
       '';
     };
 }

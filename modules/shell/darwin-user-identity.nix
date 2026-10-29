@@ -11,6 +11,8 @@
       package,
       bin,
       state,
+      identityState ? state,
+      previousBin ? null,
       installedApplications ? "${builtins.dirOf bin}/Applications",
       resourceSymlinks ? { },
       resourceTrees ? { },
@@ -54,6 +56,8 @@
         inherit
           bin
           state
+          identityState
+          previousBin
           payload
           installedApplications
           resourceSymlinks

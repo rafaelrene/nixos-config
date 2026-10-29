@@ -15,12 +15,8 @@
     };
 
     llm-agents.url = "github:numtide/llm-agents.nix";
-    t3-server-releases = {
-      url = "github:patrikduksin/t3code-nix";
-      flake = false;
-    };
-    t3-desktop-releases = {
-      url = "github:omarcresp/t3code-flake";
+    t3-release = {
+      url = "path:./modules/applications/t3code/release";
       flake = false;
     };
     # These upstream URLs are overwritten. Archive locked inputs with

@@ -16,7 +16,12 @@ in
         environmentHome = if pkgs.stdenv.hostPlatform.isDarwin then home else "$HOME";
       in
       {
-        system.build.llm-agents = features.coding-agents.bundle { inherit pkgs profile; };
+        system.build = agents.bundles // {
+          codexUpdater = agents.updaters.codex;
+          claudeUpdater = agents.updaters.claude-code;
+          # An installed pre-split updater may still stage this output during the first switch.
+          llm-agents = features.coding-agents.bundle { inherit pkgs profile; };
+        };
         environment = {
           systemPackages = agents.packages;
           etc."codex/requirements.toml".text = ''

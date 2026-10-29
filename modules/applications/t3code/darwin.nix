@@ -148,7 +148,11 @@ in
       };
     in
     {
-      system.build.t3code = initial;
+      system.build = {
+        t3code = initial;
+        t3codeUpdater = updater;
+        t3codeActivator = activate;
+      };
       system.activationScripts.preActivation.text = lib.mkBefore ''
         # An existing desktop may still own the port through its embedded server.
         if /usr/sbin/lsof -nP -iTCP:3773 -sTCP:LISTEN >/dev/null 2>&1 \

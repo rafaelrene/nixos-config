@@ -29,19 +29,7 @@
           exec ${runtimes.python3} ${./darwin-app.py} "$@"
         '';
       };
-      notify = config.features.shell.application {
-        inherit pkgs;
-        name = "notify-t3code-error";
-        text =
-          if darwin then
-            ''
-              exec /usr/bin/osascript ${./notify.applescript} "$@"
-            ''
-          else
-            ''
-              exec ${pkgs.libnotify}/bin/notify-send "T3 Code" "$@"
-            '';
-      };
+      notify = config.features.updates.notify { inherit pkgs; };
       spawn = config.features.shell.application {
         inherit pkgs;
         name = "spawn-t3code-client";
@@ -69,7 +57,6 @@
           desktopApp = "${home}/Applications/T3 Code.app";
           desktopCommand = if darwin then lib.getExe desktopSupport else null;
           spawn = lib.getExe spawn;
-          notifyCommand = lib.getExe notify;
           processCommand = if darwin then "/bin/ps" else "${pkgs.procps}/bin/ps";
           serviceCommand = if darwin then "/bin/launchctl" else "${pkgs.systemd}/bin/systemctl";
           serviceFile = "${home}/Library/LaunchAgents/org.nixos.t3code.plist";
@@ -94,8 +81,21 @@
         install -d -m 0700 ${lib.escapeShellArg state}
         # Server startup closes clients while activation holds the lock and waits
         # for that server. Requests also wait for the independent coordinator.
-        if [[ "''${1-}" == request || "''${1-}" == request-rollback || "''${1-}" == stop-clients ]]; then
+        if [[ "''${1-}" == request || "''${1-}" == request-rollback ]]; then
+          exec ${runtimes.zsh} -f ${../../system/updates/report.zsh} \
+            'T3 Code activation' ${lib.escapeShellArg "${state}/activation.log"} ${lib.getExe notify} \
+            ${./lifecycle.zsh} ${settings} "$@"
+        fi
+        if [[ "''${1-}" == stop-clients ]]; then
           exec ${runtimes.zsh} -f ${./lifecycle.zsh} ${settings} "$@"
+        fi
+        if [[ "''${1-}" == activate || "''${1-}" == rollback || "''${1-}" == launch ]]; then
+          log=${lib.escapeShellArg "${state}/activation.log"}
+          if [[ "$1" == launch ]]; then log=${lib.escapeShellArg "${state}/desktop.log"}; fi
+          exec flock --close ${lib.escapeShellArg "${state}/activation.lock"} \
+            ${runtimes.zsh} -f ${../../system/updates/report.zsh} \
+            'T3 Code activation' "$log" ${lib.getExe notify} \
+            ${./lifecycle.zsh} ${settings} "$@"
         fi
         if [[ "''${1-}" == reopen ]]; then
           ${runtimes.zsh} -f ${./lifecycle.zsh} ${settings} ready

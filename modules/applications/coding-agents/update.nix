@@ -15,27 +15,36 @@
       pkgs,
       profile,
       hostname,
+      name,
       flake ? "github:numtide/llm-agents.nix",
     }:
     let
       runtimes = config.features.shell.runtimes { inherit pkgs; };
       githubAuth = config.features.nix.withGithubAuth { inherit pkgs; };
+      notify = config.features.updates.notify { inherit pkgs; };
       state = "${profile}-updater";
+      commandName = "update-${if name == "claude-code" then "claude" else name}";
+      title = if name == "claude-code" then "Claude Code" else "Codex";
       source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
-      settings = pkgs.writeText "llm-agents-updater.json" (
+      settings = pkgs.writeText "${name}-updater.json" (
         builtins.toJSON {
-          inherit flake profile source;
+          inherit
+            flake
+            profile
+            source
+            commandName
+            ;
           darwin = pkgs.stdenv.hostPlatform.isDarwin;
           output = "${
             if pkgs.stdenv.hostPlatform.isDarwin then "darwin" else "nixos"
-          }Configurations.${hostname}.config.system.build.llm-agents";
+          }Configurations.${hostname}.config.system.build.${name}";
           staged = "${profile}-staged";
         }
       );
     in
     config.features.shell.application {
       inherit pkgs;
-      name = "update-llm-agents";
+      name = commandName;
       runtimeInputs = with pkgs; [
         coreutils
         nix
@@ -46,9 +55,11 @@
       text = ''
         install -d -m 0700 ${lib.escapeShellArg state}
         exec 9>${lib.escapeShellArg "${state}/update.lock"}
-        echo "Agent tools: waiting for any existing update to finish..."
+        echo "${title}: waiting for any existing update to finish..."
         flock 9
-        exec ${lib.getExe githubAuth} ${runtimes.zsh} -f ${./update.zsh} ${settings} "$@"
+        exec ${lib.getExe githubAuth} ${runtimes.zsh} -f ${../../system/updates/report.zsh} \
+          ${lib.escapeShellArg title} ${lib.escapeShellArg "${state}/update.log"} ${lib.getExe notify} \
+          ${./update.zsh} ${settings} "$@"
       '';
     };
 }
