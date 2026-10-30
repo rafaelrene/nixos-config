@@ -148,7 +148,7 @@ in
         text = ''
           umask 077
           settings="${baseDir}/userdata/desktop-settings.json"
-          yq --inplace --output-format=json '.localEnvironmentEnabled = false' "$settings"
+          yq --inplace --output-format=json ${lib.escapeShellArg settings.desktopMerge} "$settings"
           export T3CODE_HOME="${baseDir}"
           export T3CODE_DISABLE_AUTO_UPDATE=true
           client="${profile}/bin/t3code-desktop"
@@ -341,8 +341,8 @@ in
           "d ${home}/.local/state/nix/profiles 0700 ${user} ${group} - -"
           "C ${baseDir}/userdata/settings.json 0600 ${user} ${group} - ${settings.server}"
           # Seed writable native settings without replacing later client preferences.
-          "C ${baseDir}/userdata/desktop-settings.json 0600 ${user} ${group} - ${./desktop-settings.json}"
-          "C ${baseDir}/userdata/client-settings.json 0600 ${user} ${group} - ${./client-settings.json}"
+          "C ${baseDir}/userdata/desktop-settings.json 0600 ${user} ${group} - ${settings.desktop}"
+          "C ${baseDir}/userdata/client-settings.json 0600 ${user} ${group} - ${settings.client}"
         ];
       };
     };

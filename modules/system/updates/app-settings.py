@@ -1,25 +1,18 @@
-"""Set native updater preferences without replacing unrelated application state."""
+"""Merge declared native preferences without replacing unrelated application state."""
 
 import configparser
 import io
 import json
 import os
+import runpy
 import sqlite3
 import subprocess
 import sys
 import tempfile
+from collections.abc import MutableMapping
 from pathlib import Path
 
 import tomlkit
-
-APPLICATIONS = {
-    "anytype": ("Anytype", "Library/Application Support/anytype"),
-    "standard-notes": ("Standard Notes", "Library/Application Support/Standard Notes"),
-    "freetube": ("FreeTube", "Library/Application Support/FreeTube"),
-    "yaak": ("yaak-app", "Library/Application Support/app.yaak.desktop"),
-    "obs-studio": ("OBS", "Library/Application Support/obs-studio"),
-    "rustdesk": ("RustDesk", "Library/Preferences/com.carriez.RustDesk"),
-}
 
 
 def replacement(path, contents):
@@ -41,117 +34,90 @@ def replacement(path, contents):
     return write
 
 
-def prepare(app, directory):
-    if app == "obs-studio":
-        path = directory / "global.ini"
-        data = configparser.ConfigParser(interpolation=None)
-        data.optionxform = str
-        if path.exists():
-            data.read_string(path.read_text())
-        if not data.has_section("General"):
-            data.add_section("General")
-        if data.get("General", "EnableAutoUpdates", fallback="").lower() == "false":
-            return []
-        data.set("General", "EnableAutoUpdates", "false")
-        output = io.StringIO()
-        data.write(output, space_around_delimiters=False)
-        return [replacement(path, output.getvalue())]
-
-    if app in ("anytype", "standard-notes"):
-        filename, key, value = (
-            ("devconfig.json", "updateDisabled", True)
-            if app == "anytype"
-            else ("user-preferences.json", "enableAutoUpdates", False)
-        )
-        path = directory / filename
-        data = json.loads(path.read_text()) if path.exists() else {}
-        if not isinstance(data, dict):
-            raise ValueError(f"Expected JSON object in {path}")
-        if data.get(key) is value:
-            return []
-        data[key] = value
-        return [replacement(path, json.dumps(data, indent=2) + "\n")]
-
-    if app == "freetube":
-        path = directory / "settings.db"
-        if path.with_name("settings.db~").exists():
-            raise ValueError(
-                "FreeTube has pending database recovery; open and close it first"
-            )
-        contents = path.read_text() if path.exists() else ""
-        current = None
-        for line in contents.splitlines():
-            if line.strip():
-                record = json.loads(line)
-                if record.get("_id") == "checkForUpdates":
-                    current = None if record.get("$$deleted") else record.get("value")
-        if current is False:
-            return []
-        contents = contents.rstrip("\n") + ("\n" if contents else "")
-        contents += json.dumps({"_id": "checkForUpdates", "value": False}) + "\n"
-        return [replacement(path, contents)]
-
-    if app == "rustdesk":
-        writes = []
-        for filename, key in (
-            ("RustDesk_local.toml", "enable-check-update"),
-            ("RustDesk2.toml", "allow-auto-update"),
+def merge(data, settings, table=dict):
+    if not isinstance(data, MutableMapping):
+        raise TypeError("Expected a native settings table")
+    changed = False
+    for key, value in settings.items():
+        if isinstance(value, dict):
+            if key not in data:
+                data[key] = table()
+            changed = merge(data[key], value, table) or changed
+        elif data.get(key) != value or (
+            isinstance(value, bool) and data.get(key) is not value
         ):
-            path = directory / filename
-            data = (
-                tomlkit.parse(path.read_text()) if path.exists() else tomlkit.document()
-            )
-            if "options" not in data:
-                data["options"] = tomlkit.table()
-            if data["options"].get(key) == "N":
-                continue
-            data["options"][key] = "N"
-            writes.append(replacement(path, tomlkit.dumps(data)))
-        return writes
+            data[key] = value
+            changed = True
+    return changed
 
-    # Yaak owns its schema and migrations. Never create a partial database.
-    path = directory / "db.sqlite"
-    if not path.exists():
-        print(
-            "Yaak is not initialized; disable its updater in Settings before use",
-            file=sys.stderr,
-        )
-        return []
-    with sqlite3.connect(f"{path.as_uri()}?mode=ro", uri=True) as database:
-        row = database.execute(
-            "SELECT autoupdate, auto_download_updates FROM settings WHERE id = 'default'"
-        ).fetchone()
-    if row is None:
-        print(
-            "Yaak has no settings row; disable its updater in Settings before use",
-            file=sys.stderr,
-        )
-        return []
-    if row == (0, 0):
-        return []
 
-    def update_yaak():
-        with sqlite3.connect(f"{path.as_uri()}?mode=rw", uri=True) as database:
-            database.execute(
-                "UPDATE settings SET autoupdate = 0, auto_download_updates = 0 WHERE id = 'default'"
-            )
-
-    return [update_yaak]
+def prepare_file(path, declaration):
+    contents = path.read_text() if path.exists() else ""
+    settings = declaration["settings"]
+    match declaration["format"]:
+        case "json":
+            data = json.loads(contents) if path.exists() else {}
+            if not isinstance(data, dict):
+                raise TypeError(f"Expected JSON object in {path}")
+            if not merge(data, settings):
+                return []
+            output = json.dumps(data, indent=2) + "\n"
+        case "toml":
+            data = tomlkit.parse(contents) if contents else tomlkit.document()
+            if not merge(data, settings, tomlkit.table):
+                return []
+            output = tomlkit.dumps(data)
+        case "ini":
+            data = configparser.ConfigParser(interpolation=None)
+            data.optionxform = str
+            if contents:
+                data.read_string(contents)
+            changed = False
+            for section, values in settings.items():
+                if not data.has_section(section):
+                    data.add_section(section)
+                for key, value in values.items():
+                    expected = (
+                        str(value).lower() if isinstance(value, bool) else str(value)
+                    )
+                    current = data.get(section, key, fallback="")
+                    if isinstance(value, bool):
+                        current = current.lower()
+                    if current != expected:
+                        data.set(section, key, expected)
+                        changed = True
+            if not changed:
+                return []
+            buffer = io.StringIO()
+            data.write(buffer, space_around_delimiters=False)
+            output = buffer.getvalue()
+        case unknown:
+            raise ValueError(f"Unsupported native preference format: {unknown}")
+    return [replacement(path, output)]
 
 
 def main():
-    app, phase = sys.argv[1:]
+    settings_file, phase = sys.argv[1:]
     if phase not in ("check", "apply"):
         raise ValueError("Expected check or apply")
-    process, relative = APPLICATIONS[app]
-    writes = prepare(app, Path.home() / relative)
+    settings = json.loads(Path(settings_file).read_text())
+    directory = Path.home() / settings["directory"]
+    writes = []
+    for filename, declaration in settings.get("files", {}).items():
+        writes.extend(prepare_file(directory / filename, declaration))
+    # Native databases need an application-owned prepare(directory, replacement)
+    # function returning deferred writes, with no mutations during the check phase.
+    if "prepare" in settings:
+        prepare = runpy.run_path(settings["prepare"])["prepare"]
+        writes.extend(prepare(directory, replacement))
     if not writes:
         return
+    process = settings["process"]
     result = subprocess.run(
         ["/usr/bin/pgrep", "-i", "-x", process], capture_output=True, check=False
     )
     if result.returncode == 0:
-        raise ValueError(f"Close {process} before rebuilding its updater preferences")
+        raise ValueError(f"Close {process} before rebuilding its managed preferences")
     if result.returncode != 1:
         raise ValueError(f"Could not check whether {process} is running")
     if phase == "apply":
@@ -162,5 +128,5 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except (ValueError, OSError, sqlite3.Error) as error:
+    except (ValueError, TypeError, OSError, sqlite3.Error, configparser.Error) as error:
         sys.exit(str(error))

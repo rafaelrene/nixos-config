@@ -8,7 +8,13 @@
     {
       # First launch creates the settings database. Until then, disable updates in
       # Settings, close Yaak, and rebuild to apply the managed preference.
-      imports = [ (config.features.updates.darwinAppSettings "yaak") ];
+      imports = [
+        (config.features.updates.darwinAppSettings {
+          process = "yaak-app";
+          directory = "Library/Application Support/app.yaak.desktop";
+          prepare = ./settings.py;
+        })
+      ];
       environment.systemPackages = [ unstable.yaak ];
     };
 }

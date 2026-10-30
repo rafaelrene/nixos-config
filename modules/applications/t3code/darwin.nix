@@ -56,15 +56,18 @@ in
           /bin/launchctl setenv T3CODE_HOME "${base}"
           /bin/launchctl setenv T3CODE_DISABLE_AUTO_UPDATE true
           clientSettings="${base}/userdata/desktop-settings.json"
-          if ! test -e "$clientSettings"; then printf '{}\n' > "$clientSettings"; fi
-          yq --inplace --output-format=json '.localEnvironmentEnabled = false' "$clientSettings"
+          if ! test -e "$clientSettings"; then install -m600 ${settings.desktop} "$clientSettings"; fi
+          yq --inplace --output-format=json ${lib.escapeShellArg settings.desktopMerge} "$clientSettings"
+          if ! test -e "${base}/userdata/client-settings.json"; then
+            install -m600 ${settings.client} "${base}/userdata/client-settings.json"
+          fi
           server="${profile}-executables/bin/t3"
           if ! test -x "$server"; then
             echo "T3 Code's stable executable has not been installed." >&2
             exit 1
           fi
           if ! test -e "${base}/userdata/settings.json"; then
-            cp ${settings.server} "${base}/userdata/settings.json"
+            install -m600 ${settings.server} "${base}/userdata/settings.json"
           fi
           yq --inplace --output-format=json \
             ${lib.escapeShellArg settings.merge} \
@@ -132,9 +135,9 @@ in
           umask 077
           mkdir -p "${base}/userdata"
           settings="${base}/userdata/desktop-settings.json"
-          if ! test -e "$settings"; then printf '{}\n' > "$settings"; fi
+          if ! test -e "$settings"; then install -m600 ${settings.desktop} "$settings"; fi
           # Keep native client preferences while preventing a second, embedded server.
-          yq --inplace --output-format=json '.localEnvironmentEnabled = false' "$settings"
+          yq --inplace --output-format=json ${lib.escapeShellArg settings.desktopMerge} "$settings"
           export T3CODE_HOME="${base}"
           export T3CODE_DISABLE_AUTO_UPDATE=true
           client="${home}/Applications/T3 Code.app"

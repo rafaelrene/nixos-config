@@ -6,7 +6,16 @@
     programs.obs-studio.enable = true;
   };
   flake.modules.darwin.obs-studio = { pkgs, ... }: {
-    imports = [ (config.features.updates.darwinAppSettings "obs-studio") ];
+    imports = [
+      (config.features.updates.darwinAppSettings {
+        process = "OBS";
+        directory = "Library/Application Support/obs-studio";
+        files."global.ini" = {
+          format = "ini";
+          settings.General.EnableAutoUpdates = false;
+        };
+      })
+    ];
     environment.systemPackages = [
       (inputs.brew-nix.packages.${pkgs.stdenv.hostPlatform.system}.obs.overrideAttrs {
         # Preserve the vendor signature for Screen Recording permission.

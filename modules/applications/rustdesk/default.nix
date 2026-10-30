@@ -2,7 +2,22 @@
 {
   flake.modules.darwin.rustdesk = { lib, pkgs, ... }: {
     # User preferences do not disable an updater already enabled in a root service.
-    imports = [ (config.features.updates.darwinAppSettings "rustdesk") ];
+    imports = [
+      (config.features.updates.darwinAppSettings {
+        process = "RustDesk";
+        directory = "Library/Preferences/com.carriez.RustDesk";
+        files = {
+          "RustDesk_local.toml" = {
+            format = "toml";
+            settings.options.enable-check-update = "N";
+          };
+          "RustDesk2.toml" = {
+            format = "toml";
+            settings.options.allow-auto-update = "N";
+          };
+        };
+      })
+    ];
     environment.systemPackages = [
       (inputs.brew-nix.packages.${pkgs.stdenv.hostPlatform.system}.rustdesk.overrideAttrs {
         dontFixup = true;

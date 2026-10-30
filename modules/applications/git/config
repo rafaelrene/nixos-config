@@ -9,9 +9,14 @@
   defaultBranch = master
 
 [core]
+  editor = nvim
+  pager = delta
   whitespace = -trailing-space
   autocrlf = false
   eol = lf
+
+[interactive]
+  diffFilter = delta --color-only
 
 [color]
   ui = auto

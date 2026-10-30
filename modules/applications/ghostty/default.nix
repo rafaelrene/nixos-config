@@ -44,14 +44,14 @@ let
         (if pkgs.stdenv.hostPlatform.isDarwin then pkgs.ghostty-bin else pkgs.ghostty)
       ];
       etc = {
-        "xdg/ghostty/common".text =
-          builtins.readFile ./config-common
-          # Ghostty's Linux build has no updater; Sparkle is macOS-only.
-          + lib.optionalString pkgs.stdenv.hostPlatform.isDarwin ''
-            auto-update = off
-            command = ${(features.shell.runtimes { inherit pkgs; }).zsh} --login
-          '';
         "xdg/ghostty/theme".text = renderTheme { inherit lib pkgs; };
+      }
+      // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+        # Ghostty's Linux build has no updater; Sparkle is macOS-only.
+        "xdg/ghostty/platform".text = ''
+          auto-update = off
+          command = ${(features.shell.runtimes { inherit pkgs; }).zsh} --login
+        '';
       };
     };
   };
@@ -75,13 +75,25 @@ in
               source = ./config;
             }
           }"
+          "L+ ${home}/.config/ghostty/common - - - - ${
+            features.sources.checkoutPath {
+              inherit (config.workstation) checkout;
+              source = ./config-common;
+            }
+          }"
         ];
       };
     darwin.ghostty = { config, ... }: {
       imports = [ common ];
-      workstation.links.".config/ghostty/config" = features.sources.checkoutPath {
-        inherit (config.workstation) checkout;
-        source = ./darwin.config;
+      workstation.links = {
+        ".config/ghostty/config" = features.sources.checkoutPath {
+          inherit (config.workstation) checkout;
+          source = ./darwin.config;
+        };
+        ".config/ghostty/common" = features.sources.checkoutPath {
+          inherit (config.workstation) checkout;
+          source = ./config-common;
+        };
       };
     };
   };

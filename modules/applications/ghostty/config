@@ -1,4 +1,4 @@
-config-file = /etc/xdg/ghostty/common
+config-file = ~/.config/ghostty/common
 config-file = /etc/xdg/ghostty/theme
 gtk-titlebar = false
 window-decoration = false

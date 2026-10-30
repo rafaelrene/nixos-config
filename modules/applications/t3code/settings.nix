@@ -5,7 +5,7 @@ in
 {
   options.features.t3code.settings = lib.mkOption {
     type = lib.types.functionTo (lib.types.attrsOf lib.types.raw);
-    description = "Generate T3 Code server settings and their merge expression.";
+    description = "Generate shared T3 Code native settings and their merge expressions.";
   };
 
   config.features.t3code.settings =
@@ -16,6 +16,17 @@ in
     }:
     let
       themeJSON = features.t3code.theme { inherit lib pkgs; };
+      desktop = pkgs.writeText "t3code-desktop-settings.json" (
+        builtins.toJSON {
+          # Both native clients connect to the separately managed server.
+          localEnvironmentEnabled = false;
+        }
+      );
+      client = pkgs.writeText "t3code-client-settings.json" (
+        builtins.toJSON {
+          notificationMode = "notifications-and-sound";
+        }
+      );
       server = pkgs.writeText "t3code-declared-settings.json" (
         builtins.toJSON {
           continueThreadsAfterServerUpdate = true;
@@ -30,8 +41,9 @@ in
       );
     in
     {
-      inherit server;
+      inherit server desktop client;
       theme = pkgs.writeText "t3code-workstation-theme.json" themeJSON;
       merge = ". *= load(\"${server}\")";
+      desktopMerge = ". *= load(\"${desktop}\")";
     };
 }

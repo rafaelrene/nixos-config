@@ -4,17 +4,32 @@ let
   common =
     {
       config,
+      lib,
       pkgs,
       ...
     }:
     let
       runtimes = features.shell.runtimes { inherit pkgs; };
+      configuration = pkgs.writeText "workstation.zsh" (
+        lib.replaceStrings
+          [ "@code-root@" "@navigation@" "@git-nav@" "@git-worktrees@" ]
+          [
+            (lib.escapeShellArg config.workstation.codeRoot)
+            (toString ./navigation.zsh)
+            (toString ./git-nav.zsh)
+            (toString features.shell.gitWorktreesSource)
+          ]
+          (builtins.readFile ./config.zsh)
+      );
     in
     {
       programs.zsh = {
         enable = true;
         enableCompletion = true;
         histFile = "$HOME/.local/state/zsh/history";
+        interactiveShellInit = lib.mkOrder 900 ''
+          source ${configuration}
+        '';
         # Global Nix configuration replaces zsh's first-run setup wizard.
         shellInit = ''
           zsh-newuser-install() { :; }
@@ -22,6 +37,12 @@ let
       };
       users.users.${config.workstation.user}.shell =
         if pkgs.stdenv.hostPlatform.isDarwin then runtimes.zsh else pkgs.zsh;
+      environment.shellAliases = {
+        ls = "eza -la --icons=auto --group-directories-first";
+        vim = "nvim";
+        v = "nvim";
+        pn = "pnpm";
+      };
     };
 in
 {

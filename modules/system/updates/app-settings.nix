@@ -2,7 +2,7 @@
 {
   options.features.updates.darwinAppSettings = lib.mkOption {
     type = lib.types.functionTo lib.types.deferredModule;
-    description = "Merge native updater preferences while the application is closed.";
+    description = "Merge application-declared native preferences while the application is closed.";
   };
 
   # Close the app before rebuilding if its managed preference changes. Settings
@@ -17,6 +17,7 @@
     }:
     let
       python = pkgs.python3.withPackages (ps: [ ps.tomlkit ]);
+      settings = pkgs.writeText "native-app-settings.json" (builtins.toJSON app);
       run =
         phase:
         lib.escapeShellArgs [
@@ -27,7 +28,7 @@
           "--"
           "${python}/bin/python3"
           "${./app-settings.py}"
-          app
+          (toString settings)
           phase
         ];
     in
