@@ -3,7 +3,7 @@ let
   inherit (config) features;
 in
 {
-  flake.modules = lib.genAttrs [ "nixos" "darwin" ] (_: {
+  flake.modules = lib.genAttrs [ "nixos" "darwin" ] (platform: {
     coding-agents =
       { config, pkgs, ... }:
       let
@@ -13,25 +13,19 @@ in
           inherit pkgs profile;
           hostname = config.networking.hostName;
         };
-        environmentHome = if pkgs.stdenv.hostPlatform.isDarwin then home else "$HOME";
       in
       {
+        imports = with (features.modulesFor platform); [
+          codex
+          claude
+        ];
         system.build = agents.bundles // {
           codexUpdater = agents.updaters.codex;
           claudeUpdater = agents.updaters.claude-code;
           # An installed pre-split updater may still stage this output during the first switch.
           llm-agents = features.coding-agents.bundle { inherit pkgs profile; };
         };
-        environment = {
-          systemPackages = agents.packages;
-          etc."codex/requirements.toml".text = ''
-            check_for_update_on_startup = false
-          '';
-          variables = {
-            CODEX_HOME = "${environmentHome}/.local/share/codex";
-            CLAUDE_CONFIG_DIR = "${environmentHome}/.local/share/claude";
-          };
-        };
+        environment.systemPackages = agents.packages;
       };
   });
 }

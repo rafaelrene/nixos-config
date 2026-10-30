@@ -1,5 +1,50 @@
 model = "gpt-6.1-sol"
-model_reasoning_effort = "high"
+model_reasoning_effort = "xhigh"
+
+[features]
+# Keep the background daemon disabled for the Nix-managed CLI.
+daemon_auto_start = false
+memories = false
+
+[memories]
+generate_memories = false
+use_memories = false
+
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
+
+[tui]
+theme = "workstation"
+screen_reader_detection_done = true
+
+[tui.model_availability_nux]
+"gpt-5.6-sol" = 2
+gpt-6-astra = 4
+"gpt-6.1-sol" = 4
+
+[hooks.state]
+
+[hooks.state."/Users/rafael/.codex/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:f449e36906d318dae9007993485c98d659e24b703a81a47df9812f18d2c6601b"
+
+[hooks.state."/Users/rafael/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:f8d378986c4d79039e591646983bc297623321a2588125d1cddf8a2a36de27ab"
+
+[hooks.state."/Users/rafael/.codex/hooks.json:interrupt:0:0"]
+trusted_hash = "sha256:58ea9ed30e0b5e81a223f3d6b01959e6f16ed8410b9267c9d6e3b9a4fa8c4a70"
+
+[projects."/home/raf"]
+trust_level = "trusted"
+
+[projects."/data/code/nixos-config"]
+trust_level = "trusted"
+
+[projects."/data/code/ansible"]
+trust_level = "trusted"
+
+[projects."/data"]
+trust_level = "trusted"
+
 [projects."/Users/rafael/code/.personal/flux"]
 trust_level = "trusted"
 
@@ -57,35 +102,8 @@ trust_level = "trusted"
 [projects."/Users/rafael/code/.personal/.try/2026-08-30 echohold"]
 trust_level = "trusted"
 
-[mcp_servers.openaiDeveloperDocs]
-url = "https://developers.openai.com/mcp"
-
-[hooks.state]
-
-[hooks.state."/Users/rafael/.codex/hooks.json:permission_request:0:0"]
-trusted_hash = "sha256:f449e36906d318dae9007993485c98d659e24b703a81a47df9812f18d2c6601b"
-
-[hooks.state."/Users/rafael/.codex/hooks.json:stop:0:0"]
-trusted_hash = "sha256:f8d378986c4d79039e591646983bc297623321a2588125d1cddf8a2a36de27ab"
-
-[hooks.state."/Users/rafael/.codex/hooks.json:interrupt:0:0"]
-trusted_hash = "sha256:58ea9ed30e0b5e81a223f3d6b01959e6f16ed8410b9267c9d6e3b9a4fa8c4a70"
-
 [projects."/Users/rafael/code/.personal/nixos-config"]
 trust_level = "trusted"
 
 [projects."/Users/rafael/.t3/worktrees/global-repo/t3code-a683c45c/src/firebase/libs/gs3-ai-agents"]
 trust_level = "trusted"
-
-[tui]
-theme = "workstation"
-screen_reader_detection_done = true
-
-[tui.model_availability_nux]
-"gpt-5.6-sol" = 2
-gpt-6-astra = 2
-"gpt-6.1-sol" = 4
-
-# Keep the background daemon disabled for the Nix-managed CLI.
-[features]
-daemon_auto_start = false

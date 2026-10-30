@@ -3,12 +3,12 @@
   options.features.coding-agents.source = lib.mkOption {
     type = lib.types.path;
     default = ../../../config/agents;
-    description = "Shared editable agent instructions, settings, and skills.";
+    description = "Shared editable agent instructions and skills.";
   };
 
   options.features.coding-agents.links = lib.mkOption {
     type = lib.types.functionTo (lib.types.attrsOf lib.types.raw);
-    description = "Declare shared agent rules, settings and skill links.";
+    description = "Declare shared agent rule and skill links.";
   };
 
   config.features.coding-agents.links =
@@ -36,9 +36,6 @@
         ".local/share/codex/AGENTS.md" = "AGENTS.md";
         ".local/share/claude/AGENTS.md" = "AGENTS.md";
         ".local/share/claude/CLAUDE.md" = "CLAUDE.md";
-      };
-      settings = {
-        ".local/share/claude/settings.json" = "claude/settings.json";
       };
       skillLinks = lib.listToAttrs (
         lib.concatMap (
