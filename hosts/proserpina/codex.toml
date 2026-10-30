@@ -89,3 +89,8 @@ gpt-6-astra = 2
 # Keep the background daemon disabled for the Nix-managed CLI.
 [features]
 daemon_auto_start = false
+memories = false
+
+[memories]
+generate_memories = false
+use_memories = false
