@@ -564,6 +564,18 @@
         "url": "https://nodejs.org/dist/latest-v24.x/SHASUMS256.txt"
       }
     },
+    "rex-download": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-kB2i+M4kru4w9sYijOdBM3a1RCBsMC6tAVk5HgDp2LU=",
+        "type": "file",
+        "url": "https://blob.superlogical.com/download/rex-app/preview/latest.dmg"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://blob.superlogical.com/download/rex-app/preview/latest.dmg"
+      }
+    },
     "root": {
       "inputs": {
         "anthropic-skills": "anthropic-skills",
@@ -580,6 +592,7 @@
         "nixpkgs-darwin": "nixpkgs-darwin_2",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "nodejs-checksums": "nodejs-checksums",
+        "rex-download": "rex-download",
         "rust-overlay": "rust-overlay_2",
         "t3-release": "t3-release",
         "viber-download": "viber-download",

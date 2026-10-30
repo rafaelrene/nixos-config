@@ -33,6 +33,10 @@
       url = "file+https://download.viber.com/desktop/mac_arm/update/update.zip";
       flake = false;
     };
+    rex-download = {
+      url = "file+https://blob.superlogical.com/download/rex-app/preview/latest.dmg";
+      flake = false;
+    };
 
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 

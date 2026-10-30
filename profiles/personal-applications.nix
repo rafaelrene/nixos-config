@@ -19,6 +19,7 @@ in
         communication
         personal-data
         freetube
+        rex
         rustdesk
         ungoogled-chromium
         zentty
