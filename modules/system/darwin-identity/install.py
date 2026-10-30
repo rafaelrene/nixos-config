@@ -276,8 +276,17 @@ class Installer:
         else:
             self.sign(path, identifier)
             requirement = self.requirement(identifier)
-        if old_requirement:
-            verify(path, old_requirement, deep=deep)
+        # Source builds cannot retain a vendor's certificate. Verify the chosen
+        # identity so the persistent local fallback can handle that transition.
+        verify(path, requirement, deep=deep)
+        if old_requirement and not verify(
+            path, old_requirement, deep=deep, check=False
+        ):
+            print(
+                f"Darwin code identity: {identifier} moved to the persistent local "
+                "signing identity; macOS permissions may need to be granted again.",
+                file=sys.stderr,
+            )
         return requirement
 
     def resource_aliases(self, trees):
