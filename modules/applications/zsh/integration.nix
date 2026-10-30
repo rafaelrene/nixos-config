@@ -15,8 +15,7 @@ in
         source ${
           features.zsh.configuration {
             inherit lib pkgs;
-            inherit (config.workstation) checkout codeRoot;
-            hostname = config.networking.hostName;
+            inherit (config.workstation) codeRoot;
           }
         }
       '';

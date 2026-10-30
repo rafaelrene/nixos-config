@@ -39,6 +39,9 @@ Local package definitions are also available as flake package outputs.
 Both modes accept a checkout path, such as `ns -u /path/to/nixos-config`.
 Without one, it uses the configured main checkout.
 Nix update and rebuild commands reuse the GitHub CLI login when available.
+T3 updates select one official nightly with matching server and desktop artifacts
+for both machines. Update commands report failures and send system notifications.
+Codex, Claude Code, and T3 Code stage and activate independently.
 
 Devenv tracks upstream `main` and updates with `nup` and `nups`.
 

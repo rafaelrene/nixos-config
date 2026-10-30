@@ -8,7 +8,7 @@ if [[ "$action" == --help || "$action" == -h ]]; then
   exit 0
 fi
 settings=$(cat "$settings_file") || exit
-for key in state profile staged desktopApp desktopCommand spawn notifyCommand serviceCommand serviceFile healthUrl initial darwin processCommand; do
+for key in state profile staged desktopApp desktopCommand spawn serviceCommand serviceFile healthUrl initial darwin processCommand; do
   value=$(jq -r --arg key "$key" '.[$key] // empty' <<<"$settings") || exit
   typeset "$key=$value"
 done
@@ -297,6 +297,7 @@ recover() {
 activate() {
   local rollback=$1 old target old_version target_version='' processes clients clients_current=true reopen=false activation_failure
   old=$(active) || return
+  update_phase='checking the staged release and active server'
   if [[ "$rollback" == true ]]; then
     target_version=$(rollback_version) || return
     target=$(generation "$profile-$target_version-link") || return
@@ -320,6 +321,7 @@ activate() {
   fi
   if [[ -z "$old" ]]; then fail 'No previous T3 Code release exists. Bootstrap it before activation.'; return; fi
   desktop_action prepare "$target" || return
+  update_phase='promoting the release and checking server readiness'
   # Profile history owns rollback. This temporary root also protects recovery if
   # scheduled garbage collection prunes old generations during activation.
   if [[ ! -e "$profile" ]]; then run nix build --no-link --profile "$profile" "$old" || return; fi
@@ -341,6 +343,7 @@ activate() {
   local version
   version=$(jq -er '.version' "$target/share/t3code/release.json") || return
   print -- "T3 Code: activated $version."
+  update_success="Server and desktop $version activated; server readiness verified."
 }
 perform() {
   local target processes reopen
@@ -374,7 +377,10 @@ perform() {
       if [[ "$processes" != '[]' ]]; then fail 'A T3 Code desktop appeared during shutdown. Server startup stopped.'; return; fi
       print -- "$reopen"
       ;;
-    ready) wait_ready '' 120 ;;
+    ready)
+      update_phase='waiting for the active server'
+      wait_ready '' 120
+      ;;
     activate|rollback|launch)
       if [[ -e "$state/activation.json" ]]; then recover || return; fi
       case "$action" in
@@ -388,12 +394,6 @@ perform() {
 }
 run mkdir -p "${profile:h}" || exit
 if ! perform "$@"; then
-  if [[ "$action" == activate || "$action" == rollback || "$action" == launch ]]; then
-    message="T3 Code: ${failure:-A lifecycle command failed.}"
-    log=activation.log
-    [[ "$action" != launch ]] || log=desktop.log
-    print -r -- "$(date '+%Y-%m-%d %H:%M:%S') $message" >>"$state/$log"
-    "$notifyCommand" "$message" >/dev/null 2>&1 || true
-  fi
+  update_failure=$failure
   exit 1
 fi

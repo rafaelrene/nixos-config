@@ -581,8 +581,7 @@
         "nixpkgs-unstable": "nixpkgs-unstable",
         "nodejs-checksums": "nodejs-checksums",
         "rust-overlay": "rust-overlay_2",
-        "t3-desktop-releases": "t3-desktop-releases",
-        "t3-server-releases": "t3-server-releases",
+        "t3-release": "t3-release",
         "viber-download": "viber-download",
         "zen-browser": "zen-browser"
       }
@@ -658,37 +657,17 @@
         "type": "github"
       }
     },
-    "t3-desktop-releases": {
+    "t3-release": {
       "flake": false,
       "locked": {
-        "lastModified": 1793254894,
-        "narHash": "sha256-FBRmyCWVE9jxQDbKl3UYo8vQVJZZSJGmyoxHwli3qx4=",
-        "owner": "omarcresp",
-        "repo": "t3code-flake",
-        "rev": "1208503046f6f5212d9cc1a0369ccc6f4f67be4e",
-        "type": "github"
+        "path": "./modules/applications/t3code/release",
+        "type": "path"
       },
       "original": {
-        "owner": "omarcresp",
-        "repo": "t3code-flake",
-        "type": "github"
-      }
-    },
-    "t3-server-releases": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1793262919,
-        "narHash": "sha256-GNXI92/fy5MO9M27J5fb4Xjrv+fkRt/Wepe8InHo6NU=",
-        "owner": "patrikduksin",
-        "repo": "t3code-nix",
-        "rev": "feb6e2874b588138978d052b4d9ee05e278523a3",
-        "type": "github"
+        "path": "./modules/applications/t3code/release",
+        "type": "path"
       },
-      "original": {
-        "owner": "patrikduksin",
-        "repo": "t3code-nix",
-        "type": "github"
-      }
+      "parent": []
     },
     "treefmt-nix": {
       "inputs": {

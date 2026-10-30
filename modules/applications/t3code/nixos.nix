@@ -162,7 +162,11 @@ in
     in
     {
       nixpkgs.config.android_sdk.accept_license = true;
-      system.build.t3code = features.t3code.bundle { inherit pkgs profile; };
+      system.build = {
+        t3code = features.t3code.bundle { inherit pkgs profile; };
+        t3codeUpdater = updateT3Code;
+        t3codeActivator = activate;
+      };
       environment.variables.T3CODE_HOME = "$HOME/.local/share/t3code";
       environment.systemPackages = [
         t3Command
