@@ -21,10 +21,6 @@ in
         inherit pkgs profile;
         hostname = config.networking.hostName;
       };
-      inherit (features.coding-agents.themes { inherit lib pkgs; })
-        claudeTheme
-        codexTheme
-        ;
       sharedLinks = features.coding-agents.links {
         inherit lib;
         skillSource = "${source}/skills";
@@ -42,20 +38,10 @@ in
       # sessions, or local settings are copied, moved, or put in the Nix store.
       workstation = {
         stateAliases = {
-          ".local/share/codex" = ".codex";
-          ".local/share/claude" = ".claude";
           # Keep existing Pi data reachable while activation prunes its managed links.
           ".local/share/pi/agent" = ".pi/agent";
         };
-        links =
-          lib.mapAttrs (_: path: "${source}/${path}") sharedLinks.rules
-          // lib.mapAttrs (_: path: "${source}/${path}") sharedLinks.settings
-          // skillLinks
-          // {
-            ".local/share/codex/themes/workstation.tmTheme" = toString codexTheme;
-            ".local/share/claude/settings.json" = lib.mkDefault "${source}/claude/settings.json";
-            ".local/share/claude/themes/workstation.json" = toString claudeTheme;
-          };
+        links = lib.mapAttrs (_: path: "${source}/${path}") sharedLinks.rules // skillLinks;
 
       };
 

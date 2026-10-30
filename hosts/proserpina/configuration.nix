@@ -1,7 +1,6 @@
 { config, inputs, ... }:
 let
   modules = config.features.modulesFor "darwin";
-  inherit (config.features.sources) checkoutPath;
 in
 {
   flake.darwinConfigurations.Proserpina = inputs.nix-darwin.lib.darwinSystem {
@@ -33,14 +32,6 @@ in
         user = "rafael";
         codeRoot = "/Users/rafael/code";
         checkout = "/Users/rafael/code/.personal/nixos-config";
-        links.".local/share/codex/config.toml" = checkoutPath {
-          inherit (config.workstation) checkout;
-          source = ./codex.toml;
-        };
-        links.".local/share/claude/settings.json" = checkoutPath {
-          inherit (config.workstation) checkout;
-          source = ./claude.json;
-        };
       };
     };
 }
