@@ -22,7 +22,6 @@ in
           defaultTheme = "othinus";
           # Reapply the selection when the palette changes, not every restart.
           defaultThemeSetAt = builtins.hashString "sha256" themeJSON;
-          # T3 uses each harness's memory settings from these shared homes.
           providers = {
             codex.homePath = "${home}/.local/share/codex";
             claudeAgent.homePath = "${home}/.local/share/claude";
