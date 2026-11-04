@@ -61,6 +61,7 @@ let
         name = "ns";
         runtimeInputs = with pkgs; [
           coreutils
+          git
           nix
           zsh
           jq
