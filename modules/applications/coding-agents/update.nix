@@ -23,6 +23,8 @@
       githubAuth = config.features.nix.withGithubAuth { inherit pkgs; };
       notify = config.features.updates.notify { inherit pkgs; };
       state = "${profile}-updater";
+      # Agent profiles share Nix's tarball cache, so their imports must not overlap.
+      lock = "${builtins.dirOf profile}/coding-agent-update.lock";
       commandName = "update-${if name == "claude-code" then "claude" else name}";
       title = if name == "claude-code" then "Claude Code" else "Codex";
       source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
@@ -54,8 +56,8 @@
       ];
       text = ''
         install -d -m 0700 ${lib.escapeShellArg state}
-        exec 9>${lib.escapeShellArg "${state}/update.lock"}
-        echo "${title}: waiting for any existing update to finish..."
+        exec 9>${lib.escapeShellArg lock}
+        echo "${title}: waiting for any existing coding-agent update to finish..."
         flock 9
         exec ${lib.getExe githubAuth} ${runtimes.zsh} -f ${../../system/updates/report.zsh} \
           ${lib.escapeShellArg title} ${lib.escapeShellArg "${state}/update.log"} ${lib.getExe notify} \
