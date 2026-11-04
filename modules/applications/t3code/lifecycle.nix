@@ -15,6 +15,7 @@
       pkgs,
       home,
       desktop,
+      serverConfiguration,
       initial ? null,
     }:
     let
@@ -50,7 +51,12 @@
       };
       settings = pkgs.writeText "t3code-lifecycle.json" (
         builtins.toJSON {
-          inherit home darwin state;
+          inherit
+            home
+            darwin
+            state
+            serverConfiguration
+            ;
           initial = if initial == null then null else toString initial;
           profile = "${home}/.local/state/nix/profiles/t3code";
           staged = "${home}/.local/state/nix/profiles/t3code-staged";
@@ -79,21 +85,11 @@
       ];
       text = ''
         install -d -m 0700 ${lib.escapeShellArg state}
-        # Server startup closes clients while activation holds the lock and waits
-        # for that server. Requests also wait for the independent coordinator.
+        # Requests must not hold the lock while waiting for the coordinator.
         if [[ "''${1-}" == request || "''${1-}" == request-rollback ]]; then
           exec ${runtimes.zsh} -f ${../../system/updates/report.zsh} \
             'T3 Code activation' ${lib.escapeShellArg "${state}/activation.log"} ${lib.getExe notify} \
             ${./lifecycle.zsh} ${settings} "$@"
-        fi
-        if [[ "''${1-}" == stop-clients ]]; then
-          exec ${runtimes.zsh} -f ${./lifecycle.zsh} ${settings} "$@"
-        fi
-        if [[ "''${1-}" == reopen ]]; then
-          ${runtimes.zsh} -f ${../../system/updates/report.zsh} \
-            'T3 Code desktop' ${lib.escapeShellArg "${state}/desktop.log"} ${lib.getExe notify} \
-            ${./lifecycle.zsh} ${settings} ready
-          set -- launch
         fi
         if [[ "''${1-}" == activate || "''${1-}" == rollback || "''${1-}" == launch ]]; then
           title='T3 Code activation'

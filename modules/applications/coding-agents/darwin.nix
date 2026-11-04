@@ -53,10 +53,8 @@ in
               (lib.getExe updater)
               "--stage"
             ];
-            RunAtLoad = true;
-            # Retry this agent without holding up other scheduled updates.
-            KeepAlive.SuccessfulExit = false;
-            ThrottleInterval = 300;
+            # Switches load jobs before the Nix daemon is ready. Use the schedule.
+            RunAtLoad = false;
             StartInterval = 10800;
             ProcessType = "Background";
             StandardOutPath = "${home}/.local/state/nix-darwin/${name}-update.log";
