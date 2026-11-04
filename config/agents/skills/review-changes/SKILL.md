@@ -36,22 +36,22 @@ the gap. Other repositories use their own instructions.
 
 ## Review loop
 
-- Default to an independent Sol 6.1 reviewer on xhigh. Honor requested effort.
-- Add Opus 5.5 skeptics or other reviewers when another provider's perspective
-  helps. Use only these two models. Reviewers stay read-only and do not delegate.
-- Follow session delegation rules. Supply scope, revisions, intent, instructions,
-  and check results. Disclose unavailable reviewers; never imply their approval.
+- Use [council](../council/SKILL.md) for reviewer selection, reasoning effort,
+  review rounds, and scores.
+- Supply scope, revisions, intent, repository instructions, these review standards,
+  and check results. Reviewers stay read-only and do not delegate.
+- Keep council read-only here: report known issues and proposed fixes instead of
+  applying them. Return findings and the council score table to the user or calling
+  workflow. Leave PR description updates to an authorized implementation workflow.
 - Review the change yourself. Verify every delegate finding.
 - Track finding IDs, severity, evidence, fixes, and outcomes.
 - Start with the full diff. Later rounds cover changes and open findings.
-- Default to three rounds. Allow five for security, auth, permissions, data loss,
-  or concurrency while material findings remain. Extend further only on request.
-  Keep the same budget and ledger across fixes.
-- Exchange evidence until reviewers agree on each finding and fix. After two
-  unresolved exchanges or budget exhaustion, show both positions. Silence and
-  majority votes are not agreement.
-- Authors or full-stop apply fixes outside this review. Pause edits during review.
-  Recheck behavior changes. Skip rounds for formatting and declined suggestions.
+- Exchange evidence until reviewers agree on each finding and fix. Show unresolved
+  disagreements. Silence and majority votes are not agreement.
+- Authors or an authorized workflow such as full-stop apply fixes outside this
+  review. Return findings when changes are needed; resume council after fixes.
+  Keep the same finding ledger. Pause edits during review. Recheck behavior changes.
+  Skip rounds for formatting and declined suggestions.
 
 ## Verify and report
 
