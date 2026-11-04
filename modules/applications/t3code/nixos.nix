@@ -60,6 +60,7 @@ in
       lifecycle = features.t3code.lifecycle {
         inherit lib pkgs home;
         desktop = client;
+        serverConfiguration = "/etc/systemd/user/t3code.service";
       };
       updateT3Code = features.t3code.update {
         hostname = config.networking.hostName;
@@ -110,11 +111,8 @@ in
         text = ''
           umask 077
           mkdir -p "${state}"
-          reopen="$(${lib.getExe lifecycle} stop-clients)"
-          if [[ "$reopen" == true ]]; then
-            ${pkgs.systemd}/bin/systemctl --user start --no-block t3code-reopen.service
-          fi
-          printf '{"generation":"%s","pid":%s}\n' "$(readlink -f "${profile}")" "$$" > "${state}/running.json.tmp"
+          printf '{"generation":"%s","pid":%s,"configuration":"%s"}\n' \
+            "$(readlink -f "${profile}")" "$$" "$(readlink -f /etc/systemd/user/t3code.service)" > "${state}/running.json.tmp"
           mv "${state}/running.json.tmp" "${state}/running.json"
           exec "${profile}/bin/t3" serve \
             --base-dir ${lib.escapeShellArg baseDir} \
@@ -191,6 +189,8 @@ in
         user.services = {
           t3code-bootstrap = {
             description = "Install the first T3 Code nightly generation";
+            # Restarting this required unit would also stop an already running server.
+            restartIfChanged = false;
             unitConfig = {
               ConditionUser = user;
               # Avoid acquiring the download lock while activation waits for startup.
@@ -216,6 +216,8 @@ in
 
           t3code = {
             description = "Headless T3 Code server";
+            # ns promotes the release and configuration in one coordinated restart.
+            restartIfChanged = false;
             wantedBy = [ "default.target" ];
             requires = [ "t3code-bootstrap.service" ];
             after = [
@@ -290,15 +292,6 @@ in
             serviceConfig = {
               Type = "oneshot";
               ExecStart = "${lib.getExe lifecycle} activate";
-              TimeoutStartSec = "5min";
-            };
-          };
-          t3code-reopen = {
-            description = "Reopen the T3 Code desktop after server startup";
-            unitConfig.ConditionUser = user;
-            serviceConfig = {
-              Type = "oneshot";
-              ExecStart = "${lib.getExe lifecycle} reopen";
               TimeoutStartSec = "5min";
             };
           };

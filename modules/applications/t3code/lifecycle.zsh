@@ -4,11 +4,11 @@ settings_file=$1
 action=$2
 shift 2
 if [[ "$action" == --help || "$action" == -h ]]; then
-  print -- 'Usage: t3-lifecycle <stage GENERATION | seed | request | request-rollback | stop-clients | ready | activate | rollback | launch [ARGS...]>'
+  print -- 'Usage: t3-lifecycle <stage GENERATION | seed | request | request-rollback | activate | rollback | launch [ARGS...]>'
   exit 0
 fi
 settings=$(cat "$settings_file") || exit
-for key in state profile staged desktopApp desktopCommand spawn serviceCommand serviceFile healthUrl initial darwin processCommand serverLauncher; do
+for key in state profile staged desktopApp desktopCommand spawn serviceCommand serviceFile healthUrl initial darwin processCommand serverConfiguration; do
   value=$(jq -r --arg key "$key" '.[$key] // empty' <<<"$settings") || exit
   typeset "$key=$value"
 done
@@ -112,12 +112,13 @@ server_pid() {
   fi
 }
 healthy() {
-  local target=$1 running pid listener descriptor version executable
+  local target=$1 running pid listener descriptor version executable configuration
   running=$(cat "$state/running.json" 2>/dev/null) || return 1
   pid=$(server_pid) || return 1
   jq -e --arg generation "$target" --arg pid "$pid" '.generation == $generation and (.pid | tostring) == $pid' <<<"$running" >/dev/null || return 1
+  configuration=$(readlink -f "$serverConfiguration") || return 1
+  jq -e --arg configuration "$configuration" '.configuration == $configuration' <<<"$running" >/dev/null || return 1
   if [[ "$darwin" == true ]]; then
-    jq -e --arg launcher "$serverLauncher" '.launcher == $launcher' <<<"$running" >/dev/null || return 1
     executable=$("$processCommand" -p "$pid" -o comm=) || return 1
     [[ "$executable" == "${profile}-executables/bin/"* ]] || return 1
   fi
@@ -128,11 +129,9 @@ healthy() {
   jq -e --arg version "$version" '.serverVersion == $version' <<<"$descriptor" >/dev/null
 }
 wait_ready() {
-  local target=${1-} attempts=${2:-30} expected attempt
-  for ((attempt = 1; attempt <= attempts; attempt++)); do
-    expected=$target
-    if [[ -z "$expected" ]]; then expected=$(active) || return; fi
-    if [[ -n "$expected" ]] && healthy "$expected"; then return; fi
+  local target=$1 attempt
+  for ((attempt = 1; attempt <= 30; attempt++)); do
+    if healthy "$target"; then return; fi
     sleep 1 || return
   done
   fail 'T3 Code did not become ready. The desktop stays closed; inspect the server logs before retrying t3-activate.'
@@ -347,7 +346,7 @@ activate() {
   update_success="Server and desktop $version activated; server readiness verified."
 }
 perform() {
-  local target processes reopen
+  local target
   case "$action" in
     stage)
       target=${1:?A release generation is required}
@@ -368,20 +367,6 @@ perform() {
       ;;
     request) request false ;;
     request-rollback) request true ;;
-    stop-clients)
-      processes=$(desktops) || return
-      reopen=false
-      [[ "$processes" == '[]' ]] || reopen=true
-      processes=$(desktop_processes) || return
-      stop_desktops "$processes" || return
-      processes=$(desktop_processes) || return
-      if [[ "$processes" != '[]' ]]; then fail 'A T3 Code desktop appeared during shutdown. Server startup stopped.'; return; fi
-      print -- "$reopen"
-      ;;
-    ready)
-      update_phase='waiting for the active server'
-      wait_ready '' 120
-      ;;
     activate|rollback|launch)
       if [[ -e "$state/activation.json" ]]; then recover || return; fi
       case "$action" in

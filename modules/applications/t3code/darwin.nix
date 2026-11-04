@@ -28,7 +28,7 @@ in
           initial
           ;
         desktop = client;
-        server = run;
+        serverConfiguration = lib.getExe run;
       };
       updater = features.t3code.update {
         hostname = config.networking.hostName;
@@ -77,7 +77,7 @@ in
           mkdir -p "${state}"
           generation="${initial}"
           if test -x "${profile}/bin/t3"; then generation="$(readlink -f "${profile}")"; fi
-          printf '{"generation":"%s","pid":%s,"launcher":"%s"}\n' \
+          printf '{"generation":"%s","pid":%s,"configuration":"%s"}\n' \
             "$generation" "$$" "$(readlink -f "$0")" > "${state}/running.json.tmp"
           mv "${state}/running.json.tmp" "${state}/running.json"
           exec "$server" serve --base-dir "${base}" \
