@@ -32,12 +32,14 @@ Finish the change and prepare an open PR for the user to merge.
 4. Make the smallest change that meets the goal. Prove behavior with direct
    reproductions and relevant tests or runtime checks. Follow testing rules.
 5. Use [review-changes](../review-changes/SKILL.md). Fix verified issues within scope,
-   rerun proof, and review behavior changes with the same ledger and round budget.
+   rerun proof, and resume council review after behavior changes.
+   Preserve the finding ledger and council round history across fixes.
    Keep unrelated suggestions as follow-ups.
 6. Find an existing PR before creating one. Use T3 tools, then authenticated
    `gh` or `bkt` for missing operations. Follow repository conventions.
 7. Commit and push intended changes. Prepare an open, non-draft PR describing
-   the problem, behavior, proof, and review outcome. Link it under session rules.
+   the problem, behavior, proof, and review outcome, including council's round count
+   and score table. Link it under session rules.
 
 ## Monitor
 
