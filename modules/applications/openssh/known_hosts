@@ -1,4 +1,4 @@
-# Shared SSH host trust for all machines. Edit this file and rebuild.
+# Shared SSH host trust for all machines. SSH records accepted keys here directly.
 100.66.253.42 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKES2Ikj74bFpFkydJogzaBjrArgk33ovVOaYtSRI55n
 192.168.64.5 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGQxzMsVy0dnWpaDVMfqA4zbgl1TES10MrduzBYyQHRtVqQaHI+AjM2pRbtOzqsUi/c6z/oFqMJeQjAmQ32dBt8=
 192.168.64.5 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFdN1m5QeENDf1C7ZEY7zoqMwMY7Yb+bDmZpzueY/CxJ

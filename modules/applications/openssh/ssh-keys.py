@@ -125,19 +125,6 @@ def installed_matches(state, bundle, public, ssh):
     return True
 
 
-def link_config(ssh, target):
-    # The shared checkout can inherit group-write permissions through its ACL.
-    # OpenSSH checks the symlink target and rejects a group-writable config.
-    if target.stat().st_uid != os.getuid():
-        raise RuntimeError(f"SSH config belongs to another user: {target}")
-    target.chmod(0o644)
-    path = ssh / "config"
-    if path.is_symlink() and os.readlink(path) == str(target):
-        return
-    backup(path)
-    path.symlink_to(target)
-
-
 def provision(args):
     repo, home = Path(args.repo), Path(args.home)
     ssh = home / ".ssh"
@@ -152,9 +139,6 @@ def provision(args):
 
 
 def provision_locked(args, repo, ssh, state_dir):
-    target = None if args.skip_config else repo / "config"
-    if target is not None and not target.is_file():
-        raise RuntimeError(f"Missing SSH config: {target}")
     public = {name: (repo / f"{name}.pub").read_bytes() for name in KEYS}
     bundle_path = repo / "ssh-keys.age"
     state_path = state_dir / "installed.json"
@@ -173,8 +157,6 @@ def provision_locked(args, repo, ssh, state_dir):
         for name in KEYS:
             (ssh / name).chmod(0o600)
             (ssh / f"{name}.pub").chmod(0o644)
-        if target is not None:
-            link_config(ssh, target)
         print("Managed SSH keys are current; no passphrase needed.")
         return
 
@@ -215,8 +197,7 @@ def provision_locked(args, repo, ssh, state_dir):
                 flush=True,
             )
             if args.repack:
-                # Updating the archive must not relink the live config or mark
-                # the new bundle as installed before the next system switch.
+                # Do not mark the new bundle as installed before the next switch.
                 return
         else:
             # Decrypt the exact bytes whose digest will be recorded, even if
@@ -245,8 +226,6 @@ def provision_locked(args, repo, ssh, state_dir):
             if path.is_symlink() or (path.exists() and path.read_bytes() != value):
                 backup(path)
             atomic_write(path, value, 0o644 if name.endswith(".pub") else 0o600)
-        if target is not None:
-            link_config(ssh, target)
         atomic_write(
             state_path,
             json.dumps(
@@ -272,14 +251,9 @@ def main():
         help="parent for private temporary files; use ~/.ssh on Darwin",
     )
     parser.add_argument(
-        "--skip-config",
-        action="store_true",
-        help="leave SSH config management to nix-darwin",
-    )
-    parser.add_argument(
         "--repack",
         action="store_true",
-        help="replace the encrypted bundle from --source without installing keys or relinking SSH config",
+        help="replace the encrypted bundle from --source without installing keys",
     )
     args = parser.parse_args()
     os.umask(0o077)
