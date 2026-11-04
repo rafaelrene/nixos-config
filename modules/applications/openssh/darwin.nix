@@ -14,6 +14,10 @@ in
       runtimes = features.shell.runtimes { inherit pkgs; };
       user = config.workstation.user;
       home = config.users.users.${user}.home;
+      source = features.sources.checkoutPath {
+        inherit (config.workstation) checkout;
+        source = ./.;
+      };
       provision = lib.escapeShellArgs [
         "/usr/bin/sudo"
         "-H"
@@ -23,10 +27,7 @@ in
         runtimes.python3
         "${./ssh-keys.py}"
         "--repo"
-        (features.sources.checkoutPath {
-          inherit (config.workstation) checkout;
-          source = ./.;
-        })
+        source
         "--home"
         home
         "--source"
@@ -37,15 +38,12 @@ in
         "${pkgs.openssh}/bin/ssh-keygen"
         "--temporary-directory"
         "${home}/.ssh"
-        "--skip-config"
       ];
     in
     {
       environment.systemPackages = [ pkgs.openssh ];
       services.openssh.enable = true;
-      # OpenSSH rejects group-writable checkout files, even behind a symlink.
-      workstation.links.".ssh/config" = "${./hosts.config}";
-
+      workstation.links.".ssh/config" = "${source}/hosts.config";
       # Run after existing preflight checks, before files or services are activated.
       # darwin-rebuild check also enters preActivation and must never provision keys.
       system.activationScripts.preActivation.text = lib.mkAfter ''

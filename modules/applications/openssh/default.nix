@@ -44,7 +44,14 @@ in
           PermitRootLogin = "no";
         };
       };
-      programs.ssh.startAgent = true;
+      programs.ssh = {
+        startAgent = true;
+        extraConfig = ''
+          Match localuser ${user}
+            IdentityAgent /run/user/%i/ssh-agent
+          Match all
+        '';
+      };
       # The desktop enables GNOME Keyring, which otherwise adds a second agent.
       services.gnome.gcr-ssh-agent.enable = false;
 
@@ -58,12 +65,25 @@ in
 
       systemd.tmpfiles.rules = [
         "d ${home}/.ssh 0700 ${user} ${group} - -"
-        # The switch check repoints config with a backup; tmpfiles only fills gaps.
-        "L ${home}/.ssh/config - - - - ${source}/config"
-        "L ${home}/.ssh/hosts.config - - - - ${source}/hosts.config"
-        # Checkout ACLs can make both the linked config and its include group-writable.
+        "L ${home}/.ssh/config - - - - ${source}/hosts.config"
+        # File replacement must not restore the shared checkout's group-write ACL.
+        "a+ ${source} - - - - d:m::r-x"
         "z ${source}/config 0644 - - - -"
         "z ${source}/hosts.config 0644 - - - -"
+        "z ${source}/known_hosts 0644 - - - -"
       ];
+
+      # Replace only our legacy wrapper link; leave independently managed config alone.
+      system.userActivationScripts.ssh-config = ''
+        if [ "$(${pkgs.coreutils}/bin/id -un)" = ${lib.escapeShellArg user} ]; then
+          ssh=${lib.escapeShellArg "${home}/.ssh"}
+          if [ -L "$ssh/config" ] && [ "$(${pkgs.coreutils}/bin/readlink "$ssh/config")" = "${source}/config" ]; then
+            ${pkgs.coreutils}/bin/ln -sfn ${lib.escapeShellArg "${source}/hosts.config"} "$ssh/config"
+          fi
+          if [ -L "$ssh/hosts.config" ] && [ "$(${pkgs.coreutils}/bin/readlink "$ssh/hosts.config")" = "${source}/hosts.config" ]; then
+            ${pkgs.coreutils}/bin/rm "$ssh/hosts.config"
+          fi
+        fi
+      '';
     };
 }

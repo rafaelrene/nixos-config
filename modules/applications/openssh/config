@@ -1,4 +1,4 @@
-# This file is linked from ~/.ssh/config. Edits there are edits to this checkout.
+# Compatibility for existing ~/.ssh/config links until their next system switch.
 Include ~/.ssh/hosts.config
 
 # Keep defaults last: OpenSSH uses the first value found for each option.

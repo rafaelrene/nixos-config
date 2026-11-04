@@ -26,7 +26,7 @@ Import-tree discovers the flake-parts modules.
 - [Themes](themes/) provide the shared palette.
 
 Linux and macOS have separate Nixpkgs pins and explicit platform differences.
-Git, Ghostty, Neovim, and agent settings support live editing from the checkout.
+Git, Ghostty, Neovim, SSH, and agent settings support live editing from the checkout.
 Local package definitions are also available as flake package outputs.
 
 ## Updates and rebuilds
