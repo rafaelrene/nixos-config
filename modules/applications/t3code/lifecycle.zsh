@@ -8,7 +8,7 @@ if [[ "$action" == --help || "$action" == -h ]]; then
   exit 0
 fi
 settings=$(cat "$settings_file") || exit
-for key in state profile staged desktopApp desktopCommand spawn serviceCommand serviceFile healthUrl initial darwin processCommand; do
+for key in state profile staged desktopApp desktopCommand spawn serviceCommand serviceFile healthUrl initial darwin processCommand serverLauncher; do
   value=$(jq -r --arg key "$key" '.[$key] // empty' <<<"$settings") || exit
   typeset "$key=$value"
 done
@@ -117,6 +117,7 @@ healthy() {
   pid=$(server_pid) || return 1
   jq -e --arg generation "$target" --arg pid "$pid" '.generation == $generation and (.pid | tostring) == $pid' <<<"$running" >/dev/null || return 1
   if [[ "$darwin" == true ]]; then
+    jq -e --arg launcher "$serverLauncher" '.launcher == $launcher' <<<"$running" >/dev/null || return 1
     executable=$("$processCommand" -p "$pid" -o comm=) || return 1
     [[ "$executable" == "${profile}-executables/bin/"* ]] || return 1
   fi

@@ -16,6 +16,7 @@
       home,
       desktop,
       initial ? null,
+      server ? null,
     }:
     let
       runtimes = config.features.shell.runtimes { inherit pkgs; };
@@ -52,6 +53,7 @@
         builtins.toJSON {
           inherit home darwin state;
           initial = if initial == null then null else toString initial;
+          serverLauncher = if server == null then null else lib.getExe server;
           profile = "${home}/.local/state/nix/profiles/t3code";
           staged = "${home}/.local/state/nix/profiles/t3code-staged";
           desktopApp = "${home}/Applications/T3 Code.app";
@@ -79,7 +81,7 @@
       ];
       text = ''
         install -d -m 0700 ${lib.escapeShellArg state}
-        # Server startup closes clients while activation holds the lock and waits
+        # Linux server startup closes clients while activation holds the lock and waits
         # for that server. Requests also wait for the independent coordinator.
         if [[ "''${1-}" == request || "''${1-}" == request-rollback ]]; then
           exec ${runtimes.zsh} -f ${../../system/updates/report.zsh} \

@@ -28,6 +28,7 @@ in
           initial
           ;
         desktop = client;
+        server = run;
       };
       updater = features.t3code.update {
         hostname = config.networking.hostName;
@@ -74,13 +75,10 @@ in
             "${base}/userdata/settings.json"
           install -m600 ${settings.theme} "${base}/userdata/themes/othinus.json"
           mkdir -p "${state}"
-          reopen="$(${lib.getExe lifecycle} stop-clients)"
-          if [[ "$reopen" == true ]]; then
-            /bin/launchctl kickstart "gui/$(id -u)/org.nixos.t3code-reopen"
-          fi
           generation="${initial}"
           if test -x "${profile}/bin/t3"; then generation="$(readlink -f "${profile}")"; fi
-          printf '{"generation":"%s","pid":%s}\n' "$generation" "$$" > "${state}/running.json.tmp"
+          printf '{"generation":"%s","pid":%s,"launcher":"%s"}\n' \
+            "$generation" "$$" "$(readlink -f "$0")" > "${state}/running.json.tmp"
           mv "${state}/running.json.tmp" "${state}/running.json"
           exec "$server" serve --base-dir "${base}" \
             --host 127.0.0.1 --port 3773 --no-browser "${codeRoot}"
@@ -172,6 +170,7 @@ in
         updateNow
         activate
         rollback
+        run
       ];
       environment.variables.T3CODE_HOME = base;
       workstation.stateAliases.".local/share/t3code" = ".t3";
@@ -180,15 +179,6 @@ in
         T3CODE_DISABLE_AUTO_UPDATE = "true";
       };
       launchd.user.agents = {
-        t3code-reopen.serviceConfig = {
-          ProgramArguments = [
-            (lib.getExe lifecycle)
-            "reopen"
-          ];
-          RunAtLoad = false;
-          StandardOutPath = "${logs}/t3code-desktop.log";
-          StandardErrorPath = "${logs}/t3code-desktop.log";
-        };
         t3code = {
           environment = {
             HOME = home;
@@ -201,7 +191,8 @@ in
             NIX_SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
           };
           serviceConfig = {
-            ProgramArguments = [ (lib.getExe run) ];
+            # ns coordinates release and launcher changes after the system switch.
+            ProgramArguments = [ "/nix/var/nix/profiles/system/sw/bin/run-t3code" ];
             RunAtLoad = true;
             KeepAlive = true;
             ThrottleInterval = 30;
@@ -214,9 +205,8 @@ in
           environment.NIX_SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
           serviceConfig = {
             ProgramArguments = [ (lib.getExe updater) ];
-            RunAtLoad = true;
-            KeepAlive.SuccessfulExit = false;
-            ThrottleInterval = 300;
+            # Switches load jobs before the Nix daemon is ready. Use the schedule.
+            RunAtLoad = false;
             StartInterval = 10800;
             ProcessType = "Background";
             StandardOutPath = "${logs}/t3code-update.log";
