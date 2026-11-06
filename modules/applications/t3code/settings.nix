@@ -16,6 +16,8 @@ in
     }:
     let
       themeJSON = features.t3code.theme { inherit lib pkgs; };
+      themeId = (builtins.fromJSON themeJSON).id;
+      theme = pkgs.writeText "t3code-workstation-theme.json" themeJSON;
       desktop = pkgs.writeText "t3code-desktop-settings.json" (
         builtins.toJSON {
           # Both native clients connect to the separately managed server.
@@ -30,7 +32,7 @@ in
       server = pkgs.writeText "t3code-declared-settings.json" (
         builtins.toJSON {
           continueThreadsAfterServerUpdate = true;
-          defaultTheme = "othinus";
+          defaultTheme = themeId;
           # Reapply the selection when the palette changes, not every restart.
           defaultThemeSetAt = builtins.hashString "sha256" themeJSON;
           providers = {
@@ -41,8 +43,13 @@ in
       );
     in
     {
-      inherit server desktop client;
-      theme = pkgs.writeText "t3code-workstation-theme.json" themeJSON;
+      inherit
+        server
+        desktop
+        client
+        themeId
+        theme
+        ;
       merge = ". *= load(\"${server}\")";
       desktopMerge = ". *= load(\"${desktop}\")";
     };

@@ -268,7 +268,7 @@ in
                   "${pkgs.coreutils}/bin/install"
                   "-Dm600"
                   settings.theme
-                  "${baseDir}/userdata/themes/othinus.json"
+                  "${baseDir}/userdata/themes/${settings.themeId}.json"
                 ])
                 (utils.escapeSystemdExecArgs [
                   (lib.getExe pkgs.yq-go)
