@@ -5,19 +5,22 @@ let
       ghostty
       helium
       mpv
+      personal-data
       tailscale
       webapps
       zen
     ];
 in
 {
-  flake.modules.nixos.personal-applications.imports = shared "nixos";
+  flake.modules.nixos = {
+    personal-applications.imports = shared "nixos";
+    personal-data.imports = [ (config.features.modulesFor "nixos").filen ];
+  };
   flake.modules.darwin = {
     personal-applications.imports =
       shared "darwin"
       ++ (with (config.features.modulesFor "darwin"); [
         communication
-        personal-data
         freetube
         rex
         rustdesk
