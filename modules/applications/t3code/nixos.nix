@@ -60,7 +60,6 @@ in
       lifecycle = features.t3code.lifecycle {
         inherit lib pkgs home;
         desktop = client;
-        inherit (settings) syncTheme;
         serverConfiguration = "/etc/systemd/user/t3code.service";
       };
       updateT3Code = features.t3code.update {

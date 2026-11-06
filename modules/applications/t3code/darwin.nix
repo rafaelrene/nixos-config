@@ -28,7 +28,6 @@ in
           initial
           ;
         desktop = client;
-        inherit (settings) syncTheme;
         serverConfiguration = lib.getExe run;
       };
       updater = features.t3code.update {

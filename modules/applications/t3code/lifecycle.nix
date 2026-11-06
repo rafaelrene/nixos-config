@@ -15,7 +15,6 @@
       pkgs,
       home,
       desktop,
-      syncTheme,
       serverConfiguration,
       initial ? null,
     }:
@@ -64,7 +63,6 @@
           desktopApp = "${home}/Applications/T3 Code.app";
           desktopCommand = if darwin then lib.getExe desktopSupport else null;
           spawn = lib.getExe spawn;
-          syncTheme = lib.getExe syncTheme;
           processCommand = if darwin then "/bin/ps" else "${pkgs.procps}/bin/ps";
           serviceCommand = if darwin then "/bin/launchctl" else "${pkgs.systemd}/bin/systemctl";
           serviceFile = "${home}/Library/LaunchAgents/org.nixos.t3code.plist";

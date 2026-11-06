@@ -18,10 +18,6 @@ in
       themeJSON = features.t3code.theme { inherit lib pkgs; };
       themeId = (builtins.fromJSON themeJSON).id;
       theme = pkgs.writeText "t3code-workstation-theme.json" themeJSON;
-      python = pkgs.python3.withPackages (ps: [ ps.plyvel ]);
-      desktopProfile = "${home}/${
-        if pkgs.stdenv.hostPlatform.isDarwin then "Library/Application Support" else ".config"
-      }/t3code-v2/Local Storage/leveldb";
       desktop = pkgs.writeText "t3code-desktop-settings.json" (
         builtins.toJSON {
           # Both native clients connect to the separately managed server.
@@ -54,13 +50,6 @@ in
         themeId
         theme
         ;
-      syncTheme = features.shell.application {
-        inherit pkgs;
-        name = "t3code-sync-theme";
-        text = ''
-          exec ${python}/bin/python3 ${./sync-theme.py} ${theme} ${lib.escapeShellArg desktopProfile}
-        '';
-      };
       merge = ". *= load(\"${server}\")";
       desktopMerge = ". *= load(\"${desktop}\")";
     };

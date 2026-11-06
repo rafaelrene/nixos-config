@@ -8,7 +8,7 @@ if [[ "$action" == --help || "$action" == -h ]]; then
   exit 0
 fi
 settings=$(cat "$settings_file") || exit
-for key in state profile staged desktopApp desktopCommand spawn syncTheme serviceCommand serviceFile healthUrl initial darwin processCommand serverConfiguration; do
+for key in state profile staged desktopApp desktopCommand spawn serviceCommand serviceFile healthUrl initial darwin processCommand serverConfiguration; do
   value=$(jq -r --arg key "$key" '.[$key] // empty' <<<"$settings") || exit
   typeset "$key=$value"
 done
@@ -180,9 +180,6 @@ launch() {
   for pid in ${(f)"$(jq -r '.[].pid' <<<"$existing")"}; do
     if ! desktop_current "$pid" "$target"; then fail 'An outdated or duplicate T3 Code desktop is running. Run t3-activate to replace it.'; return; fi
   done
-  if [[ "$existing" == '[]' ]]; then
-    "$syncTheme" || print -u2 -- 'T3 Code: theme sync skipped; existing preferences retained.'
-  fi
   run "$spawn" "$@" || return
   for ((attempt = 1; attempt <= 30; attempt++)); do
     clients=$(desktops) || return
@@ -268,7 +265,6 @@ apply_generation() {
   stop_desktops "$processes" || return
   remaining=$(desktop_processes) || return
   if [[ "$remaining" != '[]' ]]; then fail 'A T3 Code desktop appeared during shutdown.'; return; fi
-  "$syncTheme" || print -u2 -- 'T3 Code: theme sync skipped; existing preferences retained.'
   stop_server || return
   install_executables "$target" || return
   if [[ -n "$version" && -e "$profile-$version-link" ]]; then
@@ -318,9 +314,6 @@ activate() {
     elif ! desktop_current "$(jq -r '.[0].pid' <<<"$clients")" "$target"; then clients_current=false; fi
   fi
   if [[ "$old" == "$target" && "$clients_current" == true ]] && healthy "$target" && app_current "$target"; then
-    if [[ "$processes" == '[]' ]]; then
-      "$syncTheme" || print -u2 -- 'T3 Code: theme sync skipped; existing preferences retained.'
-    fi
     install_executables "$target" || return
     desktop_action dock "$target" || return
     print -- 'T3 Code: the active server and desktop are current.'
