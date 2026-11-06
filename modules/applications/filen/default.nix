@@ -61,6 +61,8 @@ let
         ++ lib.optional pkgs.stdenv.hostPlatform.isLinux pkgs.procps;
         text = ''
           umask 077
+          # --data-dir bypasses Filen's default directory creation.
+          install -d -m 700 ${lib.escapeShellArg data}
           ${lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
             export LD_LIBRARY_PATH="${
               lib.makeLibraryPath [
