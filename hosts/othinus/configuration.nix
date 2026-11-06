@@ -16,6 +16,7 @@ in
     nixpkgs.hostPlatform = "x86_64-linux";
     workstation = {
       user = "raf";
+      filen.mountPoint = "/data/filen";
       checkout = "/data/code/nixos-config";
       codeRoot = "/data/code";
     };
