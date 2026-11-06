@@ -16,6 +16,7 @@
       stdenv,
       stdenvNoCC,
       versionCheckHook,
+      vulkan-loader,
       version,
       hash,
     }:
@@ -35,7 +36,11 @@
         installShellFiles
         makeWrapper
       ];
-      buildInputs = lib.optional (!isDarwin) stdenv.cc.cc.lib;
+      buildInputs = lib.optionals (!isDarwin) [
+        stdenv.cc.cc.lib
+        # The bundled transcription backend links libggml-vulkan against this loader.
+        vulkan-loader
+      ];
       dontBuild = true;
       # Bun embeds the application in the executable. Preserve its payload.
       dontStrip = true;
