@@ -80,8 +80,9 @@ in
           printf '{"generation":"%s","pid":%s,"configuration":"%s"}\n' \
             "$generation" "$$" "$(readlink -f "$0")" > "${state}/running.json.tmp"
           mv "${state}/running.json.tmp" "${state}/running.json"
+          # Advertise direct LAN and Tailscale routes to both desktop clients.
           exec "$server" serve --base-dir "${base}" \
-            --host 127.0.0.1 --port 3773 --no-browser "${codeRoot}"
+            --host 0.0.0.0 --port 3773 --no-browser "${codeRoot}"
         '';
       };
       updateNow = writeApplication {
