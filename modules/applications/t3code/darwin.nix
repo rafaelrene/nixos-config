@@ -28,6 +28,7 @@ in
           initial
           ;
         desktop = client;
+        inherit (settings) syncTheme;
         serverConfiguration = lib.getExe run;
       };
       updater = features.t3code.update {
@@ -73,7 +74,7 @@ in
           yq --inplace --output-format=json \
             ${lib.escapeShellArg settings.merge} \
             "${base}/userdata/settings.json"
-          install -m600 ${settings.theme} "${base}/userdata/themes/othinus.json"
+          install -m600 ${settings.theme} "${base}/userdata/themes/${settings.themeId}.json"
           mkdir -p "${state}"
           generation="${initial}"
           if test -x "${profile}/bin/t3"; then generation="$(readlink -f "${profile}")"; fi

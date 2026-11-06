@@ -60,6 +60,7 @@ in
       lifecycle = features.t3code.lifecycle {
         inherit lib pkgs home;
         desktop = client;
+        inherit (settings) syncTheme;
         serverConfiguration = "/etc/systemd/user/t3code.service";
       };
       updateT3Code = features.t3code.update {
@@ -268,7 +269,7 @@ in
                   "${pkgs.coreutils}/bin/install"
                   "-Dm600"
                   settings.theme
-                  "${baseDir}/userdata/themes/othinus.json"
+                  "${baseDir}/userdata/themes/${settings.themeId}.json"
                 ])
                 (utils.escapeSystemdExecArgs [
                   (lib.getExe pkgs.yq-go)
