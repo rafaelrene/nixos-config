@@ -33,6 +33,7 @@ let
             --replace-fail 'process.on("SIGINT", () => {' 'process.on("SIGTERM", () => process.emit("SIGINT"))
                   process.on("SIGINT", () => {'
           substituteInPlace src/app/featureInterfaces/driveMountingInterface.ts \
+            --replace-fail 'import VirtualDrive, {' 'import { NetworkDrive as VirtualDrive,' \
             --replace-fail 'virtualDrive.stop()' 'void virtualDrive.stop().then(resolve, reject)' \
             --replace-fail 'resolve()' ""
         '';
