@@ -26,7 +26,7 @@ in
       networking = {
         hostName = "Proserpina";
         localHostName = "Proserpina";
-        computerName = "Proserpina";
+        computerName = "proserpina";
       };
       workstation = {
         user = "rafael";
