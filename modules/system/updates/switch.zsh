@@ -17,7 +17,7 @@ for argument in "$@"; do
       -u|--upgrade-packages) upgrade=true; continue ;;
       -h|--help)
         print -- 'Usage: ns [-u|--upgrade-packages] [checkout]'
-        print -- 'Fetch and fast-forward the checkout, build and switch, then activate staged coding agents and T3.'
+        print -- 'Fast-forward the checkout when it has an upstream, build and switch, then activate staged coding agents and T3.'
         print -- 'With -u, refresh inputs and stage the newest official T3 nightly first.'
         exit 0 ;;
       --) positional=true; continue ;;
@@ -33,7 +33,14 @@ for argument in "$@"; do
 done
 checkout=${checkout:A}
 
-update_step 'fetching and fast-forwarding the checkout' git -C "$checkout" pull --ff-only || exit $?
+update_phase='checking the checkout upstream'
+head_ref=$(git -C "$checkout" rev-parse --symbolic-full-name HEAD) || exit $?
+upstream=$(git -C "$checkout" for-each-ref --format='%(upstream)' "$head_ref") || exit $?
+if [[ -n "$upstream" ]]; then
+  update_step 'fetching and fast-forwarding the checkout' git -C "$checkout" pull --ff-only || exit $?
+else
+  print -- 'Nix system update: checkout has no upstream; using the local checkout.'
+fi
 
 failures=()
 if $upgrade; then

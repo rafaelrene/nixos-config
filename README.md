@@ -38,7 +38,8 @@ Local package definitions are also available as flake package outputs.
 
 Both modes accept a checkout path, such as `ns -u /path/to/nixos-config`.
 Without one, it uses the configured main checkout.
-Both first fetch and fast-forward the checkout from its upstream.
+Both first fetch and fast-forward the checkout when it has an upstream.
+Local branches without an upstream and detached worktrees build as they are.
 Nix update and rebuild commands reuse the GitHub CLI login when available.
 T3 updates select one official nightly with matching server and desktop artifacts
 for both machines. Update commands report failures and send system notifications.
