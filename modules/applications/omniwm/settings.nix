@@ -7,7 +7,8 @@
   config.features.omniwm.settings =
     { lib, pkgs }:
     let
-      # OmniWM v0.7.3 defaults, with app rules declared below instead.
+      # OmniWM v0.7.6 (schema 4), with app rules declared below instead.
+      # Keep the schema current: reapplying old settings exhausts migration backups.
       # Its strict schema requires every action, including unassigned hotkeys.
       defaults = builtins.fromJSON (builtins.readFile ./defaults.json);
       theme = config.features.theme { inherit lib pkgs; };
