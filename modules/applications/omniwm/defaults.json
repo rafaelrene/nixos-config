@@ -815,6 +815,14 @@
     },
     {
       "binding" : "Unassigned",
+      "id" : "setWindowMark"
+    },
+    {
+      "binding" : "Unassigned",
+      "id" : "removeWindowMark"
+    },
+    {
+      "binding" : "Unassigned",
       "id" : "toggleWorkspaceBarVisibility"
     },
     {
@@ -921,7 +929,7 @@
     ],
     "mode" : "macOS"
   },
-  "schemaVersion" : 3,
+  "schemaVersion" : 4,
   "scratchpads" : {
     "labels" : {
 
