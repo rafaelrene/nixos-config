@@ -1,0 +1,2 @@
+# Unified patch context contains a space followed by upstream Go indentation.
+modules/applications/filen/*.patch -whitespace

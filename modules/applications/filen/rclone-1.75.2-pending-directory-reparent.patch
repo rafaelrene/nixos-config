@@ -1,0 +1,42 @@
+--- a/vfs/dir.go
++++ b/vfs/dir.go
+@@ -199,6 +199,13 @@
+ 
+ // addVirtual adds n virtual items to this directory and all of its parents
+ func (d *Dir) addVirtual(n int32) {
++	d.vfs.virtualMu.Lock()
++	defer d.vfs.virtualMu.Unlock()
++	d.addVirtualLocked(n)
++}
++
++// addVirtualLocked adjusts ancestor counts with VFS.virtualMu held.
++func (d *Dir) addVirtualLocked(n int32) {
+ 	for d != nil {
+ 		d._virtuals.Add(n)
+ 		d = d.parent
+@@ -398,7 +405,15 @@
+ 	d.modTimeMu.Unlock()
+ 	d.mu.Lock()
+ 	oldPath := d.path
++	d.vfs.virtualMu.Lock()
++	if d.parent != newParent {
++		// Add first so common ancestors cannot transiently lose pending children.
++		virtuals := d._virtuals.Load()
++		newParent.addVirtualLocked(virtuals)
++		d.parent.addVirtualLocked(-virtuals)
++	}
+ 	d.parent = newParent
++	d.vfs.virtualMu.Unlock()
+ 	d.entry = fsDir
+ 	d.path = fsDir.Remote()
+ 	newPath := d.path
+--- a/vfs/vfs.go
++++ b/vfs/vfs.go
+@@ -191,6 +191,7 @@
+ 	pollMu      sync.Mutex
+ 	pollChan    chan time.Duration
+ 	inUse       atomic.Int32 // count of number of opens
++	virtualMu   sync.Mutex   // serializes ancestor count propagation and directory reparenting
+ }
+ 
+ // Keep track of active VFS keyed on fs.ConfigString(f)

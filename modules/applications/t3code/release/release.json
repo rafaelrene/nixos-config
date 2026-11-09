@@ -1,13 +1,13 @@
 {
-  "version": "0.1.8-nightly.20261106.4262",
+  "version": "0.1.8-nightly.20261108.4367",
   "platforms": {
     "aarch64-darwin": {
-      "serverHash": "sha256-QMgfHWlucFbAxD4pvf0qFU6m9r2RKYJgNCVnUUGN5jM=",
-      "desktopHash": "sha256-xG2wu1nEKYlgnyj1P4Tx935vC5JsRcIeSPQ6EP7/31k="
+      "serverHash": "sha256-S28tnyeeM5mGVd7oigyHRp8wfJaFacnM6ZpJdG+euUY=",
+      "desktopHash": "sha256-veF82by2Vj85As2WbnDhBn8CcXnFvxFYyLLAm/IXkpE="
     },
     "x86_64-linux": {
-      "serverHash": "sha256-XflMoVxPaPdJ+lVA+7nVyoecqHUKxD3ScE9qGIme1tU=",
-      "desktopHash": "sha256-cWK5/6hTNQeOrX4ofN31brCnJrBdI6+EvIN31NmLGcg="
+      "serverHash": "sha256-xgo7mU2yAGJpEvK+d2srro02oBOl5m7r8ZwmceT+Mjg=",
+      "desktopHash": "sha256-GyEGcOfU7CrtJHvzBKpsbzhx6vaCA8w3izteBPdsPQE="
     }
   }
 }

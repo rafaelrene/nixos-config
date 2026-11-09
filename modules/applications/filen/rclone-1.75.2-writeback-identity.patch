@@ -1,0 +1,116 @@
+--- a/vfs/file.go
++++ b/vfs/file.go
+@@ -537,7 +537,20 @@
+ 
+ // Update the object when written and add it to the directory
+ func (f *File) setObject(o fs.Object) {
++	_ = f.updateObject(o, false)
++}
++
++// Cached writeback may finish after its file has acquired another name.
++func (f *File) setCachedObject(o fs.Object) error {
++	return f.updateObject(o, true)
++}
++
++func (f *File) updateObject(o fs.Object, checkName bool) error {
+ 	f.mu.Lock()
++	if checkName && o != nil && o.Remote() != f._cachePath() {
++		f.mu.Unlock()
++		return context.Canceled
++	}
+ 	f.o = o
+ 	f._setIsLink()
+ 	_ = f._applyPendingModTime()
+@@ -546,6 +559,7 @@
+ 
+ 	// Release File.mu before calling Dir method
+ 	d.addObject(f)
++	return nil
+ }
+ 
+ // Update the object but don't update the directory cache - for use by
+--- a/vfs/read_write.go
++++ b/vfs/read_write.go
+@@ -165,7 +165,7 @@
+ 	fh.closed = true
+ 	fh.updateSize()
+ 	if fh.opened {
+-		err = fh.item.Close(fh.file.setObject)
++		err = fh.item.Close(fh.file.setCachedObject)
+ 		fh.opened = false
+ 	} else {
+ 		// apply any pending mod times if any
+--- a/vfs/vfscache/item.go
++++ b/vfs/vfscache/item.go
+@@ -128,8 +128,9 @@
+ 	info.ATime = info.ModTime
+ }
+ 
+-// StoreFn is called back with an object after it has been uploaded
+-type StoreFn func(fs.Object)
++// StoreFn installs an uploaded object in the VFS. A rejected result leaves the
++// cache dirty so writeback can publish the item's current name instead.
++type StoreFn func(fs.Object) error
+ 
+ // newItem returns an item for the cache
+ func newItem(c *Cache, name string) (item *Item) {
+@@ -641,6 +642,7 @@
+ // Call with lock held
+ func (item *Item) _store(ctx context.Context, storeFn StoreFn) (err error) {
+ 	// defer log.Trace(item.name, "item=%p", item)("err=%v", &err)
++	name := item.name
+ 
+ 	// Transfer the temp file to the remote
+ 	cacheObj, err := item.c.fcache.NewObject(ctx, item.name)
+@@ -650,7 +652,7 @@
+ 
+ 	// Object has disappeared if cacheObj == nil
+ 	if cacheObj != nil {
+-		o, name := item.o, item.name
++		o := item.o
+ 		unlockMutexForCall(&item.mu, func() {
+ 			o, err = operations.Copy(ctx, item.c.fremote, o, name, cacheObj)
+ 		})
+@@ -661,6 +663,11 @@
+ 			}
+ 			return fmt.Errorf("vfs cache: failed to transfer file from cache to remote: %w", err)
+ 		}
++		// Rename may have completed while Copy was verifying a completed upload.
++		// Its result belongs to the previous name, even if Copy returned success.
++		if item.name != name {
++			return context.Canceled
++		}
+ 		item.o = o
+ 		item._updateFingerprint()
+ 	}
+@@ -673,8 +680,14 @@
+ 		// Write the object back to the VFS layer last with mutex unlocked
+ 		o := item.o
+ 		item.mu.Unlock()
+-		storeFn(o)
++		err = storeFn(o)
+ 		item.mu.Lock()
++		if err != nil {
++			return err
++		}
++	}
++	if item.name != name {
++		return context.Canceled
+ 	}
+ 
+ 	// Show item is clean and is eligible for cache removal
+--- a/vfs/vfscache/item_test.go
++++ b/vfs/vfscache/item_test.go
+@@ -151,10 +151,11 @@
+ 
+ 	// Check the Close callback works
+ 	callbackCalled := false
+-	callback := func(o fs.Object) {
++	callback := func(o fs.Object) error {
+ 		callbackCalled = true
+ 		assert.Equal(t, "potato", o.Remote())
+ 		assert.Equal(t, int64(100), o.Size())
++		return nil
+ 	}
+ 	require.NoError(t, item.Close(callback))
+ 	assert.True(t, callbackCalled)
