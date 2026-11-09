@@ -1,0 +1,207 @@
+--- a/vfs/dir.go
++++ b/vfs/dir.go
+@@ -474,30 +474,28 @@
+ //
+ // This is used by the vfs cache to insert objects that are uploading
+ // into the directory tree.
+-func (d *Dir) AddVirtual(leaf string, size int64, isDir bool) {
+-	var node Node
++func (d *Dir) AddVirtual(leaf string, size int64, isDir bool) Node {
++	isLink := false
++	if !isDir && d.vfs.Opt.Links {
++		// Cache paths include the link suffix; directory entries do not.
++		leaf, isLink = strings.CutSuffix(leaf, fs.LinkSuffix)
++		if leaf == "" || leaf == "." || leaf == ".." {
++			return nil
++		}
++	}
+ 	d.mu.RLock()
+ 	dPath := d.path
+-	_, found := d.items[leaf]
++	node, found := d.items[leaf]
+ 	d.mu.RUnlock()
+ 	if found {
+-		// Don't overwrite existing objects
+-		return
++		// Don't overwrite existing objects.
++		return node
+ 	}
+ 	if isDir {
+ 		remote := path.Join(dPath, leaf)
+ 		entry := fs.NewDir(remote, time.Now())
+ 		node = newDir(d.vfs, d.f, d, entry)
+ 	} else {
+-		isLink := false
+-		if d.vfs.Opt.Links {
+-			// since the path came from the cache it may have fs.LinkSuffix,
+-			// so remove it and mark the *File accordingly
+-			leaf, isLink = strings.CutSuffix(leaf, fs.LinkSuffix)
+-			if leaf == "" || leaf == "." || leaf == ".." {
+-				return
+-			}
+-		}
+ 		f := newFile(d, dPath, nil, leaf)
+ 		if isLink {
+ 			f.setSymlink()
+@@ -506,6 +504,7 @@
+ 		node = f
+ 	}
+ 	d.addObject(node)
++	return node
+ }
+ 
+ // delObject removes an object from the directory
+--- a/vfs/vfs.go
++++ b/vfs/vfs.go
+@@ -376,7 +376,7 @@
+ 	vfs.cache = nil
+ 	if cacheMode > vfscommon.CacheModeOff {
+ 		ctx, cancel := context.WithCancel(vfs.ctx)
+-		cache, err := vfscache.New(ctx, vfs.f, &vfs.Opt, vfs.AddVirtual)
++		cache, err := vfscache.New(ctx, vfs.f, &vfs.Opt, vfs.addVirtualForCache)
+ 		if err != nil {
+ 			fs.Errorf(nil, "Failed to create vfs cache - disabling: %v", err)
+ 			vfs.Opt.CacheMode = vfscommon.CacheModeOff
+@@ -932,22 +932,35 @@
+ //
+ // This is used by the vfs cache to insert objects that are uploading
+ // into the directory tree.
+-func (vfs *VFS) AddVirtual(remote string, size int64, isDir bool) (err error) {
++func (vfs *VFS) AddVirtual(remote string, size int64, isDir bool) error {
++	_, err := vfs.addVirtual(remote, size, isDir, false)
++	return err
++}
++
++// addVirtualForCache binds a recovered upload to the exact file in the tree.
++func (vfs *VFS) addVirtualForCache(remote string, size int64, isDir bool) (vfscache.StoreFn, error) {
++	return vfs.addVirtual(remote, size, isDir, true)
++}
++
++func (vfs *VFS) addVirtual(remote string, size int64, isDir, recoverParent bool) (_ vfscache.StoreFn, err error) {
+ 	remote = strings.TrimRight(remote, "/")
+ 	var dir *Dir
+ 	var parent, leaf string
+ 	if vfs.f.Features().CanHaveEmptyDirectories {
+ 		dir, leaf, err = vfs.StatParent(remote)
+-	} else {
+-		// Create parent of virtual directory since backend can't have empty directories
++	}
++	if !vfs.f.Features().CanHaveEmptyDirectories || (recoverParent && err == ENOENT) {
++		// A recovered upload may need to recreate its missing remote parent.
+ 		parent, leaf = path.Split(remote)
+ 		dir, err = vfs.mkdirAll(parent, os.FileMode(vfs.Opt.DirPerms))
+ 	}
+ 	if err != nil {
+-		return err
+-	}
+-	dir.AddVirtual(leaf, size, isDir)
+-	return nil
++		return nil, err
++	}
++	if file, ok := dir.AddVirtual(leaf, size, isDir).(*File); ok {
++		return file.setCachedObject, nil
++	}
++	return nil, nil
+ }
+ 
+ // Readlink returns the destination of the named symbolic link.
+--- a/vfs/vfscache/cache.go
++++ b/vfs/vfscache/cache.go
+@@ -70,8 +70,9 @@
+ // entry in directory listings.
+ //
+ // This is used when reloading the Cache and uploading items need to
+-// go into the directory tree.
+-type AddVirtualFn func(remote string, size int64, isDir bool) error
++// go into the directory tree. The returned callback associates a successful
++// upload with the published virtual file.
++type AddVirtualFn func(remote string, size int64, isDir bool) (StoreFn, error)
+ 
+ // New creates a new cache hierarchy for fremote
+ //
+@@ -907,9 +908,9 @@
+ 
+ // AddVirtual adds a virtual directory entry by calling the addVirtual
+ // callback if one has been registered.
+-func (c *Cache) AddVirtual(remote string, size int64, isDir bool) error {
++func (c *Cache) AddVirtual(remote string, size int64, isDir bool) (StoreFn, error) {
+ 	if c.avFn == nil {
+-		return errors.New("no AddVirtual function registered")
++		return nil, errors.New("no AddVirtual function registered")
+ 	}
+ 	return c.avFn(remote, size, isDir)
+ }
+--- a/vfs/vfscache/item.go
++++ b/vfs/vfscache/item.go
+@@ -879,24 +879,41 @@
+ 	}
+ 	// see if the object still exists
+ 	obj, _ := item.c.fremote.NewObject(ctx, item.name)
++	// Publish the exact virtual file and bind its object callback before Close:
++	// zero-delay writeback can finish synchronously.
++	size, err := item.GetSize()
++	if err != nil {
++		return fmt.Errorf("reload: failed to read size: %w", err)
++	}
++	storeFn, err := item.c.AddVirtual(item.name, size, false)
++	if err != nil {
++		// Keep recovery uploading and retry publication with its completed object.
++		fs.Errorf(item.name, "vfs cache: failed to add virtual dir entry: %v", err)
++		storeFn = func(o fs.Object) error {
++			if o.Remote() != item.GetName() {
++				return context.Canceled
++			}
++			retryStoreFn, err := item.c.AddVirtual(o.Remote(), o.Size(), false)
++			if o.Remote() != item.GetName() {
++				return context.Canceled
++			}
++			if err != nil {
++				return fmt.Errorf("reload: failed to add virtual dir entry: %w", err)
++			}
++			if retryStoreFn != nil {
++				return retryStoreFn(o)
++			}
++			return nil
++		}
++	}
+ 	// open the file with the object (or nil)
+-	err := item.Open(obj)
++	err = item.Open(obj)
+ 	if err != nil {
+ 		return err
+ 	}
+ 	// close the file to execute the writeback if needed
+-	err = item.Close(nil)
+-	if err != nil {
++	if err = item.Close(storeFn); err != nil {
+ 		return err
+-	}
+-	// put the file into the directory listings
+-	size, err := item._getSize()
+-	if err != nil {
+-		return fmt.Errorf("reload: failed to read size: %w", err)
+-	}
+-	err = item.c.AddVirtual(item.name, size, false)
+-	if err != nil {
+-		return fmt.Errorf("reload: failed to add virtual dir entry: %w", err)
+ 	}
+ 	return nil
+ }
+--- a/vfs/vfscache/cache_test.go
++++ b/vfs/vfscache/cache_test.go
+@@ -76,13 +76,13 @@
+ 
+ var avInfos []avInfo
+ 
+-func addVirtual(remote string, size int64, isDir bool) error {
++func addVirtual(remote string, size int64, isDir bool) (StoreFn, error) {
+ 	avInfos = append(avInfos, avInfo{
+ 		Remote: remote,
+ 		Size:   size,
+ 		IsDir:  isDir,
+ 	})
+-	return nil
++	return nil, nil
+ }
+ 
+ func newTestCacheOpt(t *testing.T, opt vfscommon.Options) (r *fstest.Run, c *Cache) {
