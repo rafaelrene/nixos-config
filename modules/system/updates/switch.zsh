@@ -37,7 +37,9 @@ update_phase='checking the checkout upstream'
 head_ref=$(git -C "$checkout" rev-parse --symbolic-full-name HEAD) || exit $?
 upstream=$(git -C "$checkout" for-each-ref --format='%(upstream)' "$head_ref") || exit $?
 if [[ -n "$upstream" ]]; then
-  update_step 'fetching and fast-forwarding the checkout' git -C "$checkout" pull --ff-only || exit $?
+  upstream_remote=$(git -C "$checkout" for-each-ref --format='%(upstream:remotename)' "$head_ref") || exit $?
+  update_step 'fetching the checkout upstream' git -C "$checkout" fetch --no-write-fetch-head "$upstream_remote" || exit $?
+  update_step 'fast-forwarding the checkout' git -C "$checkout" merge --ff-only "$upstream" || exit $?
 else
   print -- 'Nix system update: checkout has no upstream; using the local checkout.'
 fi
