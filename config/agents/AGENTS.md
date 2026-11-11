@@ -36,6 +36,8 @@ Always provide follow-up suggestions of next steps.
 
 - Keep things simple. Channel both "measure twice, cut once" and "yagni" energy
   unless explicitly instructed otherwise
+- Before adding an integration or dependency, identify the needed capability
+  and check whether existing tools already provide it.
 - Type-safety is useful, take advantage of it
 - Use `devenv` for runtime and tool management.
 - Don't be scared to propose bold ideas if they can meaningfully improve our work
