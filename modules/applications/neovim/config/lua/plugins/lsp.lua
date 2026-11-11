@@ -15,7 +15,11 @@ local eslint_root = util.root_pattern(
   ".eslintrc.yml"
 )
 
-local function get_eslint_root(fname)
+local function get_eslint_root(fname, filetype)
+  if filetype == "markdown" or filetype == "markdown.mdx" then
+    return eslint_root(fname)
+  end
+
   return eslint_root(fname) or vim.fs.dirname(vim.fs.find(".git", { path = fname, upward = true })[1])
 end
 
@@ -127,12 +131,18 @@ return {
           -- end workaround
         end,
         eslint = function(_, opts)
+          local filetypes = vim.list_extend(
+            vim.deepcopy(opts.filetypes or vim.lsp.config.eslint.filetypes),
+            { "markdown", "markdown.mdx" }
+          )
+
           vim.lsp.config(
             "eslint",
             vim.tbl_deep_extend("force", opts, {
+              filetypes = filetypes,
               root_dir = function(bufnr, on_dir)
                 local fname = vim.api.nvim_buf_get_name(bufnr)
-                local root = get_eslint_root(fname)
+                local root = get_eslint_root(fname, vim.bo[bufnr].filetype)
 
                 if root then
                   on_dir(root)
