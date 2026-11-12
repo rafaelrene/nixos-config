@@ -21,10 +21,6 @@
     };
     # These upstream URLs are overwritten. Archive locked inputs with
     # `nix flake archive` to reproduce superseded downloads on another machine.
-    nodejs-checksums = {
-      url = "file+https://nodejs.org/dist/latest-v24.x/SHASUMS256.txt";
-      flake = false;
-    };
     google-drive-download = {
       url = "file+https://dl.google.com/drive-file-stream/5-percent/GoogleDrive.dmg";
       flake = false;

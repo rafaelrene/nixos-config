@@ -27,9 +27,6 @@
         (lib.nameValuePair (builtins.unsafeDiscardStringContext "${pkgs.bash}/bin/bash") runtimes.bash)
         (lib.nameValuePair (builtins.unsafeDiscardStringContext (lib.getExe pkgs.zsh)) runtimes.zsh)
         (lib.nameValuePair (builtins.unsafeDiscardStringContext (lib.getExe pkgs.python3)) runtimes.python3)
-        (lib.nameValuePair (builtins.unsafeDiscardStringContext (
-          lib.getExe (config.features.nodejs.package { inherit pkgs; })
-        )) "${runtimes.directory}/node")
       ];
       sources = pkgs.writeText "darwin-user-executable-sources.json" (
         builtins.toJSON {

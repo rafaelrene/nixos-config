@@ -36,6 +36,7 @@ let
         name = "nix-update-packages";
         runtimeInputs = with pkgs; [
           coreutils
+          curl
           nix
           zsh
           jq
