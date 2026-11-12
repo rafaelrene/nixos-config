@@ -1,11 +1,10 @@
 {
   config,
-  inputs,
   lib,
   ...
 }:
 let
-  checksums = lib.splitString "\n" (builtins.readFile inputs.nodejs-checksums);
+  checksums = lib.splitString "\n" (builtins.readFile ./SHASUMS256.txt);
   platforms = {
     aarch64-darwin = "darwin-arm64";
     x86_64-linux = "linux-x64";
@@ -45,8 +44,8 @@ in
     let
       source = sources.${pkgs.stdenv.hostPlatform.system};
     in
-    # The locked upstream checksum manifest selects binaries with their bundled
-    # native-library fixes, independently of Nixpkgs' Node release schedule.
+    # Keep checksums in the source snapshot: upstream's latest manifest changes.
+    # ns -u refreshes it independently of Nixpkgs' Node release schedule.
     pkgs.stdenvNoCC.mkDerivation {
       pname = "nodejs";
       inherit (source) version;

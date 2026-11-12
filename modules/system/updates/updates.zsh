@@ -6,6 +6,19 @@ targets=$(cat "$3")
 shift 3
 checkout=${1:-$default_checkout}
 
+update_nodejs_checksums() {
+  local manifest="$checkout/modules/applications/nodejs/SHASUMS256.txt" temporary
+  temporary=$(mktemp "${manifest}.XXXXXX") || return
+  if curl --fail --silent --show-error --location --retry 3 \
+    --output "$temporary" https://nodejs.org/dist/latest-v24.x/SHASUMS256.txt \
+    && mv -- "$temporary" "$manifest"; then
+    return 0
+  fi
+  rm -f -- "$temporary"
+  return 1
+}
+
+update_step 'refreshing Node.js checksums' update_nodejs_checksums || exit 2
 # Only exit 10 permits a system switch after independent staging failures.
 update_step 'refreshing flake inputs' nix flake update --refresh --flake "$checkout" || exit 2
 # Keep the upstream skill editable alongside the other live agent settings.
