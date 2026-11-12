@@ -7,10 +7,13 @@ shift 3
 checkout=${1:-$default_checkout}
 
 update_nodejs_checksums() {
-  local manifest="$checkout/modules/applications/nodejs/SHASUMS256.txt" temporary
+  local manifest="$checkout/modules/applications/nodejs/SHASUMS256.txt" temporary version
+  version=$(curl --fail --silent --show-error --location --retry 3 https://nodejs.org/dist/index.json \
+    | jq -er 'map(select(.lts)) | max_by(.version | ltrimstr("v") | split(".") | map(tonumber)) | .version') || return
+  [[ "$version" =~ '^v[0-9]+[.][0-9]+[.][0-9]+$' ]] || return 1
   temporary=$(mktemp "${manifest}.XXXXXX") || return
   if curl --fail --silent --show-error --location --retry 3 \
-    --output "$temporary" https://nodejs.org/dist/latest-v24.x/SHASUMS256.txt \
+    --output "$temporary" "https://nodejs.org/dist/$version/SHASUMS256.txt" \
     && mv -- "$temporary" "$manifest"; then
     return 0
   fi

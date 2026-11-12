@@ -13,13 +13,13 @@ let
     _: platform:
     let
       matches = lib.filter (entry: entry != null) (
-        map (builtins.match "([0-9a-f]{64})  node-v(24[.][0-9]+[.][0-9]+)-${platform}[.]tar[.]gz") checksums
+        map (builtins.match "([0-9a-f]{64})  node-v([0-9]+[.][0-9]+[.][0-9]+)-${platform}[.]tar[.]gz") checksums
       );
       entry =
         if builtins.length matches == 1 then
           builtins.head matches
         else
-          throw "Expected one Node.js 24 checksum for ${platform}.";
+          throw "Expected one Node.js checksum for ${platform}.";
       version = builtins.elemAt entry 1;
     in
     {
@@ -45,7 +45,7 @@ in
       source = sources.${pkgs.stdenv.hostPlatform.system};
     in
     # Keep checksums in the source snapshot: upstream's latest manifest changes.
-    # ns -u refreshes it independently of Nixpkgs' Node release schedule.
+    # ns -u selects the newest LTS independently of Nixpkgs' release schedule.
     pkgs.stdenvNoCC.mkDerivation {
       pname = "nodejs";
       inherit (source) version;
