@@ -29,6 +29,9 @@
 [pull]
   ff = true
 
+[diff]
+  submodule = diff
+
 [merge]
   conflictstyle = zdiff3
 
