@@ -27,7 +27,21 @@ in
           ${pkgs.bash}/bin/bash -n "$out/bin/darwin-rebuild"
         '';
       });
-      activation = config.system.activationScripts.script.text;
+      activation =
+        let
+          # Permission failures must preserve existing macOS privacy approvals.
+          script = lib.concatStringsSep "\n" (
+            lib.filter (
+              line:
+              builtins.match "[[:space:]]*(/usr/bin/)?tccutil reset .*" line == null
+              && !(lib.hasInfix "# and we can reset it to ensure the user gets another prompt" line)
+            ) (lib.splitString "\n" config.system.activationScripts.script.text)
+          );
+        in
+        assert lib.assertMsg (
+          !lib.hasInfix "tccutil reset " script
+        ) "Darwin activation must not reset existing macOS privacy approvals.";
+        script;
       activationShebang = "#!/usr/bin/env -i ${pkgs.stdenv.shell}\n";
     in
     {
