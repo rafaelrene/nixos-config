@@ -11,35 +11,20 @@ Stay read-only. Prioritize bugs, useful improvements, then guide violations.
 ## Scope
 
 - Accept a PR, branch, commit range, or worktree. Default to current changes.
-- Read repository instructions and relevant PR or thread context. Use T3 tools,
-  then authenticated `gh` or `bkt` for missing GitHub or Bitbucket operations.
+- Read relevant PR or thread context. Use T3 tools, then authenticated `gh` or
+  `bkt` for missing GitHub or Bitbucket operations.
 - Record the checkout, base, head, and paths. Include relevant staged, unstaged,
   and untracked changes. Use the branch's merge base, supplied range, or HEAD
   for uncommitted-only reviews. Ask when unclear.
 - Preserve unrelated work. Do not edit source, commit, push, post, resolve
   threads, or change PR settings. Tests and temporary reproductions are allowed.
 
-## GroupSolver guides
-
-For GroupSolver code, confirm `groupsolver.atlassian.net` and read these guides:
-
-```sh
-acli confluence auth status
-acli confluence page view --id 1722220555 --body-format storage --json
-acli confluence page view --id 1722187777 --body-format storage --json
-acli confluence page view --id 2105966593 --body-format storage --json
-```
-
-Cite applicable Code, Naming, and TypeScript rules. Respect repository exceptions.
-If required context or guides are missing, ask whether to continue and disclose
-the gap. Other repositories use their own instructions.
-
 ## Review loop
 
 - Use [council](../council/SKILL.md) for reviewer selection, reasoning effort,
   review rounds, and scores.
-- Supply scope, revisions, intent, repository instructions, these review standards,
-  and check results. Reviewers stay read-only and do not delegate.
+- Supply scope, revisions, intent, these review standards, and check results.
+  Reviewers stay read-only and do not delegate.
 - Keep council read-only here: report known issues and proposed fixes instead of
   applying them. Return findings and the council score table to the user or calling
   workflow. Leave PR description updates to an authorized implementation workflow.
@@ -68,6 +53,7 @@ Report APPROVED, CHANGES NEEDED, or UNRESOLVED, with base and head.
 
 For each finding, show its ID, severity, category, linked location, impact,
 root cause, verification, failing code example, and minimal fix.
+Cite the rule for guide violations.
 
 Use P0 critical, P1 high, P2 medium, and P3 low. Group bugs, improvements, and
 guide violations in that order. Finish with rounds, models, checks,

@@ -10,16 +10,14 @@ Check whether the change still makes sense before updating its branch.
 
 ## Assess
 
-- Read repository instructions, local changes, the full diff, and review context.
-  Use T3 tools, then authenticated `gh` or `bkt` for GitHub or Bitbucket.
+- Read local changes, the full diff, and review context. Use T3 tools, then
+  authenticated `gh` or `bkt` for GitHub or Bitbucket.
 - Establish the original goal. Fetch relevant remotes. Record the actual target,
   original head, merge base, and remote head.
 - Check newer work for replacements, changed contracts, moved ownership, and
   behavior that should not be restored.
 - Inspect related repositories and submodule pointers. Preserve unrelated work
-  and authorship. Use a safe checkout under session worktree rules when needed.
-- For GroupSolver edits, read the guides in
-  [review-changes](../review-changes/SKILL.md#groupsolver-guides).
+  and authorship. Use a safe checkout when needed.
 
 Choose:
 
@@ -29,7 +27,6 @@ Choose:
 
 ## Update
 
-- Follow repository merge or rebase conventions.
 - Commit or push only when authorized, including by full-stop. Stop before
   creating or rewriting commits without that authority.
 - Resolve conflicts against current intent. Ask about unresolved product decisions.
@@ -42,5 +39,4 @@ Choose:
   Never merge, close, deploy, or activate through this workflow.
 
 Report the disposition, evidence, resulting diff, checks, commits or pushes,
-and remaining decisions. Recheck and link the PR after an authorized push,
-following session rules.
+and remaining decisions. Recheck and link the PR after an authorized push.
