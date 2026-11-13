@@ -260,7 +260,15 @@ class Installer:
             for name, source in self.manifest.get(field, {}).items()
         }
 
-    def native(self, path, identifier, old_requirement=None, *, deep=False):
+    def native(
+        self,
+        path,
+        identifier,
+        old_requirement=None,
+        *,
+        deep=False,
+        preserve_identity=False,
+    ):
         original = signature(path)
         # Preserve vendor signatures only when they retain the installed identity.
         if (
@@ -282,6 +290,10 @@ class Installer:
         if old_requirement and not verify(
             path, old_requirement, deep=deep, check=False
         ):
+            if preserve_identity:
+                raise InstallationError(
+                    f"Refusing to replace {identifier}: its existing code identity would change"
+                )
             print(
                 f"Darwin code identity: {identifier} moved to the persistent local "
                 "signing identity; macOS permissions may need to be granted again.",
@@ -766,6 +778,7 @@ class Installer:
                         old["requirement"]
                         if old
                         else (previous or {}).get("requirement"),
+                        preserve_identity=destination == self.bin / "bash",
                     )
             os.replace(temporary, destination)
             records[str(destination)] = {
