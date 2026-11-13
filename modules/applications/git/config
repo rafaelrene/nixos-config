@@ -5,6 +5,9 @@
   name = René Rafael
   email = rene.rafael@groupsolver.com
 
+[url "git@bitbucket.org:"]
+  insteadOf = git@ssh.bitbucket.org:
+
 [init]
   defaultBranch = master
 
