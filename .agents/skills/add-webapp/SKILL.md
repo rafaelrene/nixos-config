@@ -12,8 +12,7 @@ Example: URL `http://othinus.local:3773`, app name `T3Code (Othinus)`.
 
 ## Add the registry entry
 
-1. Work in the current checkout. Read `AGENTS.md` and
-   `modules/applications/webapps/nixos.nix`.
+1. Work in the current checkout. Read `modules/applications/webapps/nixos.nix`.
 2. Require an absolute HTTP or HTTPS URL. Preserve its scheme, host, port,
    path, query, and fragment. If the scheme is missing, ask for it rather
    than guessing. Do not store credentials or access tokens in this public

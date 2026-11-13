@@ -12,8 +12,8 @@ Finish the change and prepare an open PR for the user to merge.
 
 - A full-stop request authorizes implementation, tests, task-branch commits and
   pushes, PR creation or updates, and fixes for verified review or CI issues.
-- It includes branch updates using repository conventions and explicit-head
-  force-with-lease pushes after authorized rebases.
+- It includes branch updates and explicit-head force-with-lease pushes after
+  authorized rebases.
 - Draft replies. Posting replies and resolving threads need separate approval
   of the exact replies and resolutions.
 - Never merge, enable auto-merge, enter a merge queue, push to the default
@@ -23,23 +23,21 @@ Finish the change and prepare an open PR for the user to merge.
 
 ## Deliver
 
-1. Read repository instructions and task context. Use a task branch.
-   Preserve unrelated work. For GroupSolver, read the guides in
-   [review-changes](../review-changes/SKILL.md#groupsolver-guides).
+1. Read task context. Use a task branch and preserve unrelated work.
 2. Disable auto-merge and remove the PR from merge queues. Recheck before every
    push and at handoff. Stop if automatic merging cannot be prevented.
 3. Use [modernize](../modernize/SKILL.md) when the branch needs updating.
 4. Make the smallest change that meets the goal. Prove behavior with direct
-   reproductions and relevant tests or runtime checks. Follow testing rules.
+   reproductions and relevant tests or runtime checks.
 5. Use [review-changes](../review-changes/SKILL.md). Fix verified issues within scope,
    rerun proof, and resume council review after behavior changes.
    Preserve the finding ledger and council round history across fixes.
    Keep unrelated suggestions as follow-ups.
 6. Find an existing PR before creating one. Use T3 tools, then authenticated
-   `gh` or `bkt` for missing operations. Follow repository conventions.
+   `gh` or `bkt` for missing operations.
 7. Commit and push intended changes. Prepare an open, non-draft PR describing
    the problem, behavior, proof, and review outcome, including council's round count
-   and score table. Link it under session rules.
+   and score table. Link the PR.
 
 ## Monitor
 

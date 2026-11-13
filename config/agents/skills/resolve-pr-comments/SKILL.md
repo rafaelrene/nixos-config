@@ -20,7 +20,6 @@ Use the tools available in the current session:
   when needed to retrieve complete review threads.
 - Use `bkt` for Bitbucket Cloud and Bitbucket Data Center operations missing from
   native tools.
-- Use `acli` to read the GroupSolver coding guides below.
 
 Before using a CLI, verify that it exists and is authenticated. T3 and CLI
 authentication are independent. If a required operation has no working tool,
@@ -100,30 +99,6 @@ Use resolved and outdated threads as context. Actively review unresolved human-a
 
 Preserve the provider URL or stable identifier for every thread.
 
-## GroupSolver coding guides
-
-For GroupSolver PRs, read the current published guides before classifying review
-comments or proposing changes:
-
-- [Code guide](https://groupsolver.atlassian.net/wiki/spaces/GSTEAM/pages/1722220555/Code+guide)
-- [Function / variable naming guide](https://groupsolver.atlassian.net/wiki/spaces/GSTEAM/pages/1722187777/Function+variable+naming+guide)
-- [TypeScript guide](https://groupsolver.atlassian.net/wiki/spaces/GSTEAM/pages/2105966593/TypeScript+Guide)
-
-Confirm `acli confluence auth status` reports `groupsolver.atlassian.net`, then
-read the page bodies:
-
-```sh
-acli confluence page view --id 1722220555 --body-format storage --json
-acli confluence page view --id 1722187777 --body-format storage --json
-acli confluence page view --id 2105966593 --body-format storage --json
-```
-
-Apply relevant rules when assessing comments, planning changes, and implementing
-the approved plan. Cite the guide and rule when they support a finding. Surface
-conflicts with task or repository instructions; keep changes within the agreed
-scope. If a guide cannot be read, report which one and leave conclusions that
-depend on it unresolved while continuing other investigation.
-
 ## Investigate before classifying
 
 Investigate every relevant comment before deciding what it means or whether it is correct.
@@ -132,7 +107,7 @@ For each thread:
 
 1. Restate the reviewer’s claim or question plainly.
 2. Inspect the commented code and surrounding execution path.
-3. Inspect related types, callers, tests, documentation, configuration, and repository instructions.
+3. Inspect related types, callers, tests, documentation, and configuration.
 4. Use history and blame when they help explain intent.
 5. Run safe read-only diagnostics or existing tests when they can confirm behavior.
 6. Check the full thread for replies or later context.
@@ -207,11 +182,10 @@ After approval:
 1. Inspect the worktree and preserve unrelated user changes.
 2. Make only the approved edits.
 3. Keep comments and documentation synchronized with the code.
-4. Follow repository instructions.
-5. Run the applicable formatter, linter, type checker, and focused tests.
-6. Run the full test suite when its cost is reasonable.
-7. Report unavailable, impractical, or pre-existing failing checks plainly.
-8. Inspect the final diff for unintended changes.
+4. Run the applicable formatter, linter, type checker, and focused tests.
+5. Run the full test suite when its cost is reasonable.
+6. Report unavailable, impractical, or pre-existing failing checks plainly.
+7. Inspect the final diff for unintended changes.
 
 If implementation reveals a material flaw in the approved plan, stop and return to planning.
 
