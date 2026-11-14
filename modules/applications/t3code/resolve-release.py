@@ -27,32 +27,39 @@ def release_snapshot(releases):
     release = max(nightlies, key=lambda item: item["published_at"])
     version = release["tag_name"][1:]
 
-    def checksum(name):
-        assets = [asset for asset in release["assets"] if asset["name"] == name]
+    def artifact(*names):
+        assets = [asset for asset in release["assets"] if asset["name"] in names]
         if len(assets) != 1:
             raise ValueError(
-                f"Nightly {version} needs exactly one artifact named {name}."
+                f"Nightly {version} needs exactly one artifact named {' or '.join(names)}."
             )
-        digest = assets[0].get("digest", "")
+        asset = assets[0]
+        digest = asset.get("digest", "")
         if not isinstance(digest, str) or not re.fullmatch(
             r"sha256:[0-9a-f]{64}", digest
         ):
-            raise ValueError(f"Nightly {version} has no SHA-256 digest for {name}.")
-        return "sha256-" + base64.b64encode(bytes.fromhex(digest[7:])).decode()
-
-    return {
-        "version": version,
-        "platforms": {
-            system: {
-                "serverHash": checksum(f"t3-{version}-{server}.tar.gz"),
-                "desktopHash": checksum(f"T3-Code-{version}-{desktop}"),
-            }
-            for system, server, desktop in (
-                ("aarch64-darwin", "darwin-arm64", "arm64.zip"),
-                ("x86_64-linux", "linux-x64", "x86_64.AppImage"),
+            raise ValueError(
+                f"Nightly {version} has no SHA-256 digest for {asset['name']}."
             )
-        },
-    }
+        return {
+            "url": asset["browser_download_url"],
+            "hash": "sha256-" + base64.b64encode(bytes.fromhex(digest[7:])).decode(),
+        }
+
+    platforms = {}
+    for system, server, desktop in (
+        ("aarch64-darwin", "darwin-arm64", "arm64.zip"),
+        ("x86_64-linux", "linux-x64", "x86_64.AppImage"),
+    ):
+        desktop_asset = artifact(
+            f"T3-Code-{version}-{desktop}", f"T3-Code-Nightly-{desktop}"
+        )
+        platforms[system] = {
+            "serverHash": artifact(f"t3-{version}-{server}.tar.gz")["hash"],
+            "desktopHash": desktop_asset["hash"],
+            "desktopUrl": desktop_asset["url"],
+        }
+    return {"version": version, "platforms": platforms}
 
 
 def main():
@@ -62,6 +69,7 @@ def main():
     # Public releases remain available before the first gh auth login.
     token = subprocess.run(
         ["gh", "auth", "token", "--hostname", "github.com"],
+        check=False,
         capture_output=True,
         text=True,
     )

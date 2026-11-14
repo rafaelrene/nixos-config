@@ -31,6 +31,11 @@ in
           {
             inherit (release) version;
             hash = release.desktopHash;
+            url =
+              release.desktopUrl
+                or "https://github.com/pingdotgg/t3code/releases/download/v${release.version}/T3-Code-${release.version}-${
+                  if pkgs.stdenv.hostPlatform.isDarwin then "arm64.zip" else "x86_64.AppImage"
+                }";
           };
       package = pkgs.buildEnv {
         name = "t3code-${release.version}";
