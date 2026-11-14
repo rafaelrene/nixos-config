@@ -13,13 +13,13 @@
       unzip,
       version,
       hash,
+      url,
     }:
-    stdenvNoCC.mkDerivation (finalAttrs: {
+    stdenvNoCC.mkDerivation {
       pname = "t3code-desktop";
       inherit version;
       src = fetchurl {
-        url = "https://github.com/pingdotgg/t3code/releases/download/v${finalAttrs.version}/T3-Code-${finalAttrs.version}-arm64.zip";
-        inherit hash;
+        inherit url hash;
       };
       nativeBuildInputs = [ unzip ];
       sourceRoot = ".";
@@ -38,5 +38,5 @@
         sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
         platforms = [ "aarch64-darwin" ];
       };
-    });
+    };
 }
