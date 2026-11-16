@@ -209,7 +209,7 @@ in
             unitConfig.ConditionUser = user;
             serviceConfig = {
               Type = "oneshot";
-              ExecStart = lib.getExe updateT3Code;
+              ExecStart = "${lib.getExe updateT3Code} --background";
               TimeoutStartSec = "4h";
             };
           };

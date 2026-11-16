@@ -205,7 +205,10 @@ in
         t3code-update = {
           environment.NIX_SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
           serviceConfig = {
-            ProgramArguments = [ (lib.getExe updater) ];
+            ProgramArguments = [
+              (lib.getExe updater)
+              "--background"
+            ];
             # Switches load jobs before the Nix daemon is ready. Use the schedule.
             RunAtLoad = false;
             StartInterval = 10800;

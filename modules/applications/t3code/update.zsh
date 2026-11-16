@@ -19,9 +19,10 @@ bootstrap=false
 checkout=''
 while (( $# )); do
   case "$1" in
-    --help|-h) print -- "Usage: update-t3code [--restart] [--bootstrap] [--flake CHECKOUT]"; exit 0 ;;
+    --help|-h) print -- "Usage: update-t3code [--restart] [--bootstrap] [--background] [--flake CHECKOUT]"; exit 0 ;;
     --restart) restart=true ;;
     --bootstrap) bootstrap=true ;;
+    --background) update_background=true ;;
     --flake)
       (( $# >= 2 )) || { print -u2 -- "--flake requires a checkout."; exit 2; }
       checkout=$2; shift ;;
@@ -29,9 +30,10 @@ while (( $# )); do
   esac
   shift
 done
+update_failure_marker="$state/failure-notified"
 
 update() {
-  local generation previous version snapshot
+  local generation previous version snapshot discovery
   local -a build_options=(--no-write-lock-file --no-accept-flake-config)
   if [[ -n "$checkout" ]]; then
     build_source=$checkout
@@ -41,7 +43,14 @@ update() {
     snapshot="$state/release"
     build_options+=(--override-input t3-release "path:$snapshot")
   fi
-  update_step 'discovering the official nightly release' "$resolver" "$snapshot/release.json" || return
+  update_phase='discovering the official nightly release'
+  print -- "$update_title: $update_phase..."
+  if ! discovery=$("$resolver" "$snapshot/release.json" 2>&1); then
+    print -u2 -- "$discovery"
+    update_failure=${discovery##*$'\n'}
+    return 1
+  fi
+  print -- "$discovery"
   print -- "T3 Code: building the matching Nix server and desktop..."
   previous=$(readlink -f "$staged" 2>/dev/null) || previous=''
   mkdir -p "$base" || return

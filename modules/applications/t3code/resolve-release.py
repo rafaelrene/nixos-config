@@ -11,21 +11,15 @@ import tempfile
 from pathlib import Path
 
 
-def release_snapshot(releases):
-    nightlies = [
-        release
-        for release in releases
-        if not release.get("draft")
-        and release.get("prerelease")
-        and re.fullmatch(
-            r"v\d+\.\d+\.\d+-nightly\.\d{8}\.\d+", release.get("tag_name", "")
-        )
-        and release.get("published_at")
-    ]
-    if not nightlies:
-        raise ValueError("No published nightly appears in the latest 100 releases.")
-    release = max(nightlies, key=lambda item: item["published_at"])
-    version = release["tag_name"][1:]
+def release_snapshot(release, tag):
+    if (
+        release.get("tag_name") != tag
+        or release.get("draft")
+        or not release.get("prerelease")
+        or not release.get("published_at")
+    ):
+        raise ValueError(f"Nightly {tag} is not a published prerelease.")
+    version = tag[1:]
 
     def artifact(*names):
         assets = [asset for asset in release["assets"] if asset["name"] in names]
@@ -62,6 +56,41 @@ def release_snapshot(releases):
     return {"version": version, "platforms": platforms}
 
 
+def fetch_json(url, headers="Accept: application/json\n"):
+    """Retry transient failures without retaining bytes from partial responses."""
+    with tempfile.TemporaryDirectory(prefix="t3-releases-") as directory:
+        response = Path(directory) / "response.json"
+        subprocess.run(
+            [
+                "curl",
+                "--fail",
+                "--location",
+                "--silent",
+                "--show-error",
+                "--compressed",
+                "--connect-timeout",
+                "10",
+                "--max-time",
+                "60",
+                "--retry",
+                "3",
+                "--retry-connrefused",
+                "--retry-max-time",
+                "180",
+                "--output",
+                str(response),
+                "--header",
+                "@-",
+                url,
+            ],
+            input=headers,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return json.loads(response.read_text())
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("destination", type=Path)
@@ -79,26 +108,16 @@ def main():
         if not credential or any(character.isspace() for character in credential):
             raise ValueError("GitHub returned an invalid authentication token.")
         headers += f"Authorization: Bearer {credential}\n"
-    response = subprocess.run(
-        [
-            "curl",
-            "--fail",
-            "--silent",
-            "--show-error",
-            "--connect-timeout",
-            "10",
-            "--max-time",
-            "30",
-            "--header",
-            "@-",
-            "https://api.github.com/repos/pingdotgg/t3code/releases?per_page=100",
-        ],
-        input=headers,
-        check=True,
-        capture_output=True,
-        text=True,
+    pointer = fetch_json(
+        "https://github.com/pingdotgg/t3code/releases/download/update-feed/nightly.json"
     )
-    snapshot = release_snapshot(json.loads(response.stdout))
+    tag = pointer["tag_name"]
+    if not re.fullmatch(r"v\d+\.\d+\.\d+-nightly\.\d{8}\.\d+", tag):
+        raise ValueError("T3's nightly feed returned an invalid release tag.")
+    release = fetch_json(
+        f"https://api.github.com/repos/pingdotgg/t3code/releases/tags/{tag}", headers
+    )
+    snapshot = release_snapshot(release, tag)
     content = json.dumps(snapshot, indent=2) + "\n"
     if not destination.exists() or destination.read_text() != content:
         destination.parent.mkdir(parents=True, exist_ok=True)

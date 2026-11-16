@@ -26,6 +26,8 @@ shift 4
 update_phase=initialization
 update_success=''
 update_failure=''
+update_failure_marker=''
+update_background=false
 update_notifications=${NIX_UPDATE_NOTIFY:-true}
 
 update_step() {
@@ -47,9 +49,20 @@ TRAPEXIT() {
   else
     message=${update_success:-Completed without changes.}
     print -- "$update_title: $message"
+    if [[ -n "$update_failure_marker" ]]; then
+      rm -f -- "$update_failure_marker"
+    fi
+  fi
+  if [[ "$outcome" == error && "$update_background" == true &&
+    -n "$update_failure_marker" && -e "$update_failure_marker" ]]; then
+    return "$result"
   fi
   if [[ "$update_notifications" == true && ( "$outcome" == error || -n "$update_success" ) ]]; then
-    if ! "$update_notify" "$update_title" "$outcome" "$message Log: $update_log"; then
+    if "$update_notify" "$update_title" "$outcome" "$message Log: $update_log"; then
+      if [[ "$outcome" == error && "$update_background" == true && -n "$update_failure_marker" ]]; then
+        touch -- "$update_failure_marker"
+      fi
+    else
       print -u2 -- "WARNING: $update_title could not deliver its $outcome notification."
     fi
   fi
