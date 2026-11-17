@@ -21,8 +21,7 @@ in
       codeRoot = "/data/code";
     };
     networking.firewall.extraInputRules = ''
-      ip saddr 192.168.86.0/24 tcp dport 22 accept comment "Othinus LAN SSH"
-      ip saddr 192.168.86.0/24 tcp dport 3773 accept comment "Othinus LAN T3Code"
+      ip saddr 192.168.86.0/24 accept comment "Othinus trusted home subnet"
     '';
     users.users.raf.openssh.authorizedKeys.keyFiles = [
       ../../modules/applications/openssh/othinus.pub
