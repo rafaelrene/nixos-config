@@ -1,15 +1,15 @@
 {
-  "version": "0.1.10-nightly.20261114.4669",
+  "version": "0.1.11-nightly.20261117.4825",
   "platforms": {
     "aarch64-darwin": {
-      "serverHash": "sha256-J+grvEy/n9bXbM41VoUrg9B13TET3oKOqm7DWSolgOw=",
-      "desktopHash": "sha256-eKmCOvfm18IJ6BKN7LsL/gHFeGnWKEjSf/vwmgbmZsg=",
-      "desktopUrl": "https://github.com/pingdotgg/t3code/releases/download/v0.1.10-nightly.20261114.4669/T3-Code-0.1.10-nightly.20261114.4669-arm64.zip"
+      "serverHash": "sha256-zyusffIQEH0m8sLNTzhVyRrE7Z/dWJRStGCgnoMFwPg=",
+      "desktopHash": "sha256-Si7IHpp5avDz6eECmWzh1XY8g2sfcKrfwMfa0+lnXms=",
+      "desktopUrl": "https://github.com/pingdotgg/t3code/releases/download/v0.1.11-nightly.20261117.4825/T3-Code-0.1.11-nightly.20261117.4825-arm64.zip"
     },
     "x86_64-linux": {
-      "serverHash": "sha256-qk+4QoTCODykxk4HxDSSdrbDs2tZAM4LAohQ8IWVzfo=",
-      "desktopHash": "sha256-6zYG2/cfgusAbbsmfaE6hm+PTzIfbWEFWvsF/dwqLEE=",
-      "desktopUrl": "https://github.com/pingdotgg/t3code/releases/download/v0.1.10-nightly.20261114.4669/T3-Code-Nightly-x86_64.AppImage"
+      "serverHash": "sha256-XX9OzPONN4bo/qz752O6HvQHxHAVcwbtexrv9ZyFSlU=",
+      "desktopHash": "sha256-CPZbeM6rv0lqg8GugkuEH3iH9TVVrdW/2XWJwO/qcjQ=",
+      "desktopUrl": "https://github.com/pingdotgg/t3code/releases/download/v0.1.11-nightly.20261117.4825/T3-Code-Nightly-x86_64.AppImage"
     }
   }
 }
