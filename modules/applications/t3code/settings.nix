@@ -15,6 +15,8 @@ in
       home,
     }:
     let
+      agentProfile = "${home}/.local/state/nix/profiles/llm-agents";
+      executableSuffix = lib.optionalString pkgs.stdenv.hostPlatform.isDarwin "-executables";
       themeJSON = features.t3code.theme { inherit lib pkgs; };
       themeId = (builtins.fromJSON themeJSON).id;
       theme = pkgs.writeText "t3code-workstation-theme.json" themeJSON;
@@ -35,9 +37,21 @@ in
           defaultTheme = themeId;
           # Reapply the selection when the palette changes, not every restart.
           defaultThemeSetAt = builtins.hashString "sha256" themeJSON;
-          providers = {
-            codex.homePath = "${home}/.local/share/codex";
-            claudeAgent.homePath = "${home}/.local/share/claude";
+          providerInstances = {
+            codex = {
+              driver = "codex";
+              config = {
+                binaryPath = "${agentProfile}-codex${executableSuffix}/bin/codex";
+                homePath = "${home}/.local/share/codex";
+              };
+            };
+            claudeAgent = {
+              driver = "claudeAgent";
+              config = {
+                binaryPath = "${agentProfile}-claude-code${executableSuffix}/bin/claude";
+                homePath = "${home}/.local/share/claude";
+              };
+            };
           };
         }
       );
