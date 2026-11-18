@@ -35,7 +35,7 @@ workstation_nav() {
 		names+=("Config / ${directory:t}")
 		locations+=("$directory")
 	done
-	for directory in othinus proserpina; do
+	for directory in othinus proserpina nephtys; do
 		kinds+=(ssh)
 		names+=("$directory")
 		locations+=("$directory")

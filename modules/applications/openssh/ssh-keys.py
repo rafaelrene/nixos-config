@@ -12,7 +12,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-KEYS = ("personal", "bitbucket_work", "othinus", "proserpina")
+KEYS = ("personal", "bitbucket_work", "othinus", "proserpina", "nephtys")
 
 
 def digest(data):

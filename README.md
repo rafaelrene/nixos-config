@@ -1,10 +1,11 @@
 # Workstation configuration
 
 Personal Nix configuration for operating systems, desktops, applications,
-development tools, and coding agents across two machines:
+development tools, and coding agents across three machines:
 
 - **Othinus:** NixOS with Niri, DankMaterialShell, and Vicinae.
 - **Proserpina:** macOS with nix-darwin, OmniWM, and Raycast.
+- **Nephtys:** Mac mini with the same macOS workstation setup as Proserpina.
 
 ## Features
 
@@ -42,7 +43,7 @@ Both first fetch and fast-forward the checkout when it has an upstream.
 Local branches without an upstream and detached worktrees build as they are.
 Nix update and rebuild commands reuse the GitHub CLI login when available.
 T3 updates select one official nightly with matching server and desktop artifacts
-for both machines. Update commands report failures and send system notifications.
+for all machines. Update commands report failures and send system notifications.
 Codex, Claude Code, and T3 Code stage and activate independently.
 
 Devenv tracks upstream `main` and updates with `nup` and `nups`.

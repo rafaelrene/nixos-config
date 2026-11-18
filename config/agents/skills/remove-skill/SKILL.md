@@ -12,13 +12,14 @@ Use the checkout and rebuild command for the current host:
 | --- | --- | --- |
 | Othinus (NixOS) | `/data/code/nixos-config` | `sudo nixos-rebuild switch --flake path:/data/code/nixos-config#othinus` |
 | Proserpina (macOS) | `/Users/rafael/code/.personal/nixos-config` | `sudo darwin-rebuild switch --flake path:/Users/rafael/code/.personal/nixos-config#Proserpina` |
+| Nephtys (macOS) | `/Users/raf/code/.personal/nixos-config` | `sudo darwin-rebuild switch --flake path:/Users/raf/code/.personal/nixos-config#nephtys` |
 
 If working in a worktree, edit that checkout. Distribution uses the host's
-declared checkout after the changes reach it. Do not activate either host
+declared checkout after the changes reach it. Do not activate any host
 without explicit permission.
 
 Delete a skill from `<checkout>/config/agents/skills/` and clean up what referenced
-it. Both systems discover shared skills by directory and prunes obsolete managed links
+it. All systems discover shared skills by directory and prune obsolete managed links
 on the next rebuild. Do not remove links by hand; unrelated and built-in skills
 are preserved.
 
