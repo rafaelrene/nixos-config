@@ -44,6 +44,15 @@ in
       environment.systemPackages = [ pkgs.openssh ];
       services.openssh.enable = true;
       workstation.links.".ssh/config" = "${source}/hosts.config";
+      launchd.user.agents.ssh-keys.serviceConfig = {
+        ProgramArguments = [
+          "/usr/bin/ssh-add"
+          "--apple-load-keychain"
+        ];
+        RunAtLoad = true;
+        StandardOutPath = "${home}/.local/state/nix-darwin/ssh-keys.log";
+        StandardErrorPath = "${home}/.local/state/nix-darwin/ssh-keys.log";
+      };
       # Run after existing preflight checks, before files or services are activated.
       # darwin-rebuild check also enters preActivation and must never provision keys.
       system.activationScripts.preActivation.text = lib.mkAfter ''
