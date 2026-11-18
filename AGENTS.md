@@ -69,6 +69,8 @@ For Darwin changes, also evaluate and build the Darwin system:
 ```sh
 nix eval --raw .#darwinConfigurations.Proserpina.system.drvPath
 nix build --no-link .#darwinConfigurations.Proserpina.system
+nix eval --raw .#darwinConfigurations.nephtys.system.drvPath
+nix build --no-link .#darwinConfigurations.nephtys.system
 ```
 
 If you need me to activate a system with sudo give me command with

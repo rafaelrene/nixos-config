@@ -12,9 +12,10 @@ Use the checkout and rebuild command for the current host:
 | --- | --- | --- |
 | Othinus (NixOS) | `/data/code/nixos-config` | `sudo nixos-rebuild switch --flake path:/data/code/nixos-config#othinus` |
 | Proserpina (macOS) | `/Users/rafael/code/.personal/nixos-config` | `sudo darwin-rebuild switch --flake path:/Users/rafael/code/.personal/nixos-config#Proserpina` |
+| Nephtys (macOS) | `/Users/raf/code/.personal/nixos-config` | `sudo darwin-rebuild switch --flake path:/Users/raf/code/.personal/nixos-config#nephtys` |
 
 If working in a worktree, edit that checkout. Distribution uses the host's
-declared checkout after the changes reach it. Do not activate either host
+declared checkout after the changes reach it. Do not activate any host
 without explicit permission.
 
 Create new skills under `<checkout>/config/agents/skills/`.

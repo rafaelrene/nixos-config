@@ -1,5 +1,5 @@
 {
-  description = "Declarative workstation configurations for Othinus and Proserpina";
+  description = "Declarative workstation configurations for Othinus, Proserpina, and Nephtys";
 
   inputs = {
     flake-parts = {
