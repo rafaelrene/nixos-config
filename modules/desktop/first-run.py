@@ -4,12 +4,11 @@ import argparse
 import json
 import os
 import plistlib
-from pathlib import Path
 import pwd
 import sqlite3
 import subprocess
 import sys
-
+from pathlib import Path
 
 PANES = {
     "Accessibility": "Privacy_Accessibility",
@@ -100,8 +99,9 @@ def checks(settings):
                 "application": "/System/Applications/System Settings.app",
             }
         )
+    session_checks = []
     if settings.get("unattended"):
-        for argument, expected, title, pane in [
+        session_checks = [
             (
                 "-autologin",
                 "Automatic login user: " + settings["user"],
@@ -114,25 +114,35 @@ def checks(settings):
                 "No screen locking",
                 "com.apple.Lock-Screen-Settings.extension",
             ),
-        ]:
-            status = subprocess.run(
-                ["/usr/sbin/sysadminctl", argument, "status"],
-                capture_output=True,
-                text=True,
-                check=False,
+        ]
+    elif settings.get("manualLock"):
+        session_checks = [
+            (
+                "-screenLock",
+                "screenLock delay is immediate",
+                "Manual locking requires a password",
+                "com.apple.Lock-Screen-Settings.extension",
             )
-            ready = expected in status.stdout + status.stderr
-            result.append(
-                {
-                    "name": title,
-                    "ready": ready,
-                    "detail": "configured"
-                    if ready
-                    else "native password enrollment is required",
-                    "open": "x-apple.systempreferences:" + pane,
-                    "application": "/System/Applications/System Settings.app",
-                }
-            )
+        ]
+    for argument, expected, title, pane in session_checks:
+        status = subprocess.run(
+            ["/usr/sbin/sysadminctl", argument, "status"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        ready = expected in status.stdout + status.stderr
+        result.append(
+            {
+                "name": title,
+                "ready": ready,
+                "detail": "configured"
+                if ready
+                else "native password enrollment is required",
+                "open": "x-apple.systempreferences:" + pane,
+                "application": "/System/Applications/System Settings.app",
+            }
+        )
     for item in settings["permissions"]:
         if not Path(item["application"]).exists():
             continue

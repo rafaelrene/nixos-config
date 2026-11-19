@@ -26,6 +26,7 @@ in
           user = config.system.primaryUser;
           home = config.users.users.${config.system.primaryUser}.home;
           unattended = config.system.defaults.loginwindow.autoLoginUser != null;
+          manualLock = (config.workstation.desktop.sessionPolicy or null) == "manual-lock";
           remoteDesktop = config.environment.launchDaemons."org.nixos.remote-desktop.plist".enable or false;
           desktopSessionService = config.launchd.user.agents.desktop-session.serviceConfig.Label;
           permissions = [
