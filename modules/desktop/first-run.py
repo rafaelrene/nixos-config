@@ -166,9 +166,13 @@ def checks(settings):
     for item in settings["accounts"]:
         if not Path(item["application"]).exists():
             continue
+        detail = "sign-in or Finder Enable is required"
         if item["name"] == "Filen":
             ready = Path(item["mountPoint"]).is_mount()
+            if ready:
+                detail = "mounted"
         elif item["name"] == "Tailscale":
+            detail = "approve Network Extensions, sign in, and connect in Tailscale"
             try:
                 status = as_user(
                     settings,
@@ -189,6 +193,35 @@ def checks(settings):
                 )
             except (OSError, subprocess.TimeoutExpired, ValueError):
                 ready = False
+            if ready:
+                detail = "VPN connected"
+            if settings.get("unattended"):
+                try:
+                    onboarding = as_user(
+                        settings,
+                        [
+                            "/usr/bin/defaults",
+                            "read",
+                            "io.tailscale.ipn.macsys",
+                            "OnboardingFlow",
+                        ],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    )
+                    complete = (
+                        onboarding.returncode == 0
+                        and onboarding.stdout.strip() == "hide"
+                    )
+                except (OSError, subprocess.TimeoutExpired):
+                    complete = False
+                if not complete:
+                    ready = False
+                    detail = (
+                        "complete the Tailscale walkthrough: approve the extension and VPN "
+                        "configuration, sign in, leave Start at login and connectivity "
+                        "alerts off, choose Menu bar only, then click Start the Tailscale app"
+                    )
         else:
             ready = False
             for path in (home / "Library/CloudStorage").glob(item["prefix"] + "*"):
@@ -197,16 +230,29 @@ def checks(settings):
                     ready = True
                 except OSError:
                     pass
-        if item["name"] == "Tailscale":
-            detail = (
-                "VPN connected"
-                if ready
-                else "approve Network Extensions, sign in, and connect in Tailscale"
-            )
-        elif ready:
-            detail = "mounted" if item["name"] == "Filen" else "filesystem accessible"
-        else:
-            detail = "sign-in or Finder Enable is required"
+            if ready:
+                detail = "filesystem accessible"
+            if item["name"] == "Proton Drive" and settings.get("unattended"):
+                if not ready:
+                    detail = "sign in, enable Proton Drive in Finder, and leave Launch on startup enabled"
+                else:
+                    uid = pwd.getpwnam(settings["user"]).pw_uid
+                    try:
+                        launcher = as_user(
+                            settings,
+                            [
+                                "/bin/launchctl",
+                                "print",
+                                f"gui/{uid}/ch.protonmail.drive.launcher.ProtonDriveMacLauncher",
+                            ],
+                            capture_output=True,
+                            timeout=5,
+                        )
+                        ready = launcher.returncode == 0
+                    except (OSError, subprocess.TimeoutExpired):
+                        ready = False
+                    if not ready:
+                        detail = "enable Launch on startup in Proton Drive settings"
         result.append(
             {
                 "name": item["name"],
@@ -317,10 +363,6 @@ def main():
             if applications:
                 print(
                     "Complete approvals for every application listed above. macOS may require your password."
-                )
-            else:
-                print(
-                    "Sign in in the app, complete MFA, and enable its drive in Finder when requested."
                 )
             as_user(settings, ["/usr/bin/open", destination])
             input("Press Enter after completing this step: ")
