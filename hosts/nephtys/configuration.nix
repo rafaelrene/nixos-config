@@ -7,7 +7,10 @@ in
     modules = [ modules.nephtys ];
   };
   flake.modules.darwin.nephtys = {
-    imports = [ modules.mac-workstation ];
+    imports = [
+      modules.mac-workstation
+      modules.desktop-unattended
+    ];
 
     nixpkgs.hostPlatform = "aarch64-darwin";
     system.stateVersion = 6;

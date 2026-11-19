@@ -1,6 +1,12 @@
-{ inputs, ... }:
+{ config, inputs, ... }:
+let
+  desktopSession = (config.features.modulesFor "darwin").desktop-session;
+in
 {
   flake.modules.darwin.thaw = { pkgs, ... }: {
+    imports = [ desktopSession ];
+    workstation.desktop.loginApplications = [ "Thaw" ];
+
     environment.systemPackages = [
       # macOS 27 support currently ships on Thaw's alpha channel.
       (inputs.brew-nix.packages.${pkgs.stdenv.hostPlatform.system}.thaw.overrideAttrs {

@@ -1,4 +1,7 @@
-{ inputs, ... }:
+{ config, inputs, ... }:
+let
+  desktopSession = (config.features.modulesFor "darwin").desktop-session;
+in
 {
   flake.modules.darwin.typewhisper =
     {
@@ -13,8 +16,18 @@
         dontFixup = true;
       };
       user = config.system.primaryUser;
+      hybridHotkey = {
+        isFn = false;
+        modifierKeyCodes = [ ];
+        modifierFlags = 0;
+        keyCode = 54;
+        isDoubleTap = false;
+      };
     in
     {
+      imports = [ desktopSession ];
+      workstation.desktop.loginApplications = [ "TypeWhisper" ];
+
       environment.systemPackages = [ package ];
 
       system.activationScripts.postActivation.text = lib.mkAfter ''
@@ -41,11 +54,13 @@
             exit 1
           fi
           /bin/launchctl asuser "$typewhisper_uid" /usr/bin/sudo -H \
-            -u ${lib.escapeShellArg user} -- /usr/bin/open -g -a "$typewhisper_app"
+            -u ${lib.escapeShellArg user} -- /usr/bin/open -g -j -a "$typewhisper_app"
         )
       '';
 
       system.defaults.CustomUserPreferences."com.typewhisper.mac" = {
+        hybridHotkey = builtins.toJSON hybridHotkey;
+        hybridHotkeys = builtins.toJSON [ hybridHotkey ];
         selectedEngine = "parakeet";
         selectedLanguage = "auto";
         selectedTask = "transcribe";

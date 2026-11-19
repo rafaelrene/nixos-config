@@ -1,4 +1,7 @@
-{ withSystem, ... }:
+{ config, withSystem, ... }:
+let
+  desktopSession = (config.features.modulesFor "darwin").desktop-session;
+in
 {
   flake.modules.darwin.proton-pass =
     {
@@ -11,6 +14,7 @@
       unstable = withSystem pkgs.stdenv.hostPlatform.system ({ unstable, ... }: unstable);
     in
     {
+      imports = [ desktopSession ];
       # Preserve the complete vendor signature. Renaming or wrapping the main
       # executable breaks Electron's hardened-runtime library validation.
       environment.systemPackages = [
@@ -36,8 +40,17 @@
       launchd.user.agents.proton-pass = {
         environment.DISABLE_UPDATE_CHECK = "1";
         serviceConfig = {
-          ProgramArguments = [ "/Applications/Nix Apps/Proton Pass.app/Contents/MacOS/Proton Pass" ];
-          RunAtLoad = true;
+          ProgramArguments = [
+            "/usr/bin/open"
+            "-g"
+            "-j"
+            "--env"
+            "DISABLE_UPDATE_CHECK=1"
+            "/Applications/Nix Apps/Proton Pass.app"
+          ];
+          RunAtLoad = config.workstation.desktop.loginUtilities;
+          KeepAlive = lib.mkIf config.workstation.desktop.loginUtilities { SuccessfulExit = false; };
+          ThrottleInterval = 10;
           LimitLoadToSessionType = "Aqua";
         };
       };

@@ -16,6 +16,7 @@ in
       ];
 
       system.primaryUser = user;
+      time.timeZone = "Europe/Bratislava";
       users.users.${user}.home = "/Users/${user}";
       workstation = {
         codeRoot = "${home}/code";

@@ -83,6 +83,7 @@ in
         '';
 
         defaults = {
+          NSGlobalDomain.AppleSpacesSwitchOnActivate = false;
           # Nix owns the whole list; unlisted shortcuts revert to macOS defaults.
           # macOS applies changes at the next login.
           CustomUserPreferences."com.apple.symbolichotkeys".AppleSymbolicHotKeys =

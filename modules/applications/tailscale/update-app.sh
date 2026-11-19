@@ -27,6 +27,7 @@ tailscale_before_app_copy() {
 	tailscale_user=$3
 	tailscale_jq=$5
 	tailscale_timeout=$6
+	tailscale_login_launcher=$8
 	tailscale_resume=false
 	tailscale_reconnect=false
 
@@ -97,9 +98,7 @@ tailscale_after_app_copy() {
 	# On a failed copy, recover the version that is actually still installed.
 	tailscale_expected_version=$(defaults read "$tailscale_app/Contents/Info.plist" CFBundleShortVersionString)
 	tailscale_verify_app "$tailscale_app" || return 1
-	# rungui relies on Launch Services URL registration and can print CLIError 3
-	# while exiting successfully. Open the exact managed bundle instead.
-	if ! tailscale_user_command /usr/bin/open -g -a "$tailscale_app"; then
+	if ! tailscale_user_command /usr/bin/open -g -j -a "$tailscale_app"; then
 		echo "Could not reopen Tailscale after its app update. Open Tailscale manually." >&2
 		return 1
 	fi
@@ -118,6 +117,8 @@ tailscale_after_app_copy() {
 					return 1
 				fi
 			fi
+			tailscale_user_command "$tailscale_login_launcher" Tailscale ||
+				echo "Tailscale is running; window hiding needs macOS approval." >&2
 			return 0
 		fi
 		sleep 1

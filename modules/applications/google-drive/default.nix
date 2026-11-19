@@ -4,6 +4,8 @@ let
 in
 {
   flake.modules.darwin.google-drive = { lib, pkgs, ... }: {
+    imports = [ (config.features.modulesFor "darwin").desktop-session ];
+    workstation.desktop.backgroundApplications = [ "Google Drive" ];
     environment.systemPackages = [
       (features.google-drive.package { inherit pkgs; })
     ];

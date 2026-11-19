@@ -1,4 +1,7 @@
-{ inputs, ... }:
+{ config, inputs, ... }:
+let
+  desktopSession = (config.features.modulesFor "darwin").desktop-session;
+in
 {
   flake.modules.darwin.tailscale =
     {
@@ -24,6 +27,8 @@
           });
     in
     {
+      imports = [ desktopSession ];
+      workstation.desktop.backgroundApplications = [ "Tailscale" ];
       environment.systemPackages = [ package ];
       system = {
         # Keep the standalone app, CLI, and extension on one Nix-managed release.
@@ -46,7 +51,8 @@
                 '/Applications/Nix Apps/Tailscale.app' \
                 ${lib.escapeShellArg user} ${lib.escapeShellArg home} \
                 '${lib.getExe pkgs.jq}' '${pkgs.coreutils}/bin/timeout' \
-                '${package.src}'
+                '${package.src}' \
+                '${lib.getExe config.system.build.desktopLoginLauncher}'
           '')
           (lib.mkAfter ''
               tailscale_after_app_copy

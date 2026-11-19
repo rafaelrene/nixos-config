@@ -13,6 +13,8 @@ development tools, and coding agents across three machines:
 - Development environments with Devenv, Git tooling, and command-line utilities.
 - T3 Code, Codex, and Claude Code with shared instructions and skills.
 - Native desktop applications, web app launchers, and local dictation on macOS.
+- Managed macOS app associations, login utilities, wallpaper, Finder defaults,
+  and idle sleep prevention on AC and battery power.
 - SSH key provisioning and Tailscale access; filesystem snapshots on Othinus.
 
 ## Architecture

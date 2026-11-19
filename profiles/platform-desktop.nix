@@ -27,6 +27,8 @@
     xwayland-satellite
   ];
   flake.modules.darwin.platform-desktop.imports = with (config.features.modulesFor "darwin"); [
+    desktop
+    remote-desktop
     ffmpeg
     ghostty
     gifox

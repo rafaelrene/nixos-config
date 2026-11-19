@@ -181,7 +181,7 @@ in
       };
       launchd.user.agents = {
         t3code = {
-          environment = {
+          environment = config.launchd.user.envVariables // {
             HOME = home;
             PATH = "${runtimes.directory}:/nix/var/nix/profiles/system/sw/bin:${home}/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
             SHELL = runtimes.zsh;

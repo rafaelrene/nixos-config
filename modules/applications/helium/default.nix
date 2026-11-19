@@ -30,6 +30,18 @@ in
           "x-scheme-handler/unknown" = "helium.desktop";
         };
       };
-    darwin.helium = common;
+    darwin.helium = {
+      imports = [
+        common
+        (features.modulesFor "darwin").desktop-session
+      ];
+      environment.variables.BROWSER = "helium";
+      workstation.desktop.defaultApplications = ''
+        net.imput.helium public.html all
+        net.imput.helium http
+        net.imput.helium https
+        net.imput.helium mailto
+      '';
+    };
   };
 }

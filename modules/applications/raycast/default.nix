@@ -11,6 +11,12 @@ in
       ...
     }:
     {
+      imports = [ (features.modulesFor "darwin").desktop-session ];
+      workstation.desktop.loginApplications = [ "Raycast" ];
+      services.skhd.skhdConfig = lib.mkIf config.services.skhd.enable ''
+        cmd - space : /usr/bin/open -a '/Applications/Nix Apps/Raycast.app'
+      '';
+
       environment.systemPackages = [ (features.raycast.package { inherit pkgs; }) ];
 
       # Raycast can register its disabled updater services again. Stop existing
@@ -30,7 +36,7 @@ in
               if "$raycast_was_running"; then
                 /bin/launchctl asuser "$raycast_uid" /usr/bin/sudo -H \
                   -u ${lib.escapeShellArg config.system.primaryUser} -- \
-                  /usr/bin/open -g "$raycast_app"
+                  /usr/bin/open -g -j --env DISABLE_UPDATE_CHECK=1 "$raycast_app"
               fi
             }
             # Restore ownership and the running app even if copying fails.
