@@ -30,20 +30,22 @@
       title = if name == "claude-code" then "Claude Code" else "Codex";
       source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
       settings = pkgs.writeText "${name}-updater.json" (
-        builtins.toJSON {
-          inherit
-            flake
-            profile
-            source
-            commandName
-            ;
-          initial = toString initial;
-          darwin = pkgs.stdenv.hostPlatform.isDarwin;
-          output = "${
-            if pkgs.stdenv.hostPlatform.isDarwin then "darwin" else "nixos"
-          }Configurations.${hostname}.config.system.build.${name}";
-          staged = "${profile}-staged";
-        }
+        builtins.toJSON (
+          {
+            inherit
+              flake
+              profile
+              source
+              commandName
+              ;
+            darwin = pkgs.stdenv.hostPlatform.isDarwin;
+            output = "${
+              if pkgs.stdenv.hostPlatform.isDarwin then "darwin" else "nixos"
+            }Configurations.${hostname}.config.system.build.${name}";
+            staged = "${profile}-staged";
+          }
+          // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin { initial = toString initial; }
+        )
       );
     in
     config.features.shell.application {

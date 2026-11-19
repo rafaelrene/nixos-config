@@ -47,6 +47,10 @@ activate() {
       print -- 'No staged release; the existing release remains active.'
       return
     fi
+    if [[ "$darwin" != true ]]; then
+      print -u2 -- 'No staged or active release is available.'
+      return 1
+    fi
     generation=$(jq -er '.initial' <<<"$settings") || return
   fi
   if [[ "$generation" == "$old" ]]; then
@@ -68,7 +72,7 @@ if [[ "$activate_only" == true ]]; then
   activate || exit $?
   exit
 fi
-if [[ "$stage" == true && ! -e "$profile" && -z "$checkout" ]]; then
+if [[ "$darwin" == true && "$stage" == true && ! -e "$profile" && -z "$checkout" ]]; then
   initial=$(jq -er '.initial' <<<"$settings") || exit $?
   activate "$initial" || exit $?
 fi
@@ -88,6 +92,6 @@ if [[ "$(readlink -e "$staged")" != "$previous" ]]; then
   versions=$(jq -er '.versions | to_entries | map("\(.key) \(.value)") | join(", ")' "$staged/share/llm-agents/release.json")
   update_success="$versions staged."
 fi
-if [[ "$stage" != true ]]; then
+if [[ "$stage" != true || ( "$darwin" != true && ! -e "$profile" && -z "$checkout" ) ]]; then
   activate || exit $?
 fi

@@ -174,8 +174,13 @@ request() {
 launch() {
   local target existing clients pid attempt
   target=$(active) || return
-  if [[ -z "$target" ]]; then fail 'No T3 Code release is installed.'; return; fi
-  wait_ready "$target" || return
+  if [[ "$darwin" == true ]]; then
+    if [[ -z "$target" ]]; then fail 'No T3 Code release is installed.'; return; fi
+    wait_ready "$target" || return
+  elif [[ -z "$target" ]] || ! healthy "$target"; then
+    fail "T3 Code's active server is not ready. Run t3-activate, then reopen the desktop."
+    return
+  fi
   existing=$(desktops) || return
   if (( $(jq 'length' <<<"$existing") > 1 )); then fail 'An outdated or duplicate T3 Code desktop is running. Run t3-activate to replace it.'; return; fi
   for pid in ${(f)"$(jq -r '.[].pid' <<<"$existing")"}; do

@@ -13,6 +13,7 @@ in
       imports = with modules; [
         workstation
         desktop-workstation
+        desktop-unattended
       ];
 
       system.primaryUser = user;
