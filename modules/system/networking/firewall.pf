@@ -1,0 +1,12 @@
+table <nix_tailnet> const { 100.64.0.0/10, fd7a:115c:a1e0::/48 }
+
+pass quick on lo0 all flags any keep state label "nix-loopback"
+pass out quick all flags any keep state label "nix-outbound"
+pass in quick inet from 192.168.86.0/24 to any flags any keep state label "nix-trusted-lan"
+pass in quick proto tcp from <nix_tailnet> to any port { 22, 3773 } flags any keep state label "nix-tailnet"
+pass in quick proto udp from any to any port { 5353, 41641 } keep state label "nix-discovery-vpn"
+pass in quick inet proto udp from any port 67 to any port 68 keep state label "nix-dhcp"
+pass in quick inet6 proto udp from fe80::/10 port 547 to any port 546 keep state label "nix-dhcp6"
+pass in quick inet proto icmp icmp-type 8 keep state label "nix-ping"
+pass in quick inet6 proto ipv6-icmp icmp6-type { 1, 2, 3, 4, 128, 133, 134, 135, 136 } keep state label "nix-ipv6-control"
+block in quick all label "nix-deny-inbound"

@@ -21,6 +21,7 @@
       imports = [
         (config.features.modulesFor "generic").system
         (config.features.modulesFor "darwin").nix
+        (config.features.modulesFor "darwin").networking
       ];
       homebrew.enable = false;
     };
