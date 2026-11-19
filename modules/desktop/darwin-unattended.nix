@@ -4,7 +4,6 @@
     {
       workstation.desktop.loginUtilities = false;
       power.sleep.display = lib.mkForce "never";
-      power.restartAfterPowerFailure = true;
       system.defaults = {
         loginwindow.autoLoginUser = config.system.primaryUser;
         screensaver.askForPassword = false;
@@ -29,6 +28,10 @@
         };
       };
       system.activationScripts.postActivation.text = lib.mkAfter ''
+        restart_power_failure=$(/usr/sbin/systemsetup -getrestartpowerfailure)
+        if [[ "$restart_power_failure" != *"Not supported"* ]]; then
+          /usr/sbin/systemsetup -setrestartpowerfailure on
+        fi
         /usr/bin/pmset -a disablesleep 1
         /usr/bin/dscl . -mcxset /Computers/localhost \
           com.apple.loginwindow DisableScreenLockImmediate always -bool true
