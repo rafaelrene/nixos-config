@@ -16,7 +16,11 @@
     {
       environment.etc."pf.anchors/nixos-workstation".source = ./firewall.pf;
       launchd.daemons.workstation-firewall.serviceConfig = {
-        ProgramArguments = [ (lib.getExe applyFirewall) ];
+        ProgramArguments = [
+          "/bin/sh"
+          "-c"
+          "/bin/wait4path ${lib.getExe applyFirewall} && exec ${lib.getExe applyFirewall}"
+        ];
         RunAtLoad = true;
         KeepAlive.SuccessfulExit = false;
         ThrottleInterval = 10;
