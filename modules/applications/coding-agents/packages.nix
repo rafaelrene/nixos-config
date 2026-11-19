@@ -34,6 +34,7 @@ in
         features.coding-agents.update {
           inherit pkgs hostname name;
           profile = profiles.${name};
+          initial = bundles.${name};
         }
       );
     in

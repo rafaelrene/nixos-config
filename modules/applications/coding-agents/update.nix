@@ -16,6 +16,7 @@
       profile,
       hostname,
       name,
+      initial,
       flake ? "github:numtide/llm-agents.nix",
     }:
     let
@@ -36,6 +37,7 @@
             source
             commandName
             ;
+          initial = toString initial;
           darwin = pkgs.stdenv.hostPlatform.isDarwin;
           output = "${
             if pkgs.stdenv.hostPlatform.isDarwin then "darwin" else "nixos"

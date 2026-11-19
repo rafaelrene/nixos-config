@@ -36,13 +36,18 @@ install_executables() {
 }
 activate() {
   local generation old versions
-  generation=$(readlink -e "$staged" 2>/dev/null) || generation=''
+  generation=${1-}
+  if [[ -z "$generation" ]]; then
+    generation=$(readlink -e "$staged" 2>/dev/null) || generation=''
+  fi
   old=$(readlink -e "$profile" 2>/dev/null) || old=''
   if [[ -z "$generation" ]]; then
-    if [[ -z "$old" ]]; then print -u2 -- 'No staged or active release is available.'; return 1; fi
-    install_executables "$old" || return
-    print -- 'No staged release; the existing release remains active.'
-    return
+    if [[ -n "$old" ]]; then
+      install_executables "$old" || return
+      print -- 'No staged release; the existing release remains active.'
+      return
+    fi
+    generation=$(jq -er '.initial' <<<"$settings") || return
   fi
   if [[ "$generation" == "$old" ]]; then
     update_step 'checking installed agent executables' install_executables "$generation" || return
@@ -63,6 +68,10 @@ if [[ "$activate_only" == true ]]; then
   activate || exit $?
   exit
 fi
+if [[ "$stage" == true && ! -e "$profile" && -z "$checkout" ]]; then
+  initial=$(jq -er '.initial' <<<"$settings") || exit $?
+  activate "$initial" || exit $?
+fi
 
 build_options=(--no-write-lock-file --no-accept-flake-config)
 if [[ -n "$checkout" ]]; then
@@ -79,7 +88,6 @@ if [[ "$(readlink -e "$staged")" != "$previous" ]]; then
   versions=$(jq -er '.versions | to_entries | map("\(.key) \(.value)") | join(", ")' "$staged/share/llm-agents/release.json")
   update_success="$versions staged."
 fi
-# Background checks may bootstrap; otherwise ns or the daily job activates.
-if [[ "$stage" != true || ( ! -e "$profile" && -z "$checkout" ) ]]; then
+if [[ "$stage" != true ]]; then
   activate || exit $?
 fi
