@@ -1,45 +1,72 @@
 {
   flake.modules.darwin.desktop-unattended =
     { config, lib, ... }:
+    let
+      unattended = config.workstation.desktop.sessionPolicy == "unattended";
+    in
     {
-      workstation.desktop.loginUtilities = false;
-      power.sleep.display = lib.mkForce "never";
-      system.defaults = {
-        loginwindow.autoLoginUser = config.system.primaryUser;
-        screensaver.askForPassword = false;
-        CustomSystemPreferences."com.apple.loginwindow" = {
-          DisableScreenLockImmediate = true;
-          SleepDisabled = true;
-          autoLogoutDelay = 0;
-        };
-        CustomUserPreferences = {
-          "com.apple.loginwindow" = {
-            DisableScreenLockImmediate = true;
-            TALLogoutSavesState = false;
-          };
-          NSGlobalDomain = {
-            ApplePersistence = false;
-            NSQuitAlwaysKeepsWindows = false;
-          };
-          "com.apple.screensaver" = {
-            idleTime = 0;
-            askForPassword = 0;
-          };
-        };
+      options.workstation.desktop.sessionPolicy = lib.mkOption {
+        type = lib.types.enum [
+          "unattended"
+          "manual-lock"
+        ];
+        default = "manual-lock";
+        description = "Use automatic login without locking, or password login with manual locking and no idle lock.";
       };
-      system.activationScripts.postActivation.text = lib.mkAfter ''
-        restart_power_failure=$(/usr/sbin/systemsetup -getrestartpowerfailure)
-        if [[ "$restart_power_failure" != *"Not supported"* ]]; then
-          /usr/sbin/systemsetup -setrestartpowerfailure on
-        fi
-        /usr/bin/pmset -a disablesleep 1
-        /usr/bin/dscl . -mcxset /Computers/localhost \
-          com.apple.loginwindow DisableScreenLockImmediate always -bool true
-        /usr/bin/mcxrefresh -n ${lib.escapeShellArg config.system.primaryUser}
-        /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- \
-          /usr/bin/defaults -currentHost write com.apple.screensaver idleTime -int 0
-        /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- \
-          /usr/bin/defaults -currentHost write com.apple.loginwindow TALLogoutSavesState -bool false
-      '';
+      config = {
+        workstation.desktop.loginUtilities = false;
+        power.sleep.display = lib.mkForce "never";
+        system.defaults = {
+          loginwindow.autoLoginUser = if unattended then config.system.primaryUser else null;
+          screensaver = {
+            askForPassword = !unattended;
+            askForPasswordDelay = 0;
+          };
+          CustomSystemPreferences."com.apple.loginwindow" = {
+            DisableScreenLockImmediate = unattended;
+            SleepDisabled = true;
+            autoLogoutDelay = 0;
+          };
+          CustomUserPreferences = {
+            "com.apple.loginwindow" = {
+              DisableScreenLockImmediate = unattended;
+              TALLogoutSavesState = false;
+            };
+            NSGlobalDomain = {
+              ApplePersistence = false;
+              NSQuitAlwaysKeepsWindows = false;
+            };
+            "com.apple.screensaver" = {
+              idleTime = 0;
+              askForPassword = if unattended then 0 else 1;
+              askForPasswordDelay = 0;
+            };
+          };
+        };
+        system.activationScripts.postActivation.text = lib.mkAfter ''
+          restart_power_failure=$(/usr/sbin/systemsetup -getrestartpowerfailure)
+          if [[ "$restart_power_failure" != *"Not supported"* ]]; then
+            /usr/sbin/systemsetup -setrestartpowerfailure on
+          fi
+          /usr/bin/pmset -a disablesleep 1
+          /usr/bin/dscl . -mcxset /Computers/localhost \
+            com.apple.loginwindow DisableScreenLockImmediate always -bool ${lib.boolToString unattended}
+          /usr/bin/mcxrefresh -n ${lib.escapeShellArg config.system.primaryUser}
+          /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- \
+            /usr/bin/defaults -currentHost write com.apple.screensaver idleTime -int 0
+          /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- \
+            /usr/bin/defaults -currentHost write com.apple.screensaver askForPassword -bool ${lib.boolToString (!unattended)}
+          /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- \
+            /usr/bin/defaults -currentHost write com.apple.screensaver askForPasswordDelay -int 0
+          /usr/bin/sudo -H -u ${lib.escapeShellArg config.system.primaryUser} -- \
+            /usr/bin/defaults -currentHost write com.apple.loginwindow TALLogoutSavesState -bool false
+          ${lib.optionalString (!unattended) ''
+            if /usr/bin/defaults read /Library/Preferences/com.apple.loginwindow autoLoginUser >/dev/null 2>&1; then
+              /usr/bin/defaults delete /Library/Preferences/com.apple.loginwindow autoLoginUser
+            fi
+            /bin/rm -f /etc/kcpassword
+          ''}
+        '';
+      };
     };
 }

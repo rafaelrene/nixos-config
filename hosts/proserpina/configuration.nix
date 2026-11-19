@@ -22,5 +22,6 @@ in
       computerName = "proserpina";
     };
     workstation.user = "rafael";
+    workstation.desktop.sessionPolicy = "manual-lock";
   };
 }

@@ -20,5 +20,6 @@ in
       computerName = "nephtys";
     };
     workstation.user = "raf";
+    workstation.desktop.sessionPolicy = "unattended";
   };
 }
