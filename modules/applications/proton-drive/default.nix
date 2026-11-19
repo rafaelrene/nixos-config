@@ -12,6 +12,7 @@ in
       ...
     }:
     let
+      unattended = (config.workstation.desktop.sessionPolicy or null) == "unattended";
       stopNativeLauncher = ''
         proton_drive_uid=$(/usr/bin/id -u ${lib.escapeShellArg config.system.primaryUser})
         /bin/launchctl disable "user/$proton_drive_uid/ch.protonmail.drive.agent"
@@ -39,11 +40,14 @@ in
     in
     {
       imports = [ desktopSession ];
-      workstation.desktop.backgroundApplications = [ "Proton Drive" ];
-      system.activationScripts.postActivation.text = lib.mkAfter stopNativeLauncher;
-      launchd.user.agents.login-proton-drive.serviceConfig.ProgramArguments = lib.mkForce [
-        (lib.getExe launch)
-      ];
+      # Proton enables its login helper after sign-in. Reopening the running app shows its status window.
+      workstation.desktop.backgroundApplications = lib.optionals (!unattended) [ "Proton Drive" ];
+      system.activationScripts.postActivation.text = lib.mkIf (!unattended) (
+        lib.mkAfter stopNativeLauncher
+      );
+      launchd.user.agents = lib.mkIf (!unattended) {
+        login-proton-drive.serviceConfig.ProgramArguments = lib.mkForce [ (lib.getExe launch) ];
+      };
       environment.systemPackages = [
         (inputs.brew-nix.packages.${pkgs.stdenv.hostPlatform.system}.proton-drive.overrideAttrs {
           dontFixup = true;

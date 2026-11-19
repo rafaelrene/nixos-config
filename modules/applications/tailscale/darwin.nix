@@ -13,6 +13,7 @@ in
     let
       user = config.workstation.user;
       home = config.users.users.${user}.home;
+      unattended = (config.workstation.desktop.sessionPolicy or null) == "unattended";
       package =
         inputs.brew-nix.packages.${pkgs.stdenv.hostPlatform.system}.tailscale-app.overrideAttrs
           (old: {
@@ -29,12 +30,25 @@ in
     {
       imports = [ desktopSession ];
       workstation.desktop.backgroundApplications = [ "Tailscale" ];
+      launchd.user.agents.login-tailscale.serviceConfig.ProgramArguments = lib.mkIf unattended (
+        lib.mkForce [
+          "/usr/bin/open"
+          "-g"
+          "-j"
+          "/Applications/Nix Apps/Tailscale.app"
+        ]
+      );
       environment.systemPackages = [ package ];
       system = {
         # Keep the standalone app, CLI, and extension on one Nix-managed release.
         defaults.CustomUserPreferences."io.tailscale.ipn.macsys" = {
           SUEnableAutomaticChecks = false;
           SUAutomaticallyUpdate = false;
+        }
+        // lib.optionalAttrs unattended {
+          # The native walkthrough saves OnboardingFlow after the user completes it.
+          HideDockIcon = true;
+          TailscaleStartOnLogin = false;
         };
 
         # Register the signed installer's notarization ticket before stopping
