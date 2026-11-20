@@ -1,4 +1,4 @@
-"""Runtime-only SSH key provisioning for NixOS and nix-darwin rebuilds."""
+"""Provision the workstation credentials during NixOS and nix-darwin switches."""
 
 import argparse
 import base64
@@ -6,6 +6,7 @@ import fcntl
 import hashlib
 import json
 import os
+import runpy
 import shlex
 import subprocess
 import sys
@@ -54,7 +55,7 @@ def backup(path):
 def age_interactive(args, arguments):
     if not os.isatty(0):
         raise RuntimeError(
-            "SSH keys need a passphrase. Run this command in an interactive terminal (ssh -t for remote commands)."
+            "The workstation archive needs a passphrase. Run this command in an interactive terminal (ssh -t for remote commands)."
         )
     command = [args.age, *map(str, arguments)]
     # nixos-rebuild-ng passes terminal FDs through systemd-run --pipe, but the
@@ -75,7 +76,7 @@ def age_interactive(args, arguments):
     result = subprocess.run(command, check=False)
     if result.returncode:
         raise RuntimeError(
-            "SSH key encryption/decryption failed; installed keys were not changed."
+            "Could not unlock or encrypt the archive. Installed credentials were not changed."
         )
 
 
@@ -125,22 +126,47 @@ def installed_matches(state, bundle, public, ssh):
     return True
 
 
+def decode_bundle(payload, bitbucket):
+    encoded = json.loads(payload.read_text())
+    if not isinstance(encoded, dict):
+        raise RuntimeError("Invalid workstation archive structure.")
+    credential = None
+    if "ssh" in encoded:
+        credential = encoded.get("bitbucket")
+        if (
+            not isinstance(credential, dict)
+            or set(credential) != {"email", "token"}
+            or not all(isinstance(value, str) for value in credential.values())
+            or not bitbucket["valid"](**credential)
+        ):
+            raise RuntimeError("The archive has an invalid Bitbucket credential.")
+        encoded = encoded["ssh"]
+    if not isinstance(encoded, dict) or any(
+        not isinstance(value, str) for value in encoded.values()
+    ):
+        raise RuntimeError("Invalid SSH bundle structure.")
+    keys = {
+        name: base64.b64decode(value, validate=True) for name, value in encoded.items()
+    }
+    return keys, credential
+
+
 def provision(args):
-    repo, home = Path(args.repo), Path(args.home)
-    ssh = home / ".ssh"
-    state_dir = home / ".local/state/ssh-keys"
+    """Keep the existing install stamp so moving the archive does not force an unlock."""
+    ssh = args.home / ".ssh"
+    state_dir = args.home / ".local/state/ssh-keys"
     private_directory(ssh)
     private_directory(state_dir)
     lock_path = state_dir / "lock"
     lock_fd = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     with os.fdopen(lock_fd, "w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        provision_locked(args, repo, ssh, state_dir)
+        provision_locked(args, ssh, state_dir)
 
 
-def provision_locked(args, repo, ssh, state_dir):
-    public = {name: (repo / f"{name}.pub").read_bytes() for name in KEYS}
-    bundle_path = repo / "ssh-keys.age"
+def provision_locked(args, ssh, state_dir):
+    public = {name: (args.public_keys / f"{name}.pub").read_bytes() for name in KEYS}
+    bundle_path = args.archive
     state_path = state_dir / "installed.json"
     try:
         state = json.loads(state_path.read_text())
@@ -157,35 +183,42 @@ def provision_locked(args, repo, ssh, state_dir):
         for name in KEYS:
             (ssh / name).chmod(0o600)
             (ssh / f"{name}.pub").chmod(0o644)
-        print("Managed SSH keys are current; no passphrase needed.")
+        print("Managed workstation credentials are current; no passphrase needed.")
         return
 
+    bitbucket = runpy.run_path(args.bitbucket_helper)
     # Linux uses tmpfs; Darwin uses a private directory beside the installed keys.
     # Never place plaintext in the checkout or Nix store.
     with tempfile.TemporaryDirectory(
-        prefix="nixos-ssh-", dir=args.temporary_directory
+        prefix="workstation-secrets-", dir=args.temporary_directory
     ) as directory:
         temporary = Path(directory)
-        payload = temporary / "keys.json"
+        payload = temporary / "credentials.json"
+        credential = None
         if bundle is None or args.repack:
-            source = Path(args.source)
+            source = args.source or ssh
             if not all((source / name).is_file() for name in KEYS):
                 raise RuntimeError(
                     f"Missing configured SSH source keys in {source}. Restore {bundle_path} from Git or supply a complete --source directory."
                 )
             keys = {name: (source / name).read_bytes() for name in KEYS}
             validate_keys(args, keys, public, temporary)
-            payload.write_text(
-                json.dumps(
-                    {
-                        name: base64.b64encode(value).decode("ascii")
-                        for name, value in keys.items()
-                    }
+            encoded = {
+                name: base64.b64encode(value).decode("ascii")
+                for name, value in keys.items()
+            }
+            email, token = bitbucket["load"]()
+            if token:
+                credential = {"email": email, "token": token}
+                encoded = {"ssh": encoded, "bitbucket": credential}
+            elif args.repack:
+                raise RuntimeError(
+                    "Set up a local Bitbucket credential before repacking the archive."
                 )
-            )
-            encrypted = temporary / "keys.age"
+            payload.write_text(json.dumps(encoded))
+            encrypted = temporary / "archive.age"
             print(
-                "Creating the encrypted SSH bundle. Choose its archive passphrase at the age prompt.",
+                "Creating the encrypted workstation archive. Choose its passphrase at the age prompt.",
                 flush=True,
             )
             age_interactive(args, ["--passphrase", "--output", encrypted, payload])
@@ -202,21 +235,16 @@ def provision_locked(args, repo, ssh, state_dir):
         else:
             # Decrypt the exact bytes whose digest will be recorded, even if
             # the checkout changes while the user is entering the passphrase.
-            encrypted = temporary / "keys.age"
+            encrypted = temporary / "archive.age"
             encrypted.write_bytes(bundle)
-            print("Unlocking managed SSH keys.", flush=True)
+            print("Unlocking managed workstation credentials.", flush=True)
             age_interactive(args, ["--decrypt", "--output", payload, encrypted])
-            encoded = json.loads(payload.read_text())
-            if not isinstance(encoded, dict) or any(
-                not isinstance(value, str) for value in encoded.values()
-            ):
-                raise RuntimeError("Invalid SSH bundle structure.")
-            keys = {
-                name: base64.b64decode(value, validate=True)
-                for name, value in encoded.items()
-            }
+            keys, credential = decode_bundle(payload, bitbucket)
             validate_keys(args, keys, public, temporary)
 
+        if credential is not None:
+            # The login Keychain may be unavailable when switching over SSH.
+            bitbucket["save_file"](**credential)
         files = {}
         for name in KEYS:
             files[name] = keys[name]
@@ -236,12 +264,29 @@ def provision_locked(args, repo, ssh, state_dir):
             ).encode(),
         )
         print(f"Installed all {len(KEYS)} SSH identities.")
+        if credential is not None:
+            print("Installed the shared Bitbucket credential.")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("repo", "home", "source", "age", "ssh-keygen"):
+    for name in ("age", "ssh-keygen"):
         parser.add_argument(f"--{name}", required=True)
+    parser.add_argument("--home", type=Path, required=True)
+    parser.add_argument(
+        "--source", type=Path, help="SSH keys to repack (defaults to ~/.ssh)"
+    )
+    applications = Path(__file__).resolve().parents[2] / "applications"
+    parser.add_argument(
+        "--archive",
+        type=Path,
+        default=Path(__file__).with_name("workstation-secrets.age"),
+    )
+    parser.add_argument("--public-keys", type=Path, default=applications / "openssh")
+    parser.add_argument(
+        "--bitbucket-helper",
+        default=applications / "bitbucket/credentials.py",
+    )
     parser.add_argument(
         "--script", help="util-linux script executable for NixOS's detached terminal"
     )
@@ -253,7 +298,7 @@ def main():
     parser.add_argument(
         "--repack",
         action="store_true",
-        help="replace the encrypted bundle from --source without installing keys",
+        help="repack the SSH keys from --source and the local Bitbucket credential",
     )
     args = parser.parse_args()
     os.umask(0o077)
@@ -262,9 +307,9 @@ def main():
     except (OSError, ValueError, RuntimeError) as error:
         # Do not print JSON/parser values or decrypted key material.
         if isinstance(error, ValueError):
-            print("Invalid SSH bundle encoding.", file=sys.stderr)
+            print("Invalid workstation credential encoding.", file=sys.stderr)
         else:
-            print(f"SSH setup failed: {error}", file=sys.stderr)
+            print(f"Workstation credential setup failed: {error}", file=sys.stderr)
         return 1
     return 0
 

@@ -1,6 +1,20 @@
 { config, ... }:
 let
   inherit (config) features;
+  mergeServerSettings =
+    {
+      lib,
+      settings,
+      base,
+    }:
+    ''
+      settingsMerge=${lib.escapeShellArg settings.merge}
+      # Saved Bitbucket credentials take precedence over the service environment.
+      if [[ -n "''${T3CODE_BITBUCKET_EMAIL-}" && -n "''${T3CODE_BITBUCKET_API_TOKEN-}" && -z "''${T3CODE_BITBUCKET_ACCESS_TOKEN-}" ]]; then
+        settingsMerge+=' | del(.sourceControlHosts.bitbucket, .bitbucket)'
+      fi
+      yq --inplace --output-format=json "$settingsMerge" "${base}/userdata/settings.json"
+    '';
   commands =
     {
       lib,
@@ -145,9 +159,16 @@ in
         };
         runT3Code = pkgs.writeShellApplication {
           name = "run-t3code";
-          runtimeInputs = [ pkgs.coreutils ];
+          runtimeInputs = [
+            pkgs.coreutils
+            pkgs.yq-go
+          ];
           text = ''
             umask 077
+            ${mergeServerSettings {
+              inherit lib settings;
+              base = baseDir;
+            }}
             mkdir -p "${state}"
             printf '{"generation":"%s","pid":%s,"configuration":"%s"}\n' \
               "$(readlink -f "${profile}")" "$$" "$(readlink -f /etc/systemd/user/t3code.service)" > "${state}/running.json.tmp"
@@ -289,20 +310,11 @@ in
               serviceConfig = {
                 EnvironmentFile = "-${baseDir}/bitbucket.env";
                 # Published theme files must be regular files: T3 rejects file symlinks.
-                ExecStartPre = [
-                  (utils.escapeSystemdExecArgs [
-                    "${pkgs.coreutils}/bin/install"
-                    "-Dm600"
-                    settings.theme
-                    "${baseDir}/userdata/themes/${settings.themeId}.json"
-                  ])
-                  (utils.escapeSystemdExecArgs [
-                    (lib.getExe pkgs.yq-go)
-                    "--inplace"
-                    "--output-format=json"
-                    settings.merge
-                    "${baseDir}/userdata/settings.json"
-                  ])
+                ExecStartPre = utils.escapeSystemdExecArgs [
+                  "${pkgs.coreutils}/bin/install"
+                  "-Dm600"
+                  settings.theme
+                  "${baseDir}/userdata/themes/${settings.themeId}.json"
                 ];
                 ExecStart = lib.getExe runT3Code;
                 Restart = "always";
@@ -433,9 +445,11 @@ in
             if ! test -e "${base}/userdata/settings.json"; then
               install -m600 ${settings.server} "${base}/userdata/settings.json"
             fi
-            yq --inplace --output-format=json \
-              ${lib.escapeShellArg settings.merge} \
-              "${base}/userdata/settings.json"
+            if IFS=$'\t' read -r bitbucketEmail bitbucketToken < <(${features.bitbucket.command pkgs} read); then
+              export T3CODE_BITBUCKET_EMAIL="$bitbucketEmail" T3CODE_BITBUCKET_API_TOKEN="$bitbucketToken"
+              unset bitbucketToken T3CODE_BITBUCKET_ACCESS_TOKEN
+            fi
+            ${mergeServerSettings { inherit lib settings base; }}
             install -m600 ${settings.theme} "${base}/userdata/themes/${settings.themeId}.json"
             mkdir -p "${state}"
             generation="${initial}"

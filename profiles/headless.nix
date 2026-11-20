@@ -4,6 +4,7 @@
     headless.imports =
       (with (config.features.modulesFor platform); [
         workstation-options
+        workstation-secrets
         system
         power-management
         fonts
