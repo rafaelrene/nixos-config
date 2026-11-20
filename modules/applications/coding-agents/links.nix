@@ -12,10 +12,7 @@
   };
 
   config.features.coding-agents.links =
-    {
-      lib,
-      skillSource ? "skills",
-    }:
+    { lib }:
     let
       skillNames = lib.attrNames (
         lib.filterAttrs (
@@ -27,9 +24,20 @@
       skillDirectories = [
         ".local/share/codex/skills"
         ".local/share/claude/skills"
-        ".gemini/config/skills"
       ];
-      skills = lib.genAttrs skillNames (name: "${skillSource}/${name}");
+      antigravitySkills = ".local/share/antigravity/skills";
+      skills = lib.genAttrs skillNames (name: "skills/${name}");
+      linksFor =
+        directories:
+        lib.listToAttrs (
+          lib.concatMap (
+            directory:
+            lib.mapAttrsToList (name: value: {
+              name = "${directory}/${name}";
+              inherit value;
+            }) skills
+          ) directories
+        );
     in
     {
       inherit skillDirectories;
@@ -39,14 +47,11 @@
         ".local/share/claude/CLAUDE.md" = "CLAUDE.md";
         ".gemini/config/AGENTS.md" = "AGENTS.md";
       };
-      skillLinks = lib.listToAttrs (
-        lib.concatMap (
-          directory:
-          lib.mapAttrsToList (name: value: {
-            name = "${directory}/${name}";
-            inherit value;
-          }) skills
-        ) skillDirectories
-      );
+      skillLinks = linksFor skillDirectories;
+      antigravity = {
+        skillDirectories = [ antigravitySkills ];
+        links = linksFor [ antigravitySkills ];
+        skillAliases.${antigravitySkills} = ".gemini/config/skills";
+      };
     };
 }

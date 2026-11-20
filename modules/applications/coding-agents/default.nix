@@ -23,29 +23,39 @@ in
           inherit pkgs profile;
           hostname = config.networking.hostName;
         };
+        sharedLinks = features.coding-agents.links { inherit lib; };
+        agentLinkCommand =
+          manifest:
+          lib.escapeShellArgs [
+            "${pkgs.python3}/bin/python"
+            "${./agent-links.py}"
+            "--home"
+            home
+            "--source"
+            source
+            "--manifest"
+            "${pkgs.writeText "agent-links.json" (builtins.toJSON manifest)}"
+          ];
         nixos =
           let
             inherit (config.users.users.${user}) group;
-            inherit (features.coding-agents.links { inherit lib; })
+            inherit (sharedLinks)
               rules
               skillDirectories
               skillLinks
               ;
-            agentLinks = rules // skillLinks;
-            agentManifest = pkgs.writeText "agent-links.json" (
-              builtins.toJSON {
-                links = agentLinks;
-                inherit skillDirectories;
-              }
-            );
+            agentManifest = {
+              links = rules // skillLinks // sharedLinks.antigravity.links;
+              skillDirectories = skillDirectories ++ sharedLinks.antigravity.skillDirectories;
+              inherit (sharedLinks.antigravity) skillAliases;
+            };
           in
           {
             # NixOS runs this as the user on login and every system switch. Keep links
             # writable into the checkout, and reconcile them without touching runtime data.
             system.userActivationScripts.agentLinks = ''
               if [ "$(${pkgs.coreutils}/bin/id -un)" = ${lib.escapeShellArg user} ]; then
-                ${pkgs.python3}/bin/python ${./agent-links.py} \
-                  --home ${lib.escapeShellArg home} --source ${lib.escapeShellArg source} --manifest ${agentManifest}
+                ${agentLinkCommand agentManifest}
               fi
             '';
 
@@ -101,11 +111,7 @@ in
           };
         darwin =
           let
-            sharedLinks = features.coding-agents.links {
-              inherit lib;
-              skillSource = "${source}/skills";
-            };
-            inherit (sharedLinks) skillLinks;
+            antigravityLinks = "/usr/bin/sudo -H -u ${lib.escapeShellArg user} -- ${agentLinkCommand sharedLinks.antigravity}";
           in
           {
             environment = {
@@ -121,7 +127,15 @@ in
                 # Keep existing Pi data reachable while activation prunes its managed links.
                 ".local/share/pi/agent" = ".pi/agent";
               };
-              links = lib.mapAttrs (_: path: "${source}/${path}") sharedLinks.rules // skillLinks;
+              links = lib.mapAttrs (_: path: "${source}/${path}") (sharedLinks.rules // sharedLinks.skillLinks);
+            };
+            system.activationScripts = {
+              preActivation.text = lib.mkBefore ''
+                ${antigravityLinks} --check
+              '';
+              extraActivation.text = lib.mkAfter ''
+                ${antigravityLinks}
+              '';
             };
 
             launchd.user.agents = lib.concatMapAttrs (name: updater: {
