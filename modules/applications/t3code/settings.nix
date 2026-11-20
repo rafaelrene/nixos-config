@@ -40,6 +40,7 @@ in
           providerInstances = {
             codex = {
               driver = "codex";
+              enabled = true;
               config = {
                 binaryPath = "${agentProfile}-codex${executableSuffix}/bin/codex";
                 homePath = "${home}/.local/share/codex";
@@ -47,10 +48,16 @@ in
             };
             claudeAgent = {
               driver = "claudeAgent";
+              enabled = true;
               config = {
                 binaryPath = "${agentProfile}-claude-code${executableSuffix}/bin/claude";
                 homePath = "${home}/.local/share/claude";
               };
+            };
+            antigravity = {
+              driver = "antigravity";
+              enabled = true;
+              config.binaryPath = "${agentProfile}-antigravity-cli${executableSuffix}/bin/agy";
             };
           };
         }
@@ -64,7 +71,7 @@ in
         themeId
         theme
         ;
-      merge = ". *= load(\"${server}\")";
+      merge = ''. *= load("${server}") | del(.providerInstances["codex", "claudeAgent", "antigravity"].config.enabled)'';
       desktopMerge = ". *= load(\"${desktop}\")";
     };
 }

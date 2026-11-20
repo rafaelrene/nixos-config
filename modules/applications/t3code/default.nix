@@ -179,7 +179,10 @@ in
         };
       in
       {
-        imports = [ (features.modulesFor "nixos").android ];
+        imports = with (features.modulesFor "nixos"); [
+          android
+          antigravity
+        ];
         system.build = {
           t3code = features.t3code.bundle { inherit pkgs profile; };
           t3codeUpdater = updateT3Code;
@@ -268,7 +271,10 @@ in
                     ]
                   )
                 }:/run/current-system/sw/bin:${home}/.local/bin";
-                inherit (config.environment.variables) ANDROID_HOME;
+                inherit (config.environment.variables)
+                  AGY_CLI_DISABLE_AUTO_UPDATE
+                  ANDROID_HOME
+                  ;
                 SHELL = lib.getExe pkgs.zsh;
                 # Keep browser libraries private to T3 and its ldd diagnostics.
                 LD_LIBRARY_PATH = lib.makeLibraryPath browserLibraries;
@@ -497,7 +503,10 @@ in
         };
       in
       {
-        imports = [ (features.modulesFor "darwin").android ];
+        imports = with (features.modulesFor "darwin"); [
+          android
+          antigravity
+        ];
         system.build = {
           t3code = initial;
           t3codeUpdater = updater;
@@ -530,7 +539,10 @@ in
         launchd.user.agents = {
           t3code = {
             environment = config.launchd.user.envVariables // {
-              inherit (config.environment.variables) ANDROID_HOME;
+              inherit (config.environment.variables)
+                AGY_CLI_DISABLE_AUTO_UPDATE
+                ANDROID_HOME
+                ;
               HOME = home;
               PATH = "${runtimes.directory}:/nix/var/nix/profiles/system/sw/bin:${home}/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
               SHELL = runtimes.zsh;

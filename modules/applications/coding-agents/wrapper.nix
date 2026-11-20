@@ -14,13 +14,7 @@
       legacyProfile,
     }:
     let
-      executableDirectory =
-        if pkgs.stdenv.hostPlatform.isDarwin then "${profile}-executables/bin" else "${profile}/bin";
-      legacyDirectory =
-        if pkgs.stdenv.hostPlatform.isDarwin then
-          "${legacyProfile}-executables/bin"
-        else
-          "${legacyProfile}/bin";
+      executableSuffix = lib.optionalString pkgs.stdenv.hostPlatform.isDarwin "-executables";
     in
     config.features.shell.application {
       inherit pkgs;
@@ -30,9 +24,11 @@
         pkgs.devenv
       ];
       text = ''
-        real="${executableDirectory}/${name}"
-        # Keep the last combined-profile executable usable until this agent activates.
-        if ! test -e "${profile}"; then real="${legacyDirectory}/${name}"; fi
+        real="${profile}${executableSuffix}/bin/${name}"
+        ${lib.optionalString (legacyProfile != null) ''
+          # Keep the last combined-profile executable usable until this agent activates.
+          if ! test -e "${profile}"; then real="${legacyProfile}${executableSuffix}/bin/${name}"; fi
+        ''}
         if ! test -x "$real"; then
           echo "${name} is not installed yet. Run: ${installCommand}" >&2
           exit 1
