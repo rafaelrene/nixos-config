@@ -47,11 +47,10 @@ activate() {
       print -- 'No staged release; the existing release remains active.'
       return
     fi
-    if [[ "$darwin" != true ]]; then
+    generation=$(jq -er '.initial // empty' <<<"$settings") || {
       print -u2 -- 'No staged or active release is available.'
       return 1
-    fi
-    generation=$(jq -er '.initial' <<<"$settings") || return
+    }
   fi
   if [[ "$generation" == "$old" ]]; then
     update_step 'checking installed agent executables' install_executables "$generation" || return

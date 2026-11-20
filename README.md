@@ -11,7 +11,7 @@ development tools, and coding agents across three machines:
 
 - Shared Catppuccin theme, Ghostty terminal, Zsh shell, and Neovim configuration.
 - Development environments with Devenv, Git tooling, and command-line utilities.
-- T3 Code, Codex, and Claude Code with shared instructions and skills.
+- T3 Code, Codex, Claude Code, and Antigravity with shared agent skills.
 - Native desktop applications, web app launchers, and local dictation on macOS.
 - Managed macOS app associations, login utilities, wallpaper, Finder defaults,
   and idle sleep prevention on AC and battery power.
@@ -46,7 +46,7 @@ Local branches without an upstream and detached worktrees build as they are.
 Nix update and rebuild commands reuse the GitHub CLI login when available.
 T3 updates select one official nightly with matching server and desktop artifacts
 for all machines. Update commands report failures and send system notifications.
-Codex, Claude Code, and T3 Code stage and activate independently.
+Codex, Claude Code, Antigravity, and T3 Code stage and activate independently.
 
 Devenv tracks upstream `main` and updates with `nup` and `nups`.
 

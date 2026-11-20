@@ -162,12 +162,14 @@ in
         imports = with (features.modulesFor platform); [
           codex
           claude
+          antigravity
         ];
         config = lib.mkMerge [
           {
             system.build = agents.bundles // {
               codexUpdater = agents.updaters.codex;
               claudeUpdater = agents.updaters.claude-code;
+              antigravityUpdater = agents.updaters.antigravity-cli;
               # An installed pre-split updater may still stage this output during the first switch.
               llm-agents = features.coding-agents.bundle { inherit pkgs profile; };
             };

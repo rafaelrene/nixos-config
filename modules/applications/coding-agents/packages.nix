@@ -15,42 +15,57 @@ in
       hostname,
     }:
     let
-      names = [
-        "codex"
-        "claude-code"
-      ];
-      profiles = lib.genAttrs names (name: "${profile}-${name}");
-      bundles = lib.genAttrs names (
-        name:
+      agents = {
+        codex = {
+          executable = "codex";
+          title = "Codex";
+          legacyProfile = profile;
+        };
+        claude-code = {
+          executable = "claude";
+          title = "Claude Code";
+          legacyProfile = profile;
+        };
+        antigravity-cli = {
+          executable = "agy";
+          title = "Antigravity";
+        };
+      };
+      profiles = lib.mapAttrs (name: _: "${profile}-${name}") agents;
+      bundles = lib.mapAttrs (
+        name: agent:
         features.coding-agents.bundle {
           inherit pkgs;
           profile = profiles.${name};
           names = [ name ];
-          legacyProfile = profile;
+          legacyProfile = agent.legacyProfile or null;
         }
-      );
-      updaters = lib.genAttrs names (
-        name:
+      ) agents;
+      updaters = lib.mapAttrs (
+        name: agent:
         features.coding-agents.update {
           inherit pkgs hostname name;
+          inherit (agent) title;
+          commandName = "update-${agent.executable}";
           profile = profiles.${name};
-          initial = bundles.${name};
+          initial =
+            if pkgs.stdenv.hostPlatform.isDarwin || !(agent ? legacyProfile) then bundles.${name} else null;
         }
-      );
+      ) agents;
     in
     {
       inherit profiles bundles updaters;
       packages =
         lib.attrValues updaters
-        ++ map (
-          name:
+        ++ lib.mapAttrsToList (
+          name: agent:
           features.coding-agents.wrapper {
             inherit pkgs;
             profile = profiles.${name};
-            legacyProfile = profile;
-            name = if name == "claude-code" then "claude" else name;
-            installCommand = "update-${if name == "claude-code" then "claude" else name}";
+            legacyProfile = agent.legacyProfile or null;
+            name = agent.executable;
+            installCommand = lib.getName updaters.${name};
           }
-        ) names;
+        ) agents;
     };
 }

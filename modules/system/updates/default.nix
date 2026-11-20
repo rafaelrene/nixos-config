@@ -18,8 +18,9 @@ let
         builtins.toJSON {
           agents =
             lib.optional (config.system.build ? codexUpdater) (lib.getExe config.system.build.codexUpdater)
-            ++ lib.optional (config.system.build ? claudeUpdater) (
-              lib.getExe config.system.build.claudeUpdater
+            ++ lib.optional (config.system.build ? claudeUpdater) (lib.getExe config.system.build.claudeUpdater)
+            ++ lib.optional (config.system.build ? antigravityUpdater) (
+              lib.getExe config.system.build.antigravityUpdater
             );
           t3 =
             if config.system.build ? t3codeUpdater then

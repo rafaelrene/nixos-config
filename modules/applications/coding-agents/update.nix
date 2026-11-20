@@ -16,6 +16,8 @@
       profile,
       hostname,
       name,
+      commandName,
+      title,
       initial,
       flake ? "github:numtide/llm-agents.nix",
     }:
@@ -26,8 +28,6 @@
       state = "${profile}-updater";
       # Agent profiles share Nix's tarball cache, so their imports must not overlap.
       lock = "${builtins.dirOf profile}/coding-agent-update.lock";
-      commandName = "update-${if name == "claude-code" then "claude" else name}";
-      title = if name == "claude-code" then "Claude Code" else "Codex";
       source = "path:${inputs.self.outPath}?narHash=${lib.escapeURL inputs.self.narHash}";
       settings = pkgs.writeText "${name}-updater.json" (
         builtins.toJSON (
@@ -44,7 +44,7 @@
             }Configurations.${hostname}.config.system.build.${name}";
             staged = "${profile}-staged";
           }
-          // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin { initial = toString initial; }
+          // lib.optionalAttrs (initial != null) { initial = toString initial; }
         )
       );
     in

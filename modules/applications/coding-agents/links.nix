@@ -27,6 +27,7 @@
       skillDirectories = [
         ".local/share/codex/skills"
         ".local/share/claude/skills"
+        ".gemini/config/skills"
       ];
       skills = lib.genAttrs skillNames (name: "${skillSource}/${name}");
     in
@@ -36,6 +37,7 @@
         ".local/share/codex/AGENTS.md" = "AGENTS.md";
         ".local/share/claude/AGENTS.md" = "AGENTS.md";
         ".local/share/claude/CLAUDE.md" = "CLAUDE.md";
+        ".gemini/config/AGENTS.md" = "AGENTS.md";
       };
       skillLinks = lib.listToAttrs (
         lib.concatMap (
