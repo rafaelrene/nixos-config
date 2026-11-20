@@ -5,7 +5,7 @@ development tools, and coding agents across three machines:
 
 - **Othinus:** NixOS with Niri, DankMaterialShell, and Vicinae.
 - **Proserpina:** macOS with nix-darwin, OmniWM, and Raycast.
-- **Nephtys:** Mac mini with the same macOS workstation setup as Proserpina.
+- **Nephtys:** Mac mini for remote coding agents with automatic login and a smaller desktop setup.
 
 ## Features
 

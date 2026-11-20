@@ -55,26 +55,12 @@ in
         runDmsMatugenTemplates = false;
         runUserMatugenTemplates = false;
       };
-      # Reapply the declared power policy to existing, writable DMS settings.
-      managedSettings = pkgs.writeText "dms-managed-settings.json" (
-        builtins.toJSON (
-          appearance
-          // lib.getAttrs [
-            "acMonitorTimeout"
-            "acLockTimeout"
-            "acSuspendTimeout"
-            "acProfileName"
-            "batteryMonitorTimeout"
-            "batteryLockTimeout"
-            "batterySuspendTimeout"
-            "batteryProfileName"
-            "lockBeforeSuspend"
-          ] defaults
-        )
-      );
-      dmsSettings = pkgs.writeText "dms-default-settings.json" (builtins.toJSON (defaults // appearance));
+      managed = appearance // config.workstation.power.dmsSettings;
+      managedSettings = pkgs.writeText "dms-managed-settings.json" (builtins.toJSON managed);
+      dmsSettings = pkgs.writeText "dms-default-settings.json" (builtins.toJSON (defaults // managed));
     in
     {
+      imports = [ (features.modulesFor "nixos").power-management ];
       programs.dms-shell = {
         enable = true;
         package = pkgs.dms-shell.overrideAttrs (previous: {

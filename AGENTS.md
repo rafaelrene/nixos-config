@@ -8,6 +8,8 @@ See [README.md](README.md) for the project introduction and overview of features
 - Follow the dendritic Nix pattern with flake-parts and import-tree
 - Keep application modules individually selectable; compose them through ordinary,
   nested bundles for shared and platform selections
+- Keep a tool's configuration together in its feature directory. Define platform
+  variants in the same entry point and let hosts select the features they need.
 - Use `features.modulesFor` for named module imports so overlapping bundles include
   each merged feature once
 - By default, any changes apply to all machines

@@ -9,9 +9,11 @@ in
   flake.modules.nixos.othinus = { pkgs, ... }: {
     imports = [
       modules.othinus-hardware
-      modules.workstation
-      modules.desktop-workstation
+      modules.headless
+      modules.headful
       modules.snapshots
+      modules.pciutils
+      modules.usbutils
     ];
     nixpkgs.hostPlatform = "x86_64-linux";
     workstation = {
@@ -91,8 +93,6 @@ in
     services.xserver.videoDrivers = [ "nvidia" ];
 
     services.logind.settings.Login = {
-      # DMS owns the idle timers and selects them based on the power source.
-      IdleAction = "ignore";
       HandleLidSwitch = "suspend";
       HandleLidSwitchExternalPower = "ignore";
       HandleLidSwitchDocked = "ignore";

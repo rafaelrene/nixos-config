@@ -33,6 +33,10 @@
       url = "file+https://blob.superlogical.com/download/rex-app/preview/latest.dmg";
       flake = false;
     };
+    rex-linux = {
+      url = "https://pkgs.superlogical.com/rex/nix/preview.tar.gz";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 

@@ -547,6 +547,23 @@
         "url": "https://blob.superlogical.com/download/rex-app/preview/latest.dmg"
       }
     },
+    "rex-linux": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794939798,
+        "narHash": "sha256-Tsr0uwzT2RvMj5wamTy20im8Df8YdBY6BWZlTvqaj+c=",
+        "type": "tarball",
+        "url": "https://pkgs.superlogical.com/rex/nix/preview/0.1.0-preview.21.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://pkgs.superlogical.com/rex/nix/preview.tar.gz"
+      }
+    },
     "root": {
       "inputs": {
         "anthropic-skills": "anthropic-skills",
@@ -563,6 +580,7 @@
         "nixpkgs-darwin": "nixpkgs-darwin",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "rex-download": "rex-download",
+        "rex-linux": "rex-linux",
         "rust-overlay": "rust-overlay_2",
         "t3-release": "t3-release",
         "viber-download": "viber-download",

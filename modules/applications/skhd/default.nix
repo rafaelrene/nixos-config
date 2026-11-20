@@ -14,6 +14,7 @@ in
       cfg = config.services.skhd;
       executable = "/var/lib/skhd/skhd";
       runtimes = features.shell.runtimes { inherit pkgs; };
+      terminal = config.environment.variables.TERMINAL or null;
     in
     {
       services.skhd = {
@@ -27,7 +28,12 @@ in
           '';
         });
         skhdConfig = ''
-          alt - return : /usr/bin/open -a Ghostty "$HOME" --args --window-save-state=never
+          alt - return : ${
+            if terminal == null then
+              ''/usr/bin/open -a Ghostty "$HOME" --args --window-save-state=never''
+            else
+              lib.escapeShellArg terminal
+          }
 
           # Quit Helium to retain its session and bypass Zen mode's hidden close
           # button. Forward every other app to OmniWM's closeFocusedWindow binding.

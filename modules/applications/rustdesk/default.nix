@@ -1,5 +1,8 @@
 { inputs, config, ... }:
 {
+  flake.modules.nixos.rustdesk = { pkgs, ... }: {
+    environment.systemPackages = [ pkgs.rustdesk ];
+  };
   flake.modules.darwin.rustdesk = { lib, pkgs, ... }: {
     # User preferences do not disable an updater already enabled in a root service.
     imports = [

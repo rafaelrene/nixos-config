@@ -7,7 +7,21 @@ in
     modules = [ modules.nephtys ];
   };
   flake.modules.darwin.nephtys = {
-    imports = [ modules.mac-workstation ];
+    imports = with modules; [
+      mac-workstation
+      desktop-applications
+      desktop
+      remote-desktop
+      discord
+      slack
+      omniwm
+      gifox
+      raycast
+      shottr
+      skhd
+      proton-pass
+      ungoogled-chromium
+    ];
 
     nixpkgs.hostPlatform = "aarch64-darwin";
     system.stateVersion = 6;
@@ -19,7 +33,10 @@ in
       localHostName = "nephtys";
       computerName = "nephtys";
     };
-    workstation.user = "raf";
-    workstation.desktop.sessionPolicy = "unattended";
+    workstation = {
+      user = "raf";
+      rex.defaultTerminal = true;
+      desktop.sessionPolicy = "unattended";
+    };
   };
 }

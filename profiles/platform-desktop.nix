@@ -5,10 +5,6 @@
     desktop-theme
     niri
     dms
-    ghostty
-    t3code
-    brightnessctl
-    ffmpeg
     ffmpegthumbnailer
     ark
     dolphin
@@ -16,11 +12,7 @@
     kdegraphics-thumbnailers
     kio-extras
     okular
-    obs-studio
-    p7zip
-    pciutils
     satty
-    usbutils
     vicinae
     wl-clipboard
     wl-screenrec
@@ -29,15 +21,13 @@
   flake.modules.darwin.platform-desktop.imports = with (config.features.modulesFor "darwin"); [
     desktop
     remote-desktop
-    ffmpeg
-    ghostty
     gifox
     omniwm
-    obs-studio
     raycast
     shottr
     skhd
     thaw
     typewhisper
+    yaak
   ];
 }

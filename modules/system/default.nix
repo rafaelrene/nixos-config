@@ -1,4 +1,7 @@
 { config, ... }:
+let
+  inherit (config.features) modulesFor;
+in
 {
   flake.modules = {
     generic.system = {
@@ -9,19 +12,58 @@
         XDG_STATE_HOME = "$HOME/.local/state";
       };
     };
-    nixos.system = {
-      imports = [
-        (config.features.modulesFor "generic").system
-        (config.features.modulesFor "nixos").nix
-        (config.features.modulesFor "nixos").boot
-        (config.features.modulesFor "nixos").networking
-      ];
-    };
+    nixos.system =
+      {
+        config,
+        lib,
+        options,
+        ...
+      }:
+      let
+        user = config.workstation.user;
+        inherit (config.users.users.${user}) home group;
+      in
+      {
+        imports = [
+          (modulesFor "generic").system
+        ]
+        ++ (with (modulesFor "nixos"); [
+          nix
+          boot
+          networking
+        ]);
+
+        security = {
+          polkit.enable = true;
+          rtkit.enable = true;
+          sudo = {
+            enable = true;
+            wheelNeedsPassword = true;
+          };
+        };
+
+        services.fwupd.enable = true;
+        environment = {
+          localBinInPath = true;
+          # Packaged Perl consumers retain their own interpreter dependency.
+          defaultPackages = builtins.filter (
+            package: lib.getName package != "perl"
+          ) options.environment.defaultPackages.default;
+        };
+        systemd.tmpfiles.rules = [
+          "d ${home}/.cache 0700 ${user} ${group} - -"
+          "d ${home}/.config 0700 ${user} ${group} - -"
+          "d ${home}/.local 0700 ${user} ${group} - -"
+          "d ${home}/.local/bin 0755 ${user} ${group} - -"
+          "d ${home}/.local/share 0700 ${user} ${group} - -"
+          "d ${home}/.local/state 0700 ${user} ${group} - -"
+        ];
+      };
     darwin.system = {
       imports = [
-        (config.features.modulesFor "generic").system
-        (config.features.modulesFor "darwin").nix
-        (config.features.modulesFor "darwin").networking
+        (modulesFor "generic").system
+        (modulesFor "darwin").nix
+        (modulesFor "darwin").networking
       ];
       homebrew.enable = false;
     };
