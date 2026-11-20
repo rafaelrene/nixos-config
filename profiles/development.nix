@@ -13,6 +13,7 @@
       linear-cli
       sentry
       t3code
+      twg
     ];
   });
 }
