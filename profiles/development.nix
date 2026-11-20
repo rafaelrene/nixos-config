@@ -4,6 +4,7 @@
     development.imports = with (config.features.modulesFor platform); [
       acli
       android
+      bitbucket
       btca
       shell
       coding-agents
