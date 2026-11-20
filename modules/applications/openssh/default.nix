@@ -39,21 +39,6 @@ in
         home = config.users.users.${user}.home;
         group = config.users.users.${user}.group;
         source = checkoutSource config;
-        installKeys = pkgs.writeShellApplication {
-          name = "install-managed-ssh-keys";
-          runtimeInputs = [ pkgs.util-linux ];
-          text = ''
-            # Drop root before touching either the checkout or the user's files.
-            exec runuser -u ${lib.escapeShellArg user} -- ${pkgs.python3}/bin/python3 ${./ssh-keys.py} \
-              --repo ${./.} \
-              --home ${lib.escapeShellArg home} \
-              --source ${lib.escapeShellArg "${home}/.ssh"} \
-              --bitbucket-helper ${../bitbucket/credentials.py} \
-              --age ${pkgs.age}/bin/age \
-              --script ${pkgs.util-linux}/bin/script \
-              --ssh-keygen ${pkgs.openssh}/bin/ssh-keygen
-          '';
-        };
       in
       {
         imports = [ shared ];
@@ -76,14 +61,6 @@ in
         };
         # The desktop enables GNOME Keyring, which otherwise adds a second agent.
         services.gnome.gcr-ssh-agent.enable = false;
-
-        # Run before activation so cancellation or a bad passphrase aborts the
-        # switch. Boot, build and dry-activate must never wait for a passphrase.
-        system.preSwitchChecks.sshKeys = ''
-          if [ "$2" = switch ] || [ "$2" = test ]; then
-            ${installKeys}/bin/install-managed-ssh-keys
-          fi
-        '';
 
         systemd.tmpfiles.rules = [
           "d ${home}/.ssh 0700 ${user} ${group} - -"
@@ -117,7 +94,6 @@ in
         ...
       }:
       let
-        runtimes = features.shell.runtimes { inherit pkgs; };
         user = config.workstation.user;
         home = config.users.users.${user}.home;
         source = checkoutSource config;
@@ -132,29 +108,6 @@ in
             exec /usr/bin/ssh-add --apple-load-keychain
           '';
         };
-        provision = lib.escapeShellArgs [
-          "/usr/bin/sudo"
-          "-H"
-          "-u"
-          user
-          "--"
-          runtimes.python3
-          "${./ssh-keys.py}"
-          "--repo"
-          "${./.}"
-          "--home"
-          home
-          "--source"
-          "${home}/.ssh"
-          "--bitbucket-helper"
-          "${../bitbucket/credentials.py}"
-          "--age"
-          "${pkgs.age}/bin/age"
-          "--ssh-keygen"
-          "${pkgs.openssh}/bin/ssh-keygen"
-          "--temporary-directory"
-          "${home}/.ssh"
-        ];
       in
       {
         imports = [ shared ];
@@ -172,13 +125,6 @@ in
           StandardOutPath = "${home}/.local/state/nix-darwin/ssh-keys.log";
           StandardErrorPath = "${home}/.local/state/nix-darwin/ssh-keys.log";
         };
-        # Run after existing preflight checks, before files or services are activated.
-        # darwin-rebuild check also enters preActivation and must never provision keys.
-        system.activationScripts.preActivation.text = lib.mkAfter ''
-          if [ "''${checkActivation:-0}" != 1 ]; then
-            ${provision}
-          fi
-        '';
       };
   };
 }

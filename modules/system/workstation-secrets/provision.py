@@ -1,4 +1,4 @@
-"""Runtime-only SSH key provisioning for NixOS and nix-darwin rebuilds."""
+"""Provision the workstation credentials during NixOS and nix-darwin switches."""
 
 import argparse
 import base64
@@ -55,7 +55,7 @@ def backup(path):
 def age_interactive(args, arguments):
     if not os.isatty(0):
         raise RuntimeError(
-            "SSH keys need a passphrase. Run this command in an interactive terminal (ssh -t for remote commands)."
+            "The workstation archive needs a passphrase. Run this command in an interactive terminal (ssh -t for remote commands)."
         )
     command = [args.age, *map(str, arguments)]
     # nixos-rebuild-ng passes terminal FDs through systemd-run --pipe, but the
@@ -76,7 +76,7 @@ def age_interactive(args, arguments):
     result = subprocess.run(command, check=False)
     if result.returncode:
         raise RuntimeError(
-            "SSH key encryption/decryption failed; installed keys were not changed."
+            "Could not unlock or encrypt the archive. Installed credentials were not changed."
         )
 
 
@@ -152,21 +152,21 @@ def decode_bundle(payload, bitbucket):
 
 
 def provision(args):
-    repo, home = Path(args.repo), Path(args.home)
-    ssh = home / ".ssh"
-    state_dir = home / ".local/state/ssh-keys"
+    """Keep the existing install stamp so moving the archive does not force an unlock."""
+    ssh = args.home / ".ssh"
+    state_dir = args.home / ".local/state/ssh-keys"
     private_directory(ssh)
     private_directory(state_dir)
     lock_path = state_dir / "lock"
     lock_fd = os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
     with os.fdopen(lock_fd, "w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        provision_locked(args, repo, ssh, state_dir)
+        provision_locked(args, ssh, state_dir)
 
 
-def provision_locked(args, repo, ssh, state_dir):
-    public = {name: (repo / f"{name}.pub").read_bytes() for name in KEYS}
-    bundle_path = repo / "ssh-keys.age"
+def provision_locked(args, ssh, state_dir):
+    public = {name: (args.public_keys / f"{name}.pub").read_bytes() for name in KEYS}
+    bundle_path = args.archive
     state_path = state_dir / "installed.json"
     try:
         state = json.loads(state_path.read_text())
@@ -190,13 +190,13 @@ def provision_locked(args, repo, ssh, state_dir):
     # Linux uses tmpfs; Darwin uses a private directory beside the installed keys.
     # Never place plaintext in the checkout or Nix store.
     with tempfile.TemporaryDirectory(
-        prefix="nixos-ssh-", dir=args.temporary_directory
+        prefix="workstation-secrets-", dir=args.temporary_directory
     ) as directory:
         temporary = Path(directory)
         payload = temporary / "credentials.json"
         credential = None
         if bundle is None or args.repack:
-            source = Path(args.source)
+            source = args.source or ssh
             if not all((source / name).is_file() for name in KEYS):
                 raise RuntimeError(
                     f"Missing configured SSH source keys in {source}. Restore {bundle_path} from Git or supply a complete --source directory."
@@ -216,7 +216,7 @@ def provision_locked(args, repo, ssh, state_dir):
                     "Set up a local Bitbucket credential before repacking the archive."
                 )
             payload.write_text(json.dumps(encoded))
-            encrypted = temporary / "keys.age"
+            encrypted = temporary / "archive.age"
             print(
                 "Creating the encrypted workstation archive. Choose its passphrase at the age prompt.",
                 flush=True,
@@ -235,7 +235,7 @@ def provision_locked(args, repo, ssh, state_dir):
         else:
             # Decrypt the exact bytes whose digest will be recorded, even if
             # the checkout changes while the user is entering the passphrase.
-            encrypted = temporary / "keys.age"
+            encrypted = temporary / "archive.age"
             encrypted.write_bytes(bundle)
             print("Unlocking managed workstation credentials.", flush=True)
             age_interactive(args, ["--decrypt", "--output", payload, encrypted])
@@ -243,7 +243,8 @@ def provision_locked(args, repo, ssh, state_dir):
             validate_keys(args, keys, public, temporary)
 
         if credential is not None:
-            bitbucket["install"](**credential)
+            # The login Keychain may be unavailable when switching over SSH.
+            bitbucket["save_file"](**credential)
         files = {}
         for name in KEYS:
             files[name] = keys[name]
@@ -269,11 +270,22 @@ def provision_locked(args, repo, ssh, state_dir):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("repo", "home", "source", "age", "ssh-keygen"):
+    for name in ("age", "ssh-keygen"):
         parser.add_argument(f"--{name}", required=True)
+    parser.add_argument("--home", type=Path, required=True)
+    parser.add_argument(
+        "--source", type=Path, help="SSH keys to repack (defaults to ~/.ssh)"
+    )
+    applications = Path(__file__).resolve().parents[2] / "applications"
+    parser.add_argument(
+        "--archive",
+        type=Path,
+        default=Path(__file__).with_name("workstation-secrets.age"),
+    )
+    parser.add_argument("--public-keys", type=Path, default=applications / "openssh")
     parser.add_argument(
         "--bitbucket-helper",
-        default=Path(__file__).parent.parent / "bitbucket/credentials.py",
+        default=applications / "bitbucket/credentials.py",
     )
     parser.add_argument(
         "--script", help="util-linux script executable for NixOS's detached terminal"

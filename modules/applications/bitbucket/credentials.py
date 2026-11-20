@@ -130,16 +130,6 @@ def save_file(email, token):
             temporary.unlink(missing_ok=True)
 
 
-def install(email, token):
-    try:
-        save(email, token)
-    except (OSError, ValueError, subprocess.TimeoutExpired):
-        if not MACOS:
-            raise
-        # A switch over SSH can run before the login Keychain is unlocked.
-        save_file(email, token)
-
-
 def verify(email, token):
     authorization = base64.b64encode(f"{email}:{token}".encode()).decode()
     connection = http.client.HTTPSConnection("api.bitbucket.org", timeout=15)
