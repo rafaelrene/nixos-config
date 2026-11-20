@@ -150,7 +150,11 @@ git_nav() {
 	esac
 	if [[ $new_window == true || $key == ctrl-t ]]; then
 		if [[ $OSTYPE == darwin* ]]; then
-			/usr/bin/open -na Ghostty --args "--working-directory=$target" --window-save-state=never
+			if [[ -n ${TERMINAL:-} ]]; then
+				"$TERMINAL" "$target"
+			else
+				/usr/bin/open -na Ghostty --args "--working-directory=$target" --window-save-state=never
+			fi
 		else
 			command ghostty +new-window "--working-directory=$target"
 		fi

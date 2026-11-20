@@ -4,6 +4,41 @@ let
   desktopSession = (config.features.modulesFor "darwin").desktop-session;
 in
 {
+  flake.modules.nixos.proton-drive =
+    { pkgs, ... }:
+    let
+      proton-drive = pkgs.callPackage (
+        {
+          stdenv,
+          fetchurl,
+          autoPatchelfHook,
+          libsecret,
+        }:
+        stdenv.mkDerivation (previous: {
+          pname = "proton-drive";
+          version = "0.9.0";
+          src = fetchurl {
+            url = "https://proton.me/download/drive/cli/${previous.version}/linux-x64/proton-drive";
+            hash = "sha512-NTMCW6aa4RK2Tj4B+8wa0GiBNqQEP2z2pyiGln2F/c2ewjVHnC4RMXFhS+UiW/upNCdQmgXKWqYHHZJPp+kcqA==";
+          };
+          nativeBuildInputs = [ autoPatchelfHook ];
+          runtimeDependencies = [ libsecret ];
+          dontUnpack = true;
+          dontStrip = true;
+          installPhase = ''
+            runHook preInstall
+            install -Dm755 "$src" "$out/bin/proton-drive"
+            runHook postInstall
+          '';
+          meta.mainProgram = "proton-drive";
+          meta.platforms = [ "x86_64-linux" ];
+        })
+      ) { };
+    in
+    {
+      environment.systemPackages = [ proton-drive ];
+    };
+
   flake.modules.darwin.proton-drive =
     {
       config,

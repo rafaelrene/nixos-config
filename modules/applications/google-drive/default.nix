@@ -3,6 +3,50 @@ let
   inherit (config) features;
 in
 {
+  flake.modules.nixos.google-drive =
+    {
+      config,
+      lib,
+      pkgs,
+      utils,
+      ...
+    }:
+    let
+      user = config.workstation.user;
+      inherit (config.users.users.${user}) home group;
+      configuration = "${home}/.config/google-drive/rclone.conf";
+      mountPoint = "${home}/GoogleDrive";
+    in
+    {
+      environment.systemPackages = [ pkgs.rclone ];
+      programs.fuse.enable = true;
+      systemd.tmpfiles.rules = [ "d ${mountPoint} 0700 ${user} ${group} - -" ];
+      systemd.user.services.google-drive = {
+        description = "Mount Google Drive";
+        wantedBy = [ "default.target" ];
+        unitConfig = {
+          ConditionUser = user;
+          ConditionPathExists = configuration;
+        };
+        environment.PATH = lib.mkForce "/run/wrappers/bin:/run/current-system/sw/bin";
+        serviceConfig = {
+          ExecStart = utils.escapeSystemdExecArgs [
+            (lib.getExe pkgs.rclone)
+            "--config"
+            configuration
+            "mount"
+            "google-drive:"
+            mountPoint
+            "--vfs-cache-mode"
+            "writes"
+          ];
+          Restart = "on-failure";
+          RestartSec = 30;
+          UMask = "0077";
+        };
+      };
+    };
+
   flake.modules.darwin.google-drive =
     {
       config,

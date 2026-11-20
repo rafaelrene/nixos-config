@@ -9,11 +9,13 @@
       curl
       eza
       fd
+      ffmpeg
       fzf
       gnutar
       jq
       lsof
       openssh
+      p7zip
       ripgrep
       tealdeer
       unzip

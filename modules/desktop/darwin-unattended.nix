@@ -15,7 +15,6 @@
       };
       config = {
         workstation.desktop.loginUtilities = false;
-        power.sleep.display = lib.mkForce "never";
         system.defaults = {
           loginwindow.autoLoginUser = if unattended then config.system.primaryUser else null;
           screensaver = {
@@ -24,7 +23,6 @@
           };
           CustomSystemPreferences."com.apple.loginwindow" = {
             DisableScreenLockImmediate = unattended;
-            SleepDisabled = true;
             autoLogoutDelay = 0;
           };
           CustomUserPreferences = {
@@ -44,11 +42,6 @@
           };
         };
         system.activationScripts.postActivation.text = lib.mkAfter ''
-          restart_power_failure=$(/usr/sbin/systemsetup -getrestartpowerfailure)
-          if [[ "$restart_power_failure" != *"Not supported"* ]]; then
-            /usr/sbin/systemsetup -setrestartpowerfailure on
-          fi
-          /usr/bin/pmset -a disablesleep 1
           /usr/bin/dscl . -mcxset /Computers/localhost \
             com.apple.loginwindow DisableScreenLockImmediate always -bool ${lib.boolToString unattended}
           /usr/bin/mcxrefresh -n ${lib.escapeShellArg config.system.primaryUser}

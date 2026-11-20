@@ -1,32 +1,15 @@
 { config, ... }:
-let
-  shared =
-    platform: with (config.features.modulesFor platform); [
-      ghostty
-      helium
-      mpv
-      personal-data
-      tailscale
-      webapps
-      zen
-    ];
-in
 {
-  flake.modules.nixos = {
-    personal-applications.imports = shared "nixos";
-    personal-data.imports = [ (config.features.modulesFor "nixos").filen ];
-  };
+  flake.modules.nixos.personal-applications.imports = [
+    (config.features.modulesFor "nixos").webapps
+  ];
   flake.modules.darwin = {
-    personal-applications.imports =
-      shared "darwin"
-      ++ (with (config.features.modulesFor "darwin"); [
-        communication
-        freetube
-        rex
-        rustdesk
-        ungoogled-chromium
-        zentty
-      ]);
+    personal-applications.imports = with (config.features.modulesFor "darwin"); [
+      communication
+      freetube
+      personal-data
+      webapps
+    ];
     communication.imports = with (config.features.modulesFor "darwin"); [
       discord
       mailspring
@@ -41,10 +24,7 @@ in
       anytype
       ente
       ente-auth
-      filen
-      google-drive
       onlyoffice
-      proton-drive
       proton-pass
       standard-notes
     ];

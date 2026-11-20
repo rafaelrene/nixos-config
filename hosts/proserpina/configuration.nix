@@ -9,6 +9,7 @@ in
   flake.modules.darwin.proserpina = {
     imports = [
       modules.mac-workstation
+      modules.headful
     ];
 
     nixpkgs.hostPlatform = "aarch64-darwin";

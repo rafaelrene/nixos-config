@@ -11,9 +11,9 @@ in
     in
     {
       imports = with modules; [
-        workstation
-        desktop-workstation
+        headless
         desktop-unattended
+        wallpaper
       ];
 
       system.primaryUser = user;
