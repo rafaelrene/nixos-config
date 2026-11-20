@@ -20,7 +20,18 @@ TOKEN_KEY = "T3CODE_BITBUCKET_API_TOKEN"
 
 
 def credential_file():
-    return Path.home() / ".local/share/t3code/bitbucket.env"
+    home = Path.home()
+    base = home / ".local/share/t3code"
+    native = home / ".t3"
+    if (
+        MACOS
+        and not base.exists()
+        and not base.is_symlink()
+        and native.is_dir()
+        and not native.is_symlink()
+    ):
+        base = native
+    return base / "bitbucket.env"
 
 
 def valid(email, token):
@@ -83,7 +94,9 @@ def load_file():
 
 
 def load():
-    email, token = load_keychain() if MACOS else load_file()
+    email, token = load_file()
+    if MACOS and not token:
+        email, token = load_keychain()
     return (email, token) if valid(email, token) else ("", "")
 
 
@@ -95,8 +108,13 @@ def save(email, token):
         security("-i", command=command)
         if keychain_password(SERVICE, ACCOUNT) != entry:
             raise ValueError("Could not save the Bitbucket credential to Keychain.")
+        credential_file().unlink(missing_ok=True)
         return
 
+    save_file(email, token)
+
+
+def save_file(email, token):
     path = credential_file()
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, delete=False) as stream:
@@ -110,6 +128,16 @@ def save(email, token):
             temporary.replace(path)
         finally:
             temporary.unlink(missing_ok=True)
+
+
+def install(email, token):
+    try:
+        save(email, token)
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        if not MACOS:
+            raise
+        # A switch over SSH can run before the login Keychain is unlocked.
+        save_file(email, token)
 
 
 def verify(email, token):

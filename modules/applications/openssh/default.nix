@@ -45,9 +45,10 @@ in
           text = ''
             # Drop root before touching either the checkout or the user's files.
             exec runuser -u ${lib.escapeShellArg user} -- ${pkgs.python3}/bin/python3 ${./ssh-keys.py} \
-              --repo ${lib.escapeShellArg source} \
+              --repo ${./.} \
               --home ${lib.escapeShellArg home} \
               --source ${lib.escapeShellArg "${home}/.ssh"} \
+              --bitbucket-helper ${../bitbucket/credentials.py} \
               --age ${pkgs.age}/bin/age \
               --script ${pkgs.util-linux}/bin/script \
               --ssh-keygen ${pkgs.openssh}/bin/ssh-keygen
@@ -140,11 +141,13 @@ in
           runtimes.python3
           "${./ssh-keys.py}"
           "--repo"
-          source
+          "${./.}"
           "--home"
           home
           "--source"
           "${home}/.ssh"
+          "--bitbucket-helper"
+          "${../bitbucket/credentials.py}"
           "--age"
           "${pkgs.age}/bin/age"
           "--ssh-keygen"
