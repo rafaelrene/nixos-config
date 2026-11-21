@@ -19,3 +19,8 @@ includes = ["*.lua"]
 command = "ruff"
 options = ["format"]
 includes = ["*.py"]
+
+[formatter.typescript]
+command = "prettier"
+options = ["--write"]
+includes = ["*.mts"]

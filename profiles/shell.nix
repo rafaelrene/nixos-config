@@ -4,15 +4,14 @@
     shell.imports = with (config.features.modulesFor platform); [
       cli-tools
       version-control
-      project-run
       starship
+      workstation-picker
       zsh
       zoxide
     ];
     version-control.imports = with (config.features.modulesFor platform); [
       git
       delta
-      git-delete-branches
       neovim
     ];
   });
