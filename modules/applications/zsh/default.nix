@@ -10,17 +10,6 @@ let
     }:
     let
       runtimes = features.shell.runtimes { inherit pkgs; };
-      configuration = pkgs.writeText "workstation.zsh" (
-        lib.replaceStrings
-          [ "@code-root@" "@navigation@" "@git-nav@" "@git-worktrees@" ]
-          [
-            (lib.escapeShellArg config.workstation.codeRoot)
-            (toString ./navigation.zsh)
-            (toString ./git-nav.zsh)
-            (toString features.shell.gitWorktreesSource)
-          ]
-          (builtins.readFile ./config.zsh)
-      );
     in
     {
       programs.zsh = {
@@ -28,7 +17,7 @@ let
         enableCompletion = true;
         histFile = "$HOME/.local/state/zsh/history";
         interactiveShellInit = lib.mkOrder 900 ''
-          source ${configuration}
+          source ${./config.zsh}
         '';
         # Global Nix configuration replaces zsh's first-run setup wizard.
         shellInit = ''

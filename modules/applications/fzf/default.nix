@@ -25,11 +25,10 @@ let
       }
     );
   common = { lib, pkgs, ... }: {
-    # Load only history bindings after the workstation's bindkey -v setup.
+    # Load only history bindings after the workstation's keymap setup.
     programs.zsh.interactiveShellInit = ''
       FZF_CTRL_T_COMMAND= FZF_ALT_C_COMMAND= source ${pkgs.fzf}/share/fzf/key-bindings.zsh
-      bindkey -M viins '^R' fzf-history-widget
-      bindkey -M vicmd '^R' fzf-history-widget
+      bindkey -M emacs '^R' fzf-history-widget
     '';
     environment = {
       systemPackages = [ pkgs.fzf ];
