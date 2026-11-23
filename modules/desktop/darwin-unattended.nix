@@ -14,7 +14,7 @@
         description = "Use automatic login without locking, or password login with manual locking and no idle lock.";
       };
       config = {
-        workstation.desktop.loginUtilities = false;
+        workstation.desktop.loginUtilities = !unattended;
         system.defaults = {
           loginwindow.autoLoginUser = if unattended then config.system.primaryUser else null;
           screensaver = {
